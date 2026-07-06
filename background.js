@@ -124,16 +124,27 @@ messenger.runtime.onMessage.addListener(async (msg) => {
       await messenger.compose.beginReply(msg.messageId, "replyToSender", { body: html });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
+      messenger.notifications.create({
+        type: "basic",
+        iconUrl: messenger.runtime.getURL("icon.svg"),
+        title: "CoThunder",
+        message: "No se pudo abrir la ventana de respuesta con el texto de Copilot."
+      }).catch(() => {});
     }
     return { ok: true };
   }
   if (msg.type === "refreshAgents") {
+    let responded = false;
     for (const id of await findCopilotTabIds()) {
       try {
         const res = await messenger.tabs.sendMessage(id, { type: "getAgents" });
-        if (res && res.agents) return { ok: true, agents: res.agents };
+        if (res && res.agents) {
+          responded = true;
+          if (res.agents.length) return { ok: true, agents: res.agents };
+        }
       } catch (_) {}
     }
-    return { ok: false, reason: "no-copilot" };
+    // Respondió pero sin agentes -> lista vacía (no error); nadie respondió -> Copilot no está cargado.
+    return responded ? { ok: true, agents: [] } : { ok: false, reason: "no-copilot" };
   }
 });

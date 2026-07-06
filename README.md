@@ -39,6 +39,12 @@ Crea una plantilla como en Thunderbird: redacta un mensaje (puedes escribirlo en
 
 CoThunder lista los agentes **fijados en la barra lateral** de Copilot. Si quieres uno en el selector, **fíjalo en Copilot** (aparecerá en la barra lateral) y pulsa **↻** en la ventana de CoThunder para refrescar la lista.
 
+## Complemento recomendado: Markdown Here Revival
+
+CoThunder pide a Copilot que devuelva la respuesta en **Markdown** y la vuelca en la ventana de composición tal cual (con sus `#`, `**`, listas, tablas, citas…). Para verla **renderizada** (encabezados, negritas y listas de verdad) instala el complemento gratuito **[Markdown Here Revival](https://addons.thunderbird.net/thunderbird/addon/markdown-here-revival/)** desde el gestor de complementos de Thunderbird: convierte el Markdown de la composición en HTML con un clic (o con su vista previa). Es opcional y complementario: sin él, la respuesta sigue llegando en Markdown legible; con él, queda maquetada.
+
+> Nota: si acabas de recargar CoThunder durante el desarrollo y Markdown Here no responde en la ventana de composición, **reinicia Thunderbird** — recargar la extensión temporal puede dejar otros complementos en un estado inconsistente.
+
 ## Privacidad
 
 El contenido de los correos solo viaja a **Microsoft 365 Copilot**, el mismo destino al que ya envías datos al usar Copilot. Sin telemetría, sin terceros, sin claves. Relevante para RGPD: el tratamiento por parte de Microsoft se rige por los acuerdos de tu organización. La ventana te muestra siempre el prompt antes de enviarlo.
