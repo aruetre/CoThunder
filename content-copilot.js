@@ -56,6 +56,23 @@ async function startNewChat() {
   return true;
 }
 
+// Extrae el texto de la respuesta conservando saltos de línea y quitando adornos del bloque de código.
+function extractReplyText(el) {
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll("button, [role='toolbar']").forEach((n) => n.remove());
+  clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+  clone.querySelectorAll("p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote, pre").forEach((n) => n.append("\n"));
+  let text = clone.textContent
+    .replace(/ /g, " ")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  text = text.replace(/^`{3,}\s*\w*\n?/, "").replace(/\n?`{3,}\s*$/, "");      // comillas del bloque de código
+  text = text.replace(/^\s*(markdown|md|plaintext|text)\s*\n/i, "");           // etiqueta de idioma
+  return text.trim();
+}
+
 // Espera a que la respuesta del asistente aparezca (nodo nuevo o texto cambiado) y su texto se estabilice.
 function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
   return new Promise((resolve) => {
@@ -63,18 +80,23 @@ function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
     let last = "";
     let stableSince = Date.now();
     let appeared = false;
+    const finish = () => {
+      const n = document.querySelectorAll(SELECTORS.reply);
+      const e = n[n.length - 1];
+      return appeared && e ? extractReplyText(e) : "";
+    };
     const tick = setInterval(() => {
       const nodes = document.querySelectorAll(SELECTORS.reply);
       const el = nodes[nodes.length - 1];
       const text = el ? el.textContent.trim() : "";
       if (nodes.length > baselineCount || (text && text !== baselineText)) appeared = true;
       if (appeared && text && text === last) {
-        if (Date.now() - stableSince > 2000) { clearInterval(tick); resolve(text); }
+        if (Date.now() - stableSince > 2000) { clearInterval(tick); resolve(finish()); }
       } else {
         last = text;
         stableSince = Date.now();
       }
-      if (Date.now() - start > timeoutMs) { clearInterval(tick); resolve(appeared ? last : ""); }
+      if (Date.now() - start > timeoutMs) { clearInterval(tick); resolve(finish()); }
     }, 500);
   });
 }
