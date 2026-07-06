@@ -1,9 +1,9 @@
 :root { color-scheme: light dark; }
-body { width: 420px; margin: 0; padding: 10px; font: 13px system-ui; }
+body { width: 780px; margin: 0; padding: 10px; font: 13px system-ui; }
 #status { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 #dot { width: 10px; height: 10px; border-radius: 50%; background: #888; }
 #dot.busy { background: #e5a50a; } #dot.ok { background: #26a269; } #dot.err { background: #c01c28; }
-textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 180px;
+textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 430px;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; padding: 6px; }
 label { display: block; margin: 8px 0; }
 label.row { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
