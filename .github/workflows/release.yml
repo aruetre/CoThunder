@@ -52,13 +52,20 @@ jobs:
           name: cothunder-xpi
           path: ${{ steps.pack.outputs.xpi }}
 
-      - name: Crear la Release y adjuntar el .xpi
+      - name: Crear o actualizar la Release y adjuntar el .xpi
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" "${{ steps.pack.outputs.xpi }}" \
-            --title "CoThunder ${{ steps.pack.outputs.version }}" \
-            --notes "Extensión CoThunder ${{ steps.pack.outputs.version }} para Thunderbird 140 o superior.
+          TAG="${{ github.ref_name }}"
+          XPI="${{ steps.pack.outputs.xpi }}"
+          TITLE="CoThunder ${{ steps.pack.outputs.version }}"
+          NOTES="Extensión CoThunder ${{ steps.pack.outputs.version }} para Thunderbird 140 o superior.
 
-          Instalación: descarga el \`.xpi\` de abajo y en Thunderbird ve a Herramientas › Complementos y temas › engranaje › Instalar complemento desde archivo."
+          Instalación: descarga el .xpi de abajo y en Thunderbird ve a Herramientas › Complementos y temas › engranaje › Instalar complemento desde archivo."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES"
+            gh release upload "$TAG" "$XPI" --clobber
+          else
+            gh release create "$TAG" "$XPI" --title "$TITLE" --notes "$NOTES"
+          fi
