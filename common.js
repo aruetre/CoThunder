@@ -2,7 +2,7 @@
 
 const DEFAULT_PROMPT_TEMPLATE =
   "Redacta una respuesta profesional y cordial a este correo, en el mismo idioma del mensaje. " +
-  "Responde solo con el cuerpo del correo, sin asunto ni explicaciones.\n\n" +
+  "Responde solo con el cuerpo del correo, en código fuente Markdown, sin asunto ni explicaciones.\n\n" +
   "De: {{author}}\nAsunto: {{subject}}\n\n{{body}}";
 
 const DEFAULTS = {

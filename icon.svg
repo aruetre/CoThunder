@@ -1,11 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
-    <linearGradient id="cot" x1="4" y1="8" x2="58" y2="58" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2f6fed"/>
-      <stop offset="0.5" stop-color="#7a4fd6"/>
-      <stop offset="1" stop-color="#28c1a8"/>
+    <linearGradient id="cot" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2e8ce6"/>
+      <stop offset="0.45" stop-color="#7a4fd6"/>
+      <stop offset="1" stop-color="#2fbf9e"/>
     </linearGradient>
   </defs>
-  <path fill="url(#cot)" d="M27 5 Q 32 27 53 31 Q 32 35 27 55 Q 22 35 3 31 Q 22 27 27 5 Z"/>
-  <path fill="url(#cot)" d="M51 8 Q 53 17 61 19 Q 53 21 51 30 Q 49 21 41 19 Q 49 17 51 8 Z"/>
+  <path fill="url(#cot)" fill-rule="evenodd" d="
+    M32 32 Q 22 20 32 6 Q 42 20 32 32 Z
+    M32 32 Q 44 22 58 32 Q 44 42 32 32 Z
+    M32 32 Q 42 44 32 58 Q 22 44 32 32 Z
+    M32 32 Q 20 42 6 32 Q 20 22 32 32 Z
+  "/>
+  <circle cx="32" cy="32" r="4.5" fill="#ffffff"/>
 </svg>
