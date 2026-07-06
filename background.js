@@ -60,3 +60,13 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   const tabId = await ensureCopilotTab();
   return deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat });
 });
+
+// Sonda de Fase 2 (temporal): pide al content script los candidatos a contenedor de respuesta.
+async function probeReply() {
+  const tabs = await messenger.tabs.query({});
+  const t = tabs.find((t) => (t.url || "").includes("m365.cloud.microsoft"));
+  if (!t) { console.log("[CoThunder][probeReply] no hay pestaña de Copilot"); return; }
+  const res = await messenger.tabs.sendMessage(t.id, { type: "probeReply" });
+  console.log("[CoThunder][probeReply] candidatos:");
+  ((res && res.candidates) || []).forEach((c, i) => console.log(i, c.sel, "=>", c.text));
+}

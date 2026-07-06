@@ -54,9 +54,34 @@ async function startNewChat() {
   return true;
 }
 
+// --- Sonda de Fase 2 (temporal): descubre el contenedor de respuesta del asistente ---
+function _describe(el) {
+  const attrs = [];
+  for (const { name, value } of el.attributes) {
+    if (name === "class" || name === "style") continue;
+    attrs.push(`${name}="${(value || "").slice(0, 60)}"`);
+  }
+  const cls = typeof el.className === "string" && el.className
+    ? "." + el.className.trim().split(/\s+/).slice(0, 5).join(".") : "";
+  return `<${el.tagName.toLowerCase()}${cls}${attrs.length ? " " + attrs.join(" ") : ""}>`;
+}
+
 // Protocolo con el background: escribir (opcional nuevo chat) y enviar el prompt.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg || msg.type !== "sendPrompt") return;
+  if (!msg) return;
+  if (msg.type === "probeReply") {
+    const re = /message|response|bot|assistant|turn|copilot|answer|markdown|reply/i;
+    const candidates = [...document.querySelectorAll("[data-testid], [role], [aria-label]")]
+      .filter((el) => {
+        const key = (el.getAttribute("data-testid") || "") + " " + (el.getAttribute("role") || "") +
+          " " + (el.getAttribute("aria-label") || "") + " " + (typeof el.className === "string" ? el.className : "");
+        return re.test(key) && (el.textContent || "").trim().length > 25;
+      })
+      .slice(0, 30)
+      .map((el) => ({ sel: _describe(el), text: (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 70) }));
+    return { candidates };
+  }
+  if (msg.type !== "sendPrompt") return;
   if (msg.newChat) await startNewChat();
   if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
   await delay(300);

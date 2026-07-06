@@ -1,1 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#1a5fb4"/><text x="32" y="42" font-size="32" text-anchor="middle" fill="#fff" font-family="sans-serif">C</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="cot" x1="4" y1="8" x2="58" y2="58" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2f6fed"/>
+      <stop offset="0.5" stop-color="#7a4fd6"/>
+      <stop offset="1" stop-color="#28c1a8"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#cot)" d="M27 5 Q 32 27 53 31 Q 32 35 27 55 Q 22 35 3 31 Q 22 27 27 5 Z"/>
+  <path fill="url(#cot)" d="M51 8 Q 53 17 61 19 Q 53 21 51 30 Q 49 21 41 19 Q 49 17 51 8 Z"/>
+</svg>
