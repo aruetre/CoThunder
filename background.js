@@ -64,12 +64,8 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (msg.type === "copilotReply") {
     const { pendingMessageId } = await messenger.storage.session.get({ pendingMessageId: null });
     if (pendingMessageId == null) return;
-    // Composición HTML (mantiene barra de formato y complementos); texto tal cual, con saltos preservados.
-    const html = (msg.text || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\n/g, "<br>");
+    // Composición HTML (mantiene barra de formato y complementos); el Markdown se renderiza a HTML real.
+    const html = markdownToHtml(msg.text);
     try {
       await messenger.compose.beginReply(pendingMessageId, "replyToSender", { body: html });
     } catch (e) {

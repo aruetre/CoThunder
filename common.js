@@ -76,6 +76,50 @@ function findPart(part, type) {
   return "";
 }
 
+function escapeHtml(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// Aplica formato Markdown en línea (negrita, cursiva, código, enlaces) sobre texto ya escapado.
+function inlineMd(s) {
+  s = escapeHtml(s);
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+  s = s.replace(/\*([^*\n]+)\*/g, "<em>$1</em>");
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>');
+  return s;
+}
+
+// Conversor Markdown -> HTML mínimo para el cuerpo de la respuesta (encabezados, listas, negrita, etc.).
+function markdownToHtml(md) {
+  const lines = (md || "").replace(/\r/g, "").split("\n");
+  const out = [];
+  let listType = null;
+  const closeList = () => { if (listType) { out.push(listType === "ul" ? "</ul>" : "</ol>"); listType = null; } };
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) { closeList(); continue; }
+    let m;
+    if ((m = line.match(/^(#{1,6})\s+(.*)$/))) {
+      closeList();
+      const level = m[1].length;
+      out.push(`<h${level}>${inlineMd(m[2])}</h${level}>`);
+    } else if ((m = line.match(/^[-*+]\s+(.*)$/))) {
+      if (listType !== "ul") { closeList(); out.push("<ul>"); listType = "ul"; }
+      out.push(`<li>${inlineMd(m[1])}</li>`);
+    } else if ((m = line.match(/^\d+\.\s+(.*)$/))) {
+      if (listType !== "ol") { closeList(); out.push("<ol>"); listType = "ol"; }
+      out.push(`<li>${inlineMd(m[1])}</li>`);
+    } else {
+      closeList();
+      out.push(`<p>${inlineMd(line)}</p>`);
+    }
+  }
+  closeList();
+  return out.join("\n");
+}
+
 async function extractBody(messageId) {
   const full = await messenger.messages.getFull(messageId);
   // Prioriza el HTML (extraer solo el texto visible excluye CSS/scripts); si no hay, usa el texto plano.
