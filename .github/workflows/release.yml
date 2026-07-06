@@ -47,7 +47,7 @@ jobs:
           echo "xpi=$XPI" >> "$GITHUB_OUTPUT"
 
       - name: Subir el .xpi como artefacto del workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: cothunder-xpi
           path: ${{ steps.pack.outputs.xpi }}
