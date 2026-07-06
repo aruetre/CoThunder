@@ -18,6 +18,9 @@ Base de rama: 73d204c (tras Initial commit ddc4015)
 - Task 1.5 VERIFICADA E2E por el usuario: el botón funciona de punta a punta (correo→popup→Copilot recibe+envía). Fixes tras prueba real: getDisplayedMessages plural (f2609b3, TB 140 quitó el singular); extractBody mejorado — HTML primero, sin CSS, con estructura, alt de imágenes (a033698).
 - Task 1.7: complete (commit fdb41b1, review clean). Página de opciones (copilotUrl, promptTemplate, newChatByDefault).
 - Refinamientos de extractBody tras feedback (directos del controlador, para revisión final): a033698 (HTML primero, sin CSS, alt de imágenes) y 3ee4753 (elimina líneas en blanco). Lógica de normalizeText verificada por prueba unitaria.
-- NÚCLEO FASE 1 COMPLETO Y REVISADO. Pendiente: confirmación del usuario de que el texto sale limpio.
+- NÚCLEO FASE 1 COMPLETO Y REVISADO.
+- Limpieza de cuerpo reforzada: elimina caracteres invisibles (\p{Cf} + marcas) (ca120ba), verificado por prueba. Pendiente confirmación visual del usuario.
+- Infra de release en GitHub: .github/workflows/release.yml (tag vX.Y.Z -> empaqueta y publica .xpi) y ci.yml (validación en push/PR); README actualizado (bc4c9ea). Rama subida a origin. Decisión del usuario: NO publicar release hasta cerrar la Fase 2.
+- SIGUIENTE: Fase 2 (Tasks 2.1, 2.2) — necesita sonda para el selector del contenedor de respuesta de Copilot y detección de fin de streaming.
 - Fase 2 (Tasks 2.1, 2.2) pendiente: necesita descubrir el selector del contenedor de respuesta (interactivo con el usuario).
 - BACKLOG (pospuesto por el usuario, ver spec §16): desplegable de agentes de Copilot; comportamiento por defecto por decidir.
