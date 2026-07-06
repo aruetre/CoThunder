@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "CoThunder",
+  "description": "Envía el correo abierto a Microsoft 365 Copilot y trae la respuesta.",
+  "version": "2.0.0",
+  "applications": { "gecko": { "id": "cothunder@local", "strict_min_version": "140.0" } },
+  "permissions": ["messagesRead", "compose", "storage", "scripting"],
+  "host_permissions": ["*://m365.cloud.microsoft/*", "*://*.cloud.microsoft/*", "*://copilot.cloud.microsoft/*"],
+  "background": { "scripts": ["common.js", "background.js"], "persistent": false },
+  "message_display_action": { "default_title": "Preguntar a Copilot" },
+  "icons": { "32": "icon.svg", "64": "icon.svg" }
+}
