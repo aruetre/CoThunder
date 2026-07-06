@@ -46,7 +46,8 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "xpi=$XPI" >> "$GITHUB_OUTPUT"
 
-      - name: Subir el .xpi como artefacto del workflow
+      - name: Subir el .xpi como artefacto del workflow (solo en ejecución manual)
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v5
         with:
           name: cothunder-xpi
