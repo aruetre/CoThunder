@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "CoThunder",
   "description": "Envía el correo abierto a Microsoft 365 Copilot y trae la respuesta.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "browser_specific_settings": { "gecko": { "id": "cothunder@local", "strict_min_version": "140.0" } },
   "permissions": ["accountsRead", "messagesRead", "compose", "storage", "scripting", "notifications"],
   "host_permissions": ["*://m365.cloud.microsoft/*"],
