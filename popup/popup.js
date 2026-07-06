@@ -16,6 +16,19 @@
     const body = await extractBody(message.id);
     $("prompt").value = buildPrompt(message, body, cfg.promptTemplate);
     $("newChat").checked = cfg.newChatByDefault;
+
+    // Desplegable de agentes: se rellena con los que guardó el content script; recuerda el último elegido.
+    const { agents = [], lastAgentId = "" } = await messenger.storage.local.get({ agents: [], lastAgentId: "" });
+    const sel = $("agent");
+    for (const a of agents) {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = a.label;
+      opt.dataset.label = a.label;
+      sel.appendChild(opt);
+    }
+    if (lastAgentId && agents.some((a) => a.id === lastAgentId)) sel.value = lastAgentId;
+
     setStatus("", "Listo");
     $("send").disabled = false;
   } catch (e) {
@@ -28,8 +41,11 @@
     setStatus("busy", "Enviando a Copilot…");
     let res;
     try {
+      const agentId = $("agent").value;
+      const agentLabel = agentId && $("agent").selectedOptions[0] ? $("agent").selectedOptions[0].dataset.label || "" : "";
+      await messenger.storage.local.set({ lastAgentId: agentId });
       res = await messenger.runtime.sendMessage({
-        type: "sendToCopilot", prompt: $("prompt").value, newChat: $("newChat").checked, messageId: message.id
+        type: "sendToCopilot", prompt: $("prompt").value, newChat: $("newChat").checked, messageId: message.id, agentId, agentLabel
       });
     } catch (e) {
       res = { ok: false, reason: e && e.message ? e.message : String(e) };

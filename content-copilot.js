@@ -56,6 +56,31 @@ async function startNewChat() {
   return true;
 }
 
+// Agentes del nav de Copilot: los sub-items (deja fuera navegación e historial).
+function listAgents() {
+  return [...document.querySelectorAll(".fai-CopilotNavSubItem")]
+    .map((el) => ({ label: (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " "), id: el.id }))
+    .filter((a) => a.label && a.id);
+}
+
+// Guarda la lista de agentes para que el popup pueda ofrecerla (la SPA tarda: se intenta a los 3 y 8 s).
+function saveAgents() {
+  const agents = listAgents();
+  if (agents.length) messenger.storage.local.set({ agents }).catch(() => {});
+}
+setTimeout(saveAgents, 3000);
+setTimeout(saveAgents, 8000);
+
+// Selecciona un agente por id (estable) o, en su defecto, por nombre.
+function selectAgent(id, label) {
+  let el = id ? document.getElementById(id) : null;
+  if (!el && label) {
+    el = [...document.querySelectorAll(".fai-CopilotNavSubItem")].find((n) => (n.getAttribute("aria-label") || "").trim() === label);
+  }
+  if (el) { el.click(); return true; }
+  return false;
+}
+
 // Extrae el texto de la respuesta conservando saltos de línea y quitando adornos del bloque de código.
 function extractReplyText(el) {
   const clone = el.cloneNode(true);
@@ -103,20 +128,13 @@ function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
 
 // Protocolo con el background: escribir (opcional nuevo chat), enviar y capturar la respuesta.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg) return;
-  if (msg.type === "probeAgents") {
-    // Sonda temporal (v2.1): enumera los agentes del nav de Copilot.
-    const items = [...document.querySelectorAll('.fai-CopilotNavSubItem, .fai-CopilotNavItem, [id*="declarativeAgent"], [id*="Agent"]')]
-      .map((el) => ({
-        label: (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 50),
-        id: el.id || null,
-        testid: el.getAttribute("data-testid") || null
-      }))
-      .filter((a) => a.label);
-    return { agents: items };
+  if (!msg || msg.type !== "sendPrompt") return;
+  if (msg.agentId || msg.agentLabel) {
+    selectAgent(msg.agentId, msg.agentLabel);
+    await delay(1000);
+  } else if (msg.newChat) {
+    await startNewChat();
   }
-  if (msg.type !== "sendPrompt") return;
-  if (msg.newChat) await startNewChat();
   if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
   const baseNodes = document.querySelectorAll(SELECTORS.reply);
   const baseline = baseNodes.length;
