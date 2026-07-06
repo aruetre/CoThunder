@@ -26,7 +26,7 @@ Riesgos vivos: alojar Copilot en ventana popup está por validar (fallback a pes
 
 ## Restricciones no negociables
 
-- **Manifest V3** con `applications.gecko` y `strict_min_version: "140.0"` (TB ESR 140, probado en 140.11.1). Background como **event page no persistente** (`background.scripts` + `persistent: false`), no service worker. En MV3 no hay `content_scripts` declarativo: el content script se registra en runtime desde el background (API `scripting`/`contentScripts`), lo que es el **spike bloqueante** del proyecto (§15.1 del spec).
+- **Manifest V3** con `browser_specific_settings.gecko` (no `applications`, que da advertencia en MV3) y `strict_min_version: "140.0"` (TB ESR 140, probado en 140.11.1). Background como **event page** (`background: { scripts: [...] }`): en MV3 es no persistente por definición, **no declarar `persistent`** (da advertencia). No es service worker. En MV3 no hay `content_scripts` declarativo: el content script se registra en runtime desde el background (API `scripting`/`contentScripts`), lo que es el **spike bloqueante** del proyecto (§15.1 del spec).
 - API de Thunderbird siempre vía el objeto global **`messenger`**, nunca `browser` ni `chrome`.
 - JavaScript vanilla con `"use strict"`. Sin frameworks, sin bundlers, sin dependencias npm en runtime. Node solo para validación y tooling.
 - Permisos: `messagesRead`, `compose`, `storage`, `scripting` y `host_permissions` con el dominio de M365 Copilot (no `<all_urls>`; en MV3 `host_permissions` es key separado de `permissions`). Cualquier permiso nuevo se justifica en la especificación antes de añadirse.

@@ -26,9 +26,9 @@ Qué no hace:
 ## 2. Requisitos de plataforma
 
 - Thunderbird ESR 140.0 o superior. `strict_min_version: "140.0"`.
-- **Manifest V3** con bloque `applications.gecko`, id `cothunder@local`.
+- **Manifest V3** con bloque `browser_specific_settings.gecko` (no `applications`, deprecado y con advertencia en MV3), id `cothunder@local`.
 - API WebExtension de Thunderbird via el objeto global `messenger`.
-- Background como **event page no persistente** (`background.scripts` con `persistent: false`; Thunderbird/Firefox usan event pages en MV3, no service workers). Consecuencia: el estado en memoria (p. ej. el id de la ventana de Copilot) puede perderse cuando el background se descarga; hay que persistirlo (`storage.session`/`storage.local`) y reconstruirlo.
+- Background como **event page** (`background: { scripts: [...] }`; Thunderbird/Firefox usan event pages en MV3, no service workers). En MV3 el background es no persistente por definición: **no declarar `persistent`** (da advertencia). Consecuencia: el estado en memoria (p. ej. el id de la ventana de Copilot) puede perderse cuando el background se descarga; hay que persistirlo (`storage.session`/`storage.local`) y reconstruirlo.
 - **Registro del content script en runtime**, no declarativo: en MV3 no existe el key `content_scripts`. Se registra desde el background con la API de scripting disponible en la plataforma (`scripting.registerContentScripts` o, en su defecto, `contentScripts.register`). Requiere el permiso correspondiente (`scripting`) y el host permission de Copilot. **A validar en el spike (§15.1).**
 - Permisos: `messagesRead`, `compose` (fase 2), `storage`, `scripting`, y `host_permissions` con el dominio de Microsoft 365 Copilot (no `<all_urls>`: el destino es un dominio fijo y configurable). En MV3 `host_permissions` es un key separado de `permissions`.
 - El content script solo actúa sobre páginas cargadas en **pestañas**; Copilot debe abrirse como pestaña o como ventana que aloje una pestaña web (ver §8.1).
@@ -59,8 +59,8 @@ options/
 - `name`: "CoThunder"
 - `description`: descripción breve en español del comportamiento.
 - `version`: SemVer, empieza en "2.0.0".
-- `applications.gecko`: id `cothunder@local`, `strict_min_version: "140.0"`.
-- `background`: `{ "scripts": ["common.js", "background.js"], "persistent": false }` (event page).
+- `browser_specific_settings.gecko`: id `cothunder@local`, `strict_min_version: "140.0"`.
+- `background`: `{ "scripts": ["common.js", "background.js"] }` (event page; sin `persistent` en MV3).
 - `message_display_action`: botón en la barra del visor de mensajes. `default_title` "Preguntar a Copilot", `default_popup` "popup/popup.html".
 - `permissions`: `["messagesRead", "compose", "storage", "scripting"]`.
 - `host_permissions`: `[<patrón del dominio de M365 Copilot>]` (key separado en MV3).

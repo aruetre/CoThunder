@@ -22,7 +22,7 @@ docs/                  Especificación y documentación
 
 ## Reglas del proyecto
 
-- Manifest V3 con `applications.gecko` y `strict_min_version: 140.0` (TB ESR 140). Background event page no persistente. Sin `content_scripts` declarativo: el content script se registra en runtime (spike bloqueante, §15.1 del spec).
+- Manifest V3 con `browser_specific_settings.gecko` (no `applications`) y `strict_min_version: 140.0` (TB ESR 140). Background como event page (`background: { scripts: [...] }`, no persistente por definición en MV3; no declarar `persistent`). Sin `content_scripts` declarativo: el content script se registra en runtime (spike bloqueante, §15.1 del spec).
 - API de Thunderbird via el objeto global `messenger`, no `browser` ni `chrome`.
 - JavaScript vanilla con `"use strict"`. Sin frameworks, sin bundlers, sin dependencias npm en runtime. Node solo para validación y tooling.
 - Sin API ni claves: el contenido de los correos solo viaja a Microsoft 365 Copilot, el destino al que el usuario ya envía datos al usar Copilot. Ninguna otra red, ninguna telemetría. Relevante para RGPD: documentar cualquier cambio en el flujo de datos.

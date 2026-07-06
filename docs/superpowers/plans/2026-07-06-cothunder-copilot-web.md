@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Thunderbird ESR 140.0+, `strict_min_version: "140.0"`, id `cothunder@local`.
-- **Manifest V3.** Background como event page: `background: { scripts: ["common.js","background.js"], persistent: false }`. No service worker.
+- **Manifest V3.** Background como event page: `background: { scripts: ["common.js","background.js"] }` (no persistente por definición en MV3; **no declarar `persistent`**). No service worker. Id y versión mínima van en `browser_specific_settings.gecko` (no `applications`).
 - Sin key `content_scripts` (no existe en MV3): el content script se registra en runtime desde el background.
 - Permisos: `["messagesRead","compose","storage","scripting"]`. `host_permissions` (key separado) con el patrón del dominio de M365 Copilot.
 - API de Thunderbird siempre vía el objeto global `messenger`, nunca `browser`/`chrome`.
@@ -61,10 +61,10 @@ Objetivo: demostrar en TB 140 que se puede (a) registrar/inyectar un content scr
   "name": "CoThunder",
   "description": "Envía el correo abierto a Microsoft 365 Copilot y trae la respuesta.",
   "version": "2.0.0",
-  "applications": { "gecko": { "id": "cothunder@local", "strict_min_version": "140.0" } },
+  "browser_specific_settings": { "gecko": { "id": "cothunder@local", "strict_min_version": "140.0" } },
   "permissions": ["messagesRead", "compose", "storage", "scripting"],
   "host_permissions": ["*://m365.cloud.microsoft/*", "*://*.cloud.microsoft/*", "*://copilot.cloud.microsoft/*"],
-  "background": { "scripts": ["common.js", "background.js"], "persistent": false },
+  "background": { "scripts": ["common.js", "background.js"] },
   "message_display_action": { "default_title": "Preguntar a Copilot" },
   "icons": { "32": "icon.svg", "64": "icon.svg" }
 }

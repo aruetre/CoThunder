@@ -16,8 +16,8 @@ for f in $(find . -name '*.js' -not -path './node_modules/*' -not -path './.*');
 
 Si algo falla, corregir antes de seguir. En el manifest, verificar además:
 
-- `manifest_version` es 3, con `background.persistent: false` (event page, no service worker; TB usa event pages en MV3).
-- `applications.gecko.strict_min_version` coincide con la versión mínima documentada en la especificación (140.0).
+- `manifest_version` es 3. Background como event page (`background: { scripts: [...] }`, no service worker; TB usa event pages en MV3). **No declarar `persistent`** ni usar el key `applications` (ambos dan advertencia en MV3).
+- `browser_specific_settings.gecko.strict_min_version` coincide con la versión mínima documentada en la especificación (140.0).
 - No hay key `content_scripts` (no existe en MV3): el content script se registra en runtime desde el background. `host_permissions` es key separado de `permissions`.
 - Los permisos son exactamente los que la especificación lista (`messagesRead`, `compose`, `storage`, `scripting` + host permission de Copilot). Cualquier permiso nuevo debe justificarse en `docs/ESPECIFICACION.md` antes de añadirse.
 - Todo fichero referenciado en el manifest existe en disco (background scripts, popup, options, iconos).
