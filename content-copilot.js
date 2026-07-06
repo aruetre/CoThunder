@@ -56,11 +56,17 @@ async function startNewChat() {
   return true;
 }
 
-// Agentes del nav de Copilot: los sub-items (deja fuera navegación e historial).
+// Agentes del nav de Copilot. Los chats del historial comparten clase con los agentes,
+// así que se filtra por el id: los agentes empiezan por P_/T_ o contienen "agent"/"gpt";
+// las conversaciones del historial son GUID sueltos.
+function isAgentId(id) {
+  return !!id && (/^[PT]_/.test(id) || /agent|gpt/i.test(id));
+}
+
 function listAgents() {
   return [...document.querySelectorAll(".fai-CopilotNavSubItem")]
     .map((el) => ({ label: (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " "), id: el.id }))
-    .filter((a) => a.label && a.id);
+    .filter((a) => a.label && isAgentId(a.id));
 }
 
 // Guarda la lista de agentes para que el popup pueda ofrecerla (la SPA tarda: se intenta a los 3 y 8 s).
