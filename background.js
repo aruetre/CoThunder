@@ -56,6 +56,7 @@ async function deliverWithRetry(tabId, payload, timeoutMs = 30000) {
 // Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
+  if (msg.type === "diag") { console.log("[CoThunder][diag]", msg.m); return; }
   if (msg.type === "sendToCopilot") {
     await messenger.storage.session.set({ pendingMessageId: msg.messageId ?? null });
     const tabId = await ensureCopilotTab();
@@ -63,10 +64,16 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   }
   if (msg.type === "copilotReply") {
     const { pendingMessageId } = await messenger.storage.session.get({ pendingMessageId: null });
+    console.log("[CoThunder] copilotReply recibido; pendingMessageId=", pendingMessageId, "; len=", (msg.text || "").length);
     if (pendingMessageId == null) return;
-    await messenger.compose.beginReply(pendingMessageId, "replyToSender", {
-      plainTextBody: msg.text, isPlainText: true
-    });
+    try {
+      await messenger.compose.beginReply(pendingMessageId, "replyToSender", {
+        plainTextBody: msg.text, isPlainText: true
+      });
+      console.log("[CoThunder] composición abierta");
+    } catch (e) {
+      console.error("[CoThunder] beginReply falló:", e);
+    }
     await messenger.storage.session.set({ pendingMessageId: null });
     return { ok: true };
   }

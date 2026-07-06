@@ -56,8 +56,10 @@ async function startNewChat() {
   return true;
 }
 
-// Espera a que aparezca una respuesta NUEVA (más que baseline) y se estabilice sin indicador de carga.
-function waitForReply(baselineCount, timeoutMs = 120000) {
+const diag = (m) => { try { messenger.runtime.sendMessage({ type: "diag", m }); } catch (_) {} };
+
+// Espera a que la respuesta del asistente aparezca (nodo nuevo o texto cambiado) y su texto se estabilice.
+function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
   return new Promise((resolve) => {
     const start = Date.now();
     let last = "";
@@ -65,12 +67,11 @@ function waitForReply(baselineCount, timeoutMs = 120000) {
     let appeared = false;
     const tick = setInterval(() => {
       const nodes = document.querySelectorAll(SELECTORS.reply);
-      if (nodes.length > baselineCount) appeared = true;
-      const loading = document.querySelector(SELECTORS.loading);
       const el = nodes[nodes.length - 1];
       const text = el ? el.textContent.trim() : "";
-      if (appeared && text && text === last && !loading) {
-        if (Date.now() - stableSince > 1500) { clearInterval(tick); resolve(text); }
+      if (nodes.length > baselineCount || (text && text !== baselineText)) appeared = true;
+      if (appeared && text && text === last) {
+        if (Date.now() - stableSince > 2000) { clearInterval(tick); resolve(text); }
       } else {
         last = text;
         stableSince = Date.now();
@@ -85,11 +86,15 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg || msg.type !== "sendPrompt") return;
   if (msg.newChat) await startNewChat();
   if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
-  const baseline = document.querySelectorAll(SELECTORS.reply).length;
+  const baseNodes = document.querySelectorAll(SELECTORS.reply);
+  const baseline = baseNodes.length;
+  const baselineText = baseline ? baseNodes[baseline - 1].textContent.trim() : "";
   await delay(300);
   if (!clickSend()) return { ok: false, reason: "no-send" };
+  diag("enviado; baseline=" + baseline);
   // Fase 2: en segundo plano, espera la respuesta y avisa al background.
-  waitForReply(baseline).then((text) => {
+  waitForReply(baseline, baselineText).then((text) => {
+    diag("waitForReply -> " + (text ? text.length + " chars" : "vacío"));
     if (text) messenger.runtime.sendMessage({ type: "copilotReply", text }).catch(() => {});
   });
   return { ok: true };
