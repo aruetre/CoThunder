@@ -1,0 +1,64 @@
+name: Release XPI
+
+# Publica el .xpi en la página de Releases al empujar una etiqueta vX.Y.Z.
+# También se puede lanzar a mano (workflow_dispatch) para obtener el .xpi como artefacto.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validar manifest y sintaxis JS
+        run: |
+          node -e "const m=JSON.parse(require('fs').readFileSync('manifest.json'));if(!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(m.version))throw new Error('version no SemVer: '+m.version);console.log('manifest OK, version '+m.version)"
+          for f in common.js background.js content-copilot.js popup/popup.js options/options.js; do node --check "$f" && echo "$f OK"; done
+
+      - name: Verificar que existen los ficheros referenciados en el manifest
+        run: |
+          node -e "
+          const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json'));
+          const refs=[...(m.background?.scripts||[]),m.message_display_action?.default_popup,m.options_ui?.page,...Object.values(m.icons||{})].filter(Boolean);
+          let ok=true;for(const r of refs){if(!fs.existsSync(r)){console.error('FALTA: '+r);ok=false;}}
+          if(!ok)process.exit(1);console.log('Referencias del manifest OK ('+refs.length+')');
+          "
+
+      - name: Empaquetar XPI
+        id: pack
+        run: |
+          VERSION=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json')).version")
+          XPI="cothunder-${VERSION}.xpi"
+          zip -r "$XPI" manifest.json common.js background.js content-copilot.js icon.svg popup options -x '*.md'
+          echo "Contenido del paquete:"
+          unzip -l "$XPI"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "xpi=$XPI" >> "$GITHUB_OUTPUT"
+
+      - name: Subir el .xpi como artefacto del workflow
+        uses: actions/upload-artifact@v4
+        with:
+          name: cothunder-xpi
+          path: ${{ steps.pack.outputs.xpi }}
+
+      - name: Crear la Release y adjuntar el .xpi
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" "${{ steps.pack.outputs.xpi }}" \
+            --title "CoThunder ${{ steps.pack.outputs.version }}" \
+            --notes "Extensión CoThunder ${{ steps.pack.outputs.version }} para Thunderbird 140 o superior.
+
+          Instalación: descarga el \`.xpi\` de abajo y en Thunderbird ve a Herramientas › Complementos y temas › engranaje › Instalar complemento desde archivo."

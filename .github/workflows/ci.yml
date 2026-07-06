@@ -1,0 +1,26 @@
+name: CI
+
+# Valida manifest y sintaxis JS en cada push y pull request.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validar manifest
+        run: node -e "JSON.parse(require('fs').readFileSync('manifest.json')); console.log('manifest OK')"
+
+      - name: Comprobar sintaxis de los JS
+        run: |
+          for f in common.js background.js content-copilot.js popup/popup.js options/options.js; do
+            node --check "$f" && echo "$f OK"
+          done
