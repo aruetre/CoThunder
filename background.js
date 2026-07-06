@@ -32,7 +32,7 @@ async function ensureCopilotTab() {
       // la pestaña ya no existe; se recrea abajo
     }
   }
-  const win = await messenger.windows.create({ type: "popup", url: copilotUrl, width: 480, height: 900 });
+  const win = await messenger.windows.create({ type: "popup", url: copilotUrl, width: 1200, height: 860 });
   const tabId = win.tabs[0].id;
   await messenger.storage.session.set({ copilotTabId: tabId });
   return tabId;
