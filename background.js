@@ -79,29 +79,40 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
   if (msg.type === "sendToCopilot") {
     try {
-      await messenger.storage.session.set({ pendingMessageId: msg.messageId ?? null });
       const tabId = await ensureCopilotTab();
-      return await deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat, agentId: msg.agentId, agentLabel: msg.agentLabel });
+      // El messageId viaja con el prompt y vuelve con la respuesta, así cada respuesta va a su correo.
+      return await deliverWithRetry(tabId, {
+        type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat,
+        agentId: msg.agentId, agentLabel: msg.agentLabel, messageId: msg.messageId
+      });
     } catch (e) {
       console.error("[CoThunder] sendToCopilot:", e);
       return { ok: false, reason: e && e.message ? e.message : String(e) };
     }
   }
   if (msg.type === "copilotReply") {
-    const { pendingMessageId } = await messenger.storage.session.get({ pendingMessageId: null });
-    if (pendingMessageId == null) return;
+    if (msg.messageId == null) return;
+    if (!msg.text) {
+      // La captura falló (timeout o interfaz cambiada): avisar, ya que el popup se cerró tras "Enviado".
+      messenger.notifications.create({
+        type: "basic",
+        iconUrl: messenger.runtime.getURL("icon.svg"),
+        title: "CoThunder",
+        message: "No se pudo capturar la respuesta de Copilot. Revísala en la ventana de Copilot."
+      }).catch(() => {});
+      return;
+    }
     // Composición HTML (mantiene barra de formato y complementos); texto tal cual, con saltos preservados.
-    const html = (msg.text || "")
+    const html = msg.text
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/\n/g, "<br>");
     try {
-      await messenger.compose.beginReply(pendingMessageId, "replyToSender", { body: html });
+      await messenger.compose.beginReply(msg.messageId, "replyToSender", { body: html });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
     }
-    await messenger.storage.session.set({ pendingMessageId: null });
     return { ok: true };
   }
   if (msg.type === "refreshAgents") {

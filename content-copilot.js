@@ -164,9 +164,10 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   const baselineText = baseline ? baseNodes[baseline - 1].textContent.trim() : "";
   await delay(300);
   if (!clickSend()) return { ok: false, reason: "no-send" };
-  // Fase 2: en segundo plano, espera la respuesta y avisa al background.
+  // Fase 2: en segundo plano, espera la respuesta y la devuelve con su messageId (para no cruzar correos).
+  const replyToMessageId = msg.messageId;
   waitForReply(baseline, baselineText).then((text) => {
-    if (text) messenger.runtime.sendMessage({ type: "copilotReply", text }).catch(() => {});
+    messenger.runtime.sendMessage({ type: "copilotReply", text, messageId: replyToMessageId }).catch(() => {});
   });
   return { ok: true };
 });
