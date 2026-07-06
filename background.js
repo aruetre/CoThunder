@@ -18,3 +18,10 @@ async function registerCopilotScript() {
   }
 }
 registerCopilotScript();
+
+// Instrumentación de spike: confirma en la consola del background que el content script se inyecta.
+messenger.runtime.onMessage.addListener((msg) => {
+  if (msg && msg.type === "contentAlive") {
+    console.log("[CoThunder] content script VIVO en", msg.url);
+  }
+});
