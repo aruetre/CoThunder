@@ -2,9 +2,9 @@
 
 // Registra el content script de Copilot en runtime, a partir de la URL configurada.
 async function registerCopilotScript() {
-  const { copilotUrl } = await getConfig();
-  const match = matchPatternFromUrl(copilotUrl);
   try {
+    const { copilotUrl } = await getConfig();
+    const match = matchPatternFromUrl(copilotUrl); // puede lanzar si la URL es inválida
     await messenger.scripting.unregisterContentScripts({ ids: ["copilot"] }).catch(() => {});
     await messenger.scripting.registerContentScripts([{
       id: "copilot",
@@ -17,7 +17,10 @@ async function registerCopilotScript() {
   }
 }
 registerCopilotScript();
-messenger.storage.onChanged.addListener(registerCopilotScript);
+// Solo re-registrar cuando cambia la URL de Copilot (no en cada escritura de storage.session).
+messenger.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.copilotUrl) registerCopilotScript();
+});
 
 // Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
 async function ensureCopilotTab() {
@@ -57,9 +60,14 @@ async function deliverWithRetry(tabId, payload, timeoutMs = 30000) {
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
   if (msg.type === "sendToCopilot") {
-    await messenger.storage.session.set({ pendingMessageId: msg.messageId ?? null });
-    const tabId = await ensureCopilotTab();
-    return deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat });
+    try {
+      await messenger.storage.session.set({ pendingMessageId: msg.messageId ?? null });
+      const tabId = await ensureCopilotTab();
+      return await deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat });
+    } catch (e) {
+      console.error("[CoThunder] sendToCopilot:", e);
+      return { ok: false, reason: e && e.message ? e.message : String(e) };
+    }
   }
   if (msg.type === "copilotReply") {
     const { pendingMessageId } = await messenger.storage.session.get({ pendingMessageId: null });
