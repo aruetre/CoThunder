@@ -135,7 +135,9 @@ Selectores reales descubiertos en el spike (M365 Copilot, 2026-07-06), sujetos a
 const SELECTORS = {
   editor: "#m365-chat-editor-target-element",                 // editor Lexical (contenteditable, id estable)
   sendButton: "button.fai-SendButton, button.fai-ChatInput__send",  // solo existe cuando hay texto
-  newChat: '[data-testid=\"newChatButton\"]'
+  newChat: '[data-testid=\"newChatButton\"]',
+  reply: '[data-testid=\"markdown-reply\"]',                  // texto limpio de la respuesta (el último)
+  loading: '[data-testid=\"loading-message\"]'                // presente mientras Copilot genera
 };
 ```
 
@@ -144,7 +146,7 @@ Al recibir del background `{ prompt, newChat }`:
 1. Si `newChat`, localiza y pulsa `SELECTORS.newChat` y espera (~800 ms) a que el editor quede listo.
 2. Escribe en el editor Lexical. **Método validado:** colocar el cursor al final y disparar **un único** evento `beforeinput` con `{ inputType: "insertText", data: prompt }`. Disparar además `input` duplica el texto; asignar `textContent` no lo registra; `execCommand("insertText")` y un evento `paste` sintético no funcionaron de forma fiable. Conviene limpiar antes el editor (seleccionar todo + `execCommand("delete")`).
 3. Pulsa `SELECTORS.sendButton` (que solo aparece una vez hay texto).
-4. Responde al background con éxito. **Fase 2:** además observa el fin del streaming de la respuesta (p. ej. `MutationObserver` sobre el contenedor de mensajes hasta que deja de crecer y reaparece el botón de enviar), extrae el texto del último mensaje del asistente y emite `copilotReply { text }`. (El selector del contenedor de respuesta se descubrirá al abordar la fase 2.)
+4. Responde al background con éxito. **Fase 2:** guarda el número de elementos `SELECTORS.reply` antes de enviar (baseline) y, en segundo plano, espera a que aparezca uno nuevo, desaparezca `SELECTORS.loading` y el texto del último se estabilice (~1,5 s sin cambios); entonces extrae `textContent` del último `SELECTORS.reply` y emite `copilotReply { text }`. Timeout de seguridad (~120 s).
 
 Degradación robusta (§12): si no encuentra el editor o el botón (interfaz cambiada, o sesión no iniciada), no falla en silencio: lo comunica al background con un motivo, y el flujo cae al portapapeles.
 

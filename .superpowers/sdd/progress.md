@@ -21,6 +21,8 @@ Base de rama: 73d204c (tras Initial commit ddc4015)
 - NÚCLEO FASE 1 COMPLETO Y REVISADO.
 - Limpieza de cuerpo reforzada: elimina caracteres invisibles (\p{Cf} + marcas) (ca120ba), verificado por prueba. Pendiente confirmación visual del usuario.
 - Infra de release en GitHub: .github/workflows/release.yml (tag vX.Y.Z -> empaqueta y publica .xpi) y ci.yml (validación en push/PR); README actualizado (bc4c9ea). Rama subida a origin. Decisión del usuario: NO publicar release hasta cerrar la Fase 2.
-- SIGUIENTE: Fase 2 (Tasks 2.1, 2.2) — necesita sonda para el selector del contenedor de respuesta de Copilot y detección de fin de streaming.
+## FASE 2 (traer la respuesta a composición)
+- Sonda probeReply descubrió los selectores de respuesta: `[data-testid="markdown-reply"]` (texto limpio, coger el último) y `[data-testid="loading-message"]` (presente mientras genera). Icono Copilot (spark) añadido al botón (1dd5cd9).
+- Task 2 (combinada 2.1+2.2) EN CURSO: content script espera respuesta (waitForReply con baseline + loading + estabilidad) y emite copilotReply; background guarda pendingMessageId y abre beginReply; popup pasa messageId. Elimina la sonda probeReply. Un solo onMessage listener por script.
 - Fase 2 (Tasks 2.1, 2.2) pendiente: necesita descubrir el selector del contenedor de respuesta (interactivo con el usuario).
 - BACKLOG (pospuesto por el usuario, ver spec §16): desplegable de agentes de Copilot; comportamiento por defecto por decidir.
