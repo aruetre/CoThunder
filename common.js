@@ -2,15 +2,15 @@
 
 // Guía de estilo Markdown compartida por el prompt normal y el de plantilla (maquetación idéntica).
 const MARKDOWN_STYLE =
-  "Maqueta la respuesta aprovechando todos los elementos de Markdown estándar que aporten claridad:\n" +
-  "- Encabezados de nivel 1 a 6 (#, ##, ###, …) para estructurar; empieza con el saludo como encabezado.\n" +
+  "Usa los elementos y estilos de Markdown estándar más adecuados para mejorar la claridad y la organización " +
+  "de la respuesta; no hace falta usarlos todos, elige solo los que encajen con el contenido. Tienes disponibles:\n" +
+  "- Encabezados de nivel 1 a 6 (#, ##, ###, …) para estructurar.\n" +
   "- Énfasis: negrita (**texto**), cursiva (*texto*) y tachado (~~texto~~).\n" +
   "- Listas ordenadas (1., 2., 3.), con viñetas (-), anidadas y de tareas (- [ ] / - [x]).\n" +
   "- Tablas para comparar datos o presentar información estructurada.\n" +
-  "- Citas (>), incluidas anidadas, para reproducir o destacar fragmentos del correo.\n" +
+  "- Citas (>), incluidas anidadas.\n" +
   "- Código en línea (`código`) y bloques de código con lenguaje (```).\n" +
-  "- Enlaces [texto](url), imágenes ![alt](url) y líneas divisorias (---).\n" +
-  "No abuses del formato: úsalo donde mejore la claridad.";
+  "- Enlaces [texto](url), imágenes ![alt](url) y líneas divisorias (---).";
 
 const DEFAULT_PROMPT_TEMPLATE =
   "Redacta una respuesta profesional y cordial a este correo, en el mismo idioma del mensaje. " +
