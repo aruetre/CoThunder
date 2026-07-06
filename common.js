@@ -3,6 +3,11 @@
 const DEFAULT_PROMPT_TEMPLATE =
   "Redacta una respuesta profesional y cordial a este correo, en el mismo idioma del mensaje. " +
   "Responde solo con el cuerpo del correo, en código fuente Markdown, sin asunto ni explicaciones.\n\n" +
+  "Estilo Markdown a aplicar:\n" +
+  "- Comienza con el saludo como encabezado de nivel 1 (por ejemplo: # Hola Juan).\n" +
+  "- Resalta las ideas o datos clave con **negrita**.\n" +
+  "- Usa listas cuando aporten claridad: ordenadas (1., 2., 3.) para pasos o secuencias, y con viñetas (-) para enumeraciones sin orden; elige el tipo según el contexto.\n" +
+  "- Mantén párrafos cortos y no abuses del formato.\n\n" +
   "De: {{author}}\nAsunto: {{subject}}\n\n{{body}}";
 
 const DEFAULTS = {
