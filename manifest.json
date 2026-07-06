@@ -7,6 +7,6 @@
   "permissions": ["messagesRead", "compose", "storage", "scripting"],
   "host_permissions": ["*://m365.cloud.microsoft/*"],
   "background": { "scripts": ["common.js", "background.js"] },
-  "message_display_action": { "default_title": "Preguntar a Copilot" },
+  "message_display_action": { "default_title": "Preguntar a Copilot", "default_popup": "popup/popup.html" },
   "icons": { "32": "icon.svg", "64": "icon.svg" }
 }
