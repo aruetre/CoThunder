@@ -74,6 +74,21 @@ async function findCopilotTabIds() {
   return [...ids];
 }
 
+// Sonda temporal (descubrimiento del panel completo de agentes).
+async function probeAgentsFull() {
+  for (const id of await findCopilotTabIds()) {
+    try {
+      const res = await messenger.tabs.sendMessage(id, { type: "probeAgentsFull" });
+      if (res && res.items) {
+        console.log("[CoThunder][probeAgentsFull] items:");
+        res.items.forEach((it, i) => console.log(i, JSON.stringify(it)));
+        return;
+      }
+    } catch (_) {}
+  }
+  console.log("[CoThunder][probeAgentsFull] no hay Copilot cargado; recarga su ventana (F5)");
+}
+
 // Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;

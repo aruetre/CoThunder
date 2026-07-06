@@ -151,6 +151,22 @@ messenger.runtime.onMessage.addListener(async (msg) => {
     if (agents.length) messenger.storage.local.set({ agents }).catch(() => {});
     return { agents };
   }
+  if (msg.type === "probeAgentsFull") {
+    // Sonda temporal: enumera candidatos a agente (por id o clase) para descubrir el panel completo.
+    const items = [...document.querySelectorAll("[id], [aria-label]")]
+      .filter((el) => {
+        const cls = typeof el.className === "string" ? el.className : "";
+        return isAgentId(el.id) || /agent/i.test(cls) || /agent/i.test(el.getAttribute("aria-label") || "");
+      })
+      .slice(0, 80)
+      .map((el) => ({
+        label: (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 45),
+        id: el.id || null,
+        cls: (typeof el.className === "string" ? el.className : "").split(/\s+/).filter((c) => /agent|nav|item|card|grid|list/i.test(c)).slice(0, 4).join("."),
+        tag: el.tagName.toLowerCase()
+      }));
+    return { items };
+  }
   if (msg.type !== "sendPrompt") return;
   if (msg.agentId || msg.agentLabel) {
     selectAgent(msg.agentId, msg.agentLabel);
