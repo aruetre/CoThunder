@@ -38,7 +38,8 @@ async function spikeType(text = "Hola desde CoThunder") {
   const t = tabs.find((t) => (t.url || "").includes("m365.cloud.microsoft"));
   if (!t) { console.log("[CoThunder][spikeType] no hay pestaña de Copilot"); return; }
   const res = await messenger.tabs.sendMessage(t.id, { type: "spikeType", text });
-  console.log("[CoThunder][spikeType] ok:", res && res.ok, "| editorText:", res && res.editorText);
+  console.log("[CoThunder][spikeType] ok:", res && res.ok, "| método que funcionó:", res && res.worked);
+  console.log("[CoThunder][spikeType] resultados por método:", res && res.results);
+  console.log("[CoThunder][spikeType] editorText final:", res && res.editorText);
   console.log("[CoThunder][spikeType] sendButtons:", res && res.sendButtons);
-  console.log("[CoThunder][spikeType] labeledButtons:", res && res.labeledButtons);
 }
