@@ -1,38 +1,62 @@
 "use strict";
-console.log("[CoThunder] background cargado");
-const COPILOT_MATCHES = ["*://m365.cloud.microsoft/*"];
 
+// Registra el content script de Copilot en runtime, a partir de la URL configurada.
 async function registerCopilotScript() {
+  const { copilotUrl } = await getConfig();
+  const match = matchPatternFromUrl(copilotUrl);
   try {
-    const existing = await messenger.scripting.getRegisteredContentScripts({ ids: ["copilot"] });
-    if (existing.length) return;
+    await messenger.scripting.unregisterContentScripts({ ids: ["copilot"] }).catch(() => {});
     await messenger.scripting.registerContentScripts([{
       id: "copilot",
-      matches: COPILOT_MATCHES,
+      matches: [match],
       js: ["content-copilot.js"],
       runAt: "document_idle"
     }]);
-    console.log("[CoThunder] content script registrado (scripting)");
   } catch (e) {
-    console.error("[CoThunder] scripting.registerContentScripts falló:", e);
+    console.error("[CoThunder] registro content script:", e);
   }
 }
 registerCopilotScript();
+messenger.storage.onChanged.addListener(registerCopilotScript);
 
-// Instrumentación de spike: confirma en la consola del background que el content script se inyecta.
-messenger.runtime.onMessage.addListener((msg) => {
-  if (msg && msg.type === "contentAlive") {
-    console.log("[CoThunder] content script VIVO en", msg.url);
+// Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
+// El id se persiste en storage.session porque el background es event page no persistente.
+async function ensureCopilotTab() {
+  const { copilotUrl } = await getConfig();
+  const { copilotTabId } = await messenger.storage.session.get({ copilotTabId: null });
+  if (copilotTabId != null) {
+    try {
+      const t = await messenger.tabs.get(copilotTabId);
+      await messenger.windows.update(t.windowId, { focused: true });
+      return copilotTabId;
+    } catch (_) {
+      // la pestaña ya no existe; se recrea abajo
+    }
   }
-});
-
-// Helper de spike: llamable desde la consola del background.
-// spikeSend()               -> escribe y envía en el chat actual
-// spikeSend({ newChat:true }) -> abre chat nuevo, escribe y envía
-async function spikeSend(opts = {}) {
-  const tabs = await messenger.tabs.query({});
-  const t = tabs.find((t) => (t.url || "").includes("m365.cloud.microsoft"));
-  if (!t) { console.log("[CoThunder][spikeSend] no hay pestaña de Copilot"); return; }
-  const res = await messenger.tabs.sendMessage(t.id, { type: "spikeSend", text: opts.text, newChat: opts.newChat });
-  console.log("[CoThunder][spikeSend] resultado:", res);
+  const win = await messenger.windows.create({ type: "popup", url: copilotUrl, width: 480, height: 900 });
+  const tabId = win.tabs[0].id;
+  await messenger.storage.session.set({ copilotTabId: tabId });
+  return tabId;
 }
+
+// Entrega el payload al content script reintentando hasta que responda (la SPA tarda en cargar).
+async function deliverWithRetry(tabId, payload, timeoutMs = 30000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const res = await messenger.tabs.sendMessage(tabId, payload);
+      if (res) return res;
+    } catch (_) {
+      // content script aún no inyectado; reintentar
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  return { ok: false, reason: "timeout" };
+}
+
+// Puente desde el popup: asegura la ventana de Copilot y le pasa el prompt.
+messenger.runtime.onMessage.addListener(async (msg) => {
+  if (!msg || msg.type !== "sendToCopilot") return;
+  const tabId = await ensureCopilotTab();
+  return deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat });
+});
