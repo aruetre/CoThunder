@@ -21,7 +21,12 @@ registerCopilotScript();
 
 // Instrumentación de spike: confirma en la consola del background que el content script se inyecta.
 messenger.runtime.onMessage.addListener((msg) => {
-  if (msg && msg.type === "contentAlive") {
+  if (!msg) return;
+  if (msg.type === "contentAlive") {
     console.log("[CoThunder] content script VIVO en", msg.url);
+  } else if (msg.type === "probe") {
+    console.log(`[CoThunder][SONDA ${msg.tag}] editors:`, msg.editors);
+    console.log(`[CoThunder][SONDA ${msg.tag}] sendButtons:`, msg.sendButtons);
+    console.log(`[CoThunder][SONDA ${msg.tag}] newChat:`, msg.newChat);
   }
 });
