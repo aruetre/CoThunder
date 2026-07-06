@@ -4,7 +4,10 @@
   const setStatus = (cls, text) => { $("dot").className = cls; $("statusText").textContent = text; };
 
   const [tab] = await messenger.tabs.query({ active: true, currentWindow: true });
-  const message = await messenger.messageDisplay.getDisplayedMessage(tab.id);
+  // TB 140 solo expone getDisplayedMessages (plural), que devuelve una MessageList; getDisplayedMessage se eliminó.
+  const displayed = await messenger.messageDisplay.getDisplayedMessages(tab.id);
+  const messages = Array.isArray(displayed) ? displayed : (displayed && displayed.messages) || [];
+  const message = messages[0];
   if (!message) { setStatus("err", "No hay ningún correo abierto en esta pestaña"); return; }
 
   const cfg = await getConfig();
