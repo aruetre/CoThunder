@@ -64,10 +64,14 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (msg.type === "copilotReply") {
     const { pendingMessageId } = await messenger.storage.session.get({ pendingMessageId: null });
     if (pendingMessageId == null) return;
+    // Composición HTML (mantiene barra de formato y complementos); texto tal cual, con saltos preservados.
+    const html = (msg.text || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br>");
     try {
-      await messenger.compose.beginReply(pendingMessageId, "replyToSender", {
-        plainTextBody: msg.text, isPlainText: true
-      });
+      await messenger.compose.beginReply(pendingMessageId, "replyToSender", { body: html });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
     }
