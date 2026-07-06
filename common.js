@@ -7,6 +7,11 @@ const DEFAULT_PROMPT_TEMPLATE =
   "- Comienza con el saludo como encabezado de nivel 1 (por ejemplo: # Hola Juan).\n" +
   "- Resalta las ideas o datos clave con **negrita**.\n" +
   "- Usa listas cuando aporten claridad: ordenadas (1., 2., 3.) para pasos o secuencias, y con viñetas (-) para enumeraciones sin orden; elige el tipo según el contexto.\n" +
+  "- Usa tablas Markdown cuando compares datos o presentes información estructurada.\n" +
+  "- Usa citas (>) para reproducir o destacar fragmentos del correo original.\n" +
+  "- Usa admoniciones para avisos importantes, con formato de cita y etiqueta, por ejemplo:\n" +
+  "  > [!NOTE] Nota informativa\n" +
+  "  > [!WARNING] Advertencia importante\n" +
   "- Mantén párrafos cortos y no abuses del formato.\n\n" +
   "De: {{author}}\nAsunto: {{subject}}\n\n{{body}}";
 
@@ -113,8 +118,9 @@ function buildTemplatePrompt(message, body, templateBody) {
     "Usa la plantilla como base: si tiene huecos o marcadores (por ejemplo [nombre], [fecha], [motivo]), " +
     "rellénalos con los datos del correo; si es un modelo de estructura o de tono, síguelo. Aprovecha tu " +
     "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla. " +
-    "Devuelve solo el cuerpo del correo en código fuente Markdown, usando encabezados (#), negrita (**) y " +
-    "listas para una maquetación clara y mejorada, sin asunto ni explicaciones.\n\n" +
+    "Devuelve solo el cuerpo del correo en código fuente Markdown, usando cuando aporten claridad: encabezados (#), " +
+    "negrita (**), listas, tablas, citas (>) y admoniciones (por ejemplo `> [!NOTE] ...` o `> [!WARNING] ...`), " +
+    "para una maquetación rica y mejorada, sin asunto ni explicaciones.\n\n" +
     "--- PLANTILLA (Markdown) ---\n" + (templateBody || "") + "\n--- FIN PLANTILLA ---\n\n" +
     "--- CORREO ORIGINAL ---\nDe: " + (message.author || "") + "\nAsunto: " + (message.subject || "") + "\n\n" + (body || "");
 }
