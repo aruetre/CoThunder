@@ -32,3 +32,8 @@ Base de rama: 73d204c (tras Initial commit ddc4015)
 - ESTADO: Fase 1 + Fase 2 completas y verificadas y en uso. Backlog: riesgos de concurrencia (Fase 3), desplegable de agentes, ¿ancho de la ventana de Copilot? Pendiente revisión final de rama antes de release/tag.
 - Fase 2 (Tasks 2.1, 2.2) pendiente: necesita descubrir el selector del contenedor de respuesta (interactivo con el usuario).
 - BACKLOG (pospuesto por el usuario, ver spec §16): desplegable de agentes de Copilot; comportamiento por defecto por decidir.
+
+## v2.1 (rama cothunder-v2.1-agentes)
+- Desplegable de agentes: lista los agentes de la barra lateral de Copilot (.fai-CopilotNavSubItem, id P_/T_/agent/gpt; filtra historial), recuerda el último, botón de refresco + refresco periódico. Selección por clic con escritura robusta (reintenta+verifica). Enfoque barra-lateral+fijar (el panel completo se descartó por frágil). Verificado por el usuario.
+- Endurecido Fase 2: messageId de ida y vuelta (sin pendingMessageId único) -> no cruza correos; notificación si la captura falla. Permiso notifications añadido.
+- PENDIENTE: prueba del usuario (agente + endurecido) y release v2.1.0 (bump manifest a 2.1.0, merge a main, tag).
