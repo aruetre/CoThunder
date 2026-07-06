@@ -29,13 +29,18 @@ function matchPatternFromUrl(url) {
 
 const MAX_BODY = 12000;
 
-// Colapsa espacios y elimina las líneas en blanco (los correos anidan divs/tablas que dejan muchas).
+// Caracteres invisibles a eliminar: formato Unicode (\p{Cf}: zero-width, BOM, soft hyphen, bidi)
+// más rellenos y marcas invisibles que no son \p{Cf} (CGJ, braille en blanco, rellenos hangul).
+const INVISIBLE = /[\p{Cf}\u034F\u2800\u115F\u1160\u3164\uFFA0]/gu;
+
+// Limpia el texto: quita invisibles, nbsp, colapsa espacios y elimina las líneas en blanco.
 function normalizeText(t) {
   return (t || "")
+    .replace(INVISIBLE, "")
     .replace(/ /g, " ")
     .replace(/\r/g, "")
     .split("\n")
-    .map((line) => line.replace(/[ \t ]+/g, " ").trim())
+    .map((line) => line.replace(/[^\S\n]+/g, " ").trim())
     .filter((line) => line.length > 0)
     .join("\n")
     .trim();
