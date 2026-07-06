@@ -7,7 +7,7 @@ textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 18
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; padding: 6px; }
 label { display: block; margin: 8px 0; }
 label.row { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
-#agent { flex: 1; box-sizing: border-box; padding: 4px;
+#agent, #template { flex: 1; box-sizing: border-box; padding: 4px;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; }
 #refreshAgents { width: auto; padding: 4px 10px; background: transparent; color: inherit;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; cursor: pointer; }

@@ -34,6 +34,30 @@
     const { agents = [], lastAgentId = "" } = await messenger.storage.local.get({ agents: [], lastAgentId: "" });
     populateAgents(agents, lastAgentId);
 
+    // Desplegable de plantillas: mensajes de las carpetas de plantillas de Thunderbird.
+    const templates = await listTemplates().catch(() => []);
+    const tsel = $("template");
+    const multiSource = new Set(templates.map((t) => t.source)).size > 1;
+    for (const t of templates) {
+      const opt = document.createElement("option");
+      opt.value = String(t.id);
+      opt.textContent = multiSource ? `${t.subject} — ${t.source}` : t.subject;
+      tsel.appendChild(opt);
+    }
+    tsel.addEventListener("change", async () => {
+      if (!tsel.value) { $("prompt").value = buildPrompt(message, body, cfg.promptTemplate); return; }
+      $("send").disabled = true;
+      setStatus("busy", "Cargando plantilla…");
+      try {
+        const templateBody = await extractTemplateBody(Number(tsel.value));
+        $("prompt").value = buildTemplatePrompt(message, body, templateBody);
+        setStatus("", "Plantilla cargada");
+      } catch (_) {
+        setStatus("err", "No se pudo leer la plantilla");
+      }
+      $("send").disabled = false;
+    });
+
     setStatus("", "Listo");
     $("send").disabled = false;
   } catch (e) {

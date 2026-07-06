@@ -85,3 +85,54 @@ async function extractBody(messageId) {
   if (text.length > MAX_BODY) text = text.slice(0, MAX_BODY) + "\n[correo truncado]";
   return text;
 }
+
+// Plantillas: mensajes de las carpetas de tipo "templates" (incluida la de Carpetas locales).
+async function listTemplates() {
+  const folders = await messenger.folders.query({ specialUse: ["templates"] }).catch(() => []);
+  const out = [];
+  for (const f of folders || []) {
+    let source = f.name || "Plantillas";
+    try {
+      const acc = await messenger.accounts.get(f.accountId);
+      if (acc && acc.name) source = acc.name;
+    } catch (_) {}
+    let page = await messenger.messages.list(f.id).catch(() => null);
+    while (page) {
+      for (const m of page.messages || []) out.push({ id: m.id, subject: m.subject || "(sin asunto)", source });
+      page = page.id ? await messenger.messages.continueList(page.id).catch(() => null) : null;
+    }
+  }
+  return out;
+}
+
+// Prompt cuando se elige una plantilla: mezcla el correo original + la plantilla (en Markdown) +
+// el conocimiento del agente, y devuelve una respuesta enriquecida y maquetada en Markdown.
+function buildTemplatePrompt(message, body, templateBody) {
+  return "Redacta la respuesta a este correo combinando tres fuentes: (1) el correo original de abajo, " +
+    "(2) la plantilla en Markdown de abajo, y (3) tu conocimiento y experiencia como agente especializado. " +
+    "Usa la plantilla como base: si tiene huecos o marcadores (por ejemplo [nombre], [fecha], [motivo]), " +
+    "rellénalos con los datos del correo; si es un modelo de estructura o de tono, síguelo. Aprovecha tu " +
+    "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla. " +
+    "Devuelve solo el cuerpo del correo, maquetado en Markdown (encabezados, negrita, listas) para que quede " +
+    "claro y bien presentado, sin asunto ni explicaciones.\n\n" +
+    "--- PLANTILLA (Markdown) ---\n" + (templateBody || "") + "\n--- FIN PLANTILLA ---\n\n" +
+    "--- CORREO ORIGINAL ---\nDe: " + (message.author || "") + "\nAsunto: " + (message.subject || "") + "\n\n" + (body || "");
+}
+
+// Lee una plantilla conservando su Markdown fuente: prioriza texto plano y no colapsa los saltos de párrafo.
+async function extractTemplateBody(messageId) {
+  const full = await messenger.messages.getFull(messageId);
+  let text = findPart(full, "text/plain");
+  if (!text) {
+    const html = findPart(full, "text/html");
+    if (html) text = htmlToText(html);
+  }
+  text = (text || "")
+    .replace(INVISIBLE, "")
+    .replace(/\r/g, "")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  if (text.length > MAX_BODY) text = text.slice(0, MAX_BODY) + "\n[plantilla truncada]";
+  return text;
+}
