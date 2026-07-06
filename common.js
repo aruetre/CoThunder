@@ -2,9 +2,10 @@
 
 // Guía de estilo Markdown compartida por el prompt normal y el de plantilla (maquetación idéntica).
 const MARKDOWN_STYLE =
-  "Usa los elementos y estilos de Markdown estándar más adecuados para mejorar la claridad y la organización " +
-  "de la respuesta; no hace falta usarlos todos, elige solo los que encajen con el contenido. Tienes disponibles:\n" +
-  "- Encabezados de nivel 1 a 6 (#, ##, ###, …) para estructurar.\n" +
+  "Maqueta SIEMPRE la respuesta en Markdown de forma clara y con buen diseño, creativo pero sin recargar: " +
+  "usa el formato para organizar y facilitar la lectura, no por adornar. Como MÍNIMO resalta lo clave con " +
+  "negrita y usa listas cuando haya enumeraciones o pasos. Aprovecha, según encajen con el contenido:\n" +
+  "- Encabezados (#, ##, ###) para separar secciones cuando la respuesta lo pida.\n" +
   "- Énfasis: negrita (**texto**), cursiva (*texto*) y tachado (~~texto~~).\n" +
   "- Listas ordenadas (1., 2., 3.), con viñetas (-), anidadas y de tareas (- [ ] / - [x]).\n" +
   "- Tablas para comparar datos o presentar información estructurada.\n" +
