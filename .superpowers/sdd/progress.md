@@ -15,5 +15,7 @@ Base de rama: 73d204c (tras Initial commit ddc4015)
 - Task 1.3: complete (commit 9a55eee). content-copilot.js con listener sendPrompt, sin instrumentación de spike. Revisado por el controlador (transcripción mecánica del brief, node --check OK).
 - Task 1.4: complete (commit a695048, review clean). background.js real: registro por config, ventana única (storage.session), handshake, sendToCopilot. Minors (para revisión final): catch(_) tácito; sin validar copilotUrl en windows.create (fuera de scope).
 - Task 1.5+1.6: complete (commit 1ea702e, review clean). Popup del botón: monta prompt del correo, envía sendToCopilot, degradación al portapapeles. PENDIENTE: prueba extremo a extremo del usuario en TB (hito Fase 1). Riesgo a validar aquí: que windows.create popup inyecte el content script; si no, cambiar a tabs.create.
-- (pendiente) Task 1.7: página de opciones — base 1ea702e
-- Fase 2 (Tasks 2.1, 2.2) pendiente.
+- Task 1.5 VERIFICADA E2E por el usuario: el botón funciona de punta a punta (correo→popup→Copilot recibe+envía). Fixes tras prueba real: getDisplayedMessages plural (f2609b3, TB 140 quitó el singular); extractBody mejorado — HTML primero, sin CSS, con estructura, alt de imágenes (a033698).
+- (siguiente) Task 1.7: página de opciones — base a033698 (o el fix de extracción actual)
+- Fase 2 (Tasks 2.1, 2.2) pendiente: necesita descubrir el selector del contenedor de respuesta (interactivo con el usuario).
+- BACKLOG (pospuesto por el usuario, ver spec §16): desplegable de agentes de Copilot; comportamiento por defecto por decidir.

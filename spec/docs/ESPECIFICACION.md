@@ -207,4 +207,8 @@ En MV3 no hay `content_scripts` declarativo y la API `scripting` no aparece en l
 
 ## 16. Mejoras candidatas (no incluidas)
 
-Por orden de valor: selección de tono por correo (formal, breve, negativa cordial), soporte de hilos (incluir mensajes anteriores en el prompt), atajo de teclado, e internacionalización de la UI con `_locales`.
+- **Desplegable de agentes de Copilot** (pedido por el usuario, pospuesto tras la Fase 1): el content script enumera los agentes disponibles en el nav de Copilot (elementos `.fai-CopilotNavSubItem`, con `aria-label` y `id` tipo `P_...declarativeAgent`, p. ej. "Adobe Acrobat", "Canva") y los guarda; el popup los ofrece en un desplegable (+ "Copilot por defecto"); al enviar, el content script hace clic en el agente elegido antes de escribir. Comportamiento por defecto (recordar el último vs. siempre por defecto) por decidir. Primer paso: sonda de descubrimiento de agentes reales.
+- Selección de tono por correo (formal, breve, negativa cordial).
+- Soporte de hilos (incluir mensajes anteriores en el prompt).
+- Atajo de teclado e internacionalización de la UI con `_locales`.
+- **Imágenes reales** en el prompt: no factible con la inyección de texto actual (solo se incluye el `alt` de las imágenes); requeriría pegar datos de imagen en Copilot.
