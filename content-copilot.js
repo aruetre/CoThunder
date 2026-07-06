@@ -70,6 +70,7 @@ function saveAgents() {
 }
 setTimeout(saveAgents, 3000);
 setTimeout(saveAgents, 8000);
+setInterval(saveAgents, 60000); // refresco periódico por si el usuario crea agentes nuevos
 
 // Selecciona un agente por id (estable) o, en su defecto, por nombre.
 function selectAgent(id, label) {
@@ -128,7 +129,13 @@ function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
 
 // Protocolo con el background: escribir (opcional nuevo chat), enviar y capturar la respuesta.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg || msg.type !== "sendPrompt") return;
+  if (!msg) return;
+  if (msg.type === "getAgents") {
+    const agents = listAgents();
+    if (agents.length) messenger.storage.local.set({ agents }).catch(() => {});
+    return { agents };
+  }
+  if (msg.type !== "sendPrompt") return;
   if (msg.agentId || msg.agentLabel) {
     selectAgent(msg.agentId, msg.agentLabel);
     await delay(1000);

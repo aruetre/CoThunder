@@ -56,6 +56,24 @@ async function deliverWithRetry(tabId, payload, timeoutMs = 30000) {
   return { ok: false, reason: "timeout" };
 }
 
+// Ids de pestañas/ventanas donde está cargado Copilot (id guardado, pestañas y ventanas popup).
+async function findCopilotTabIds() {
+  const ids = new Set();
+  const { copilotTabId } = await messenger.storage.session.get({ copilotTabId: null });
+  if (copilotTabId != null) ids.add(copilotTabId);
+  for (const t of await messenger.tabs.query({})) {
+    if ((t.url || "").includes("m365.cloud.microsoft")) ids.add(t.id);
+  }
+  try {
+    for (const w of await messenger.windows.getAll({ populate: true })) {
+      for (const t of w.tabs || []) {
+        if ((t.url || "").includes("m365.cloud.microsoft")) ids.add(t.id);
+      }
+    }
+  } catch (_) {}
+  return [...ids];
+}
+
 // Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
@@ -85,5 +103,14 @@ messenger.runtime.onMessage.addListener(async (msg) => {
     }
     await messenger.storage.session.set({ pendingMessageId: null });
     return { ok: true };
+  }
+  if (msg.type === "refreshAgents") {
+    for (const id of await findCopilotTabIds()) {
+      try {
+        const res = await messenger.tabs.sendMessage(id, { type: "getAgents" });
+        if (res && res.agents) return { ok: true, agents: res.agents };
+      } catch (_) {}
+    }
+    return { ok: false, reason: "no-copilot" };
   }
 });

@@ -2,7 +2,7 @@
 <html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="popup.css"></head>
 <body>
   <div id="status"><span id="dot"></span><span id="statusText">Preparando…</span></div>
-  <label class="row">Agente: <select id="agent"><option value="">Copilot por defecto</option></select></label>
+  <label class="row">Agente: <select id="agent"><option value="">Copilot por defecto</option></select> <button type="button" id="refreshAgents" title="Actualizar la lista de agentes desde Copilot">↻</button></label>
   <textarea id="prompt" rows="12"></textarea>
   <label><input type="checkbox" id="newChat"> Empezar chat nuevo</label>
   <button id="send" disabled>Enviar a Copilot</button>

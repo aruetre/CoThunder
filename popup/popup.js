@@ -3,6 +3,19 @@
   const $ = (id) => document.getElementById(id);
   const setStatus = (cls, text) => { $("dot").className = cls; $("statusText").textContent = text; };
 
+  const populateAgents = (agents, selectedId) => {
+    const sel = $("agent");
+    sel.length = 1; // conserva la primera opción "Copilot por defecto"
+    for (const a of agents) {
+      const opt = document.createElement("option");
+      opt.value = a.id;
+      opt.textContent = a.label;
+      opt.dataset.label = a.label;
+      sel.appendChild(opt);
+    }
+    if (selectedId && agents.some((a) => a.id === selectedId)) sel.value = selectedId;
+  };
+
   let message;
   try {
     const [tab] = await messenger.tabs.query({ active: true, currentWindow: true });
@@ -19,15 +32,7 @@
 
     // Desplegable de agentes: se rellena con los que guardó el content script; recuerda el último elegido.
     const { agents = [], lastAgentId = "" } = await messenger.storage.local.get({ agents: [], lastAgentId: "" });
-    const sel = $("agent");
-    for (const a of agents) {
-      const opt = document.createElement("option");
-      opt.value = a.id;
-      opt.textContent = a.label;
-      opt.dataset.label = a.label;
-      sel.appendChild(opt);
-    }
-    if (lastAgentId && agents.some((a) => a.id === lastAgentId)) sel.value = lastAgentId;
+    populateAgents(agents, lastAgentId);
 
     setStatus("", "Listo");
     $("send").disabled = false;
@@ -35,6 +40,21 @@
     setStatus("err", "No se pudo preparar el prompt: " + (e && e.message ? e.message : e));
     return;
   }
+
+  // Refresco manual: pide al content script la lista actual de agentes (por si creaste uno nuevo).
+  $("refreshAgents").addEventListener("click", async () => {
+    const prev = $("agent").value;
+    $("refreshAgents").disabled = true;
+    let res;
+    try { res = await messenger.runtime.sendMessage({ type: "refreshAgents" }); } catch (_) { res = { ok: false }; }
+    if (res && res.ok) {
+      populateAgents(res.agents || [], prev);
+      setStatus("", "Agentes actualizados");
+    } else {
+      setStatus("err", "Abre la ventana de Copilot para actualizar los agentes");
+    }
+    $("refreshAgents").disabled = false;
+  });
 
   $("send").addEventListener("click", async () => {
     $("send").disabled = true;
