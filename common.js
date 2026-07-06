@@ -29,10 +29,29 @@ function matchPatternFromUrl(url) {
 
 const MAX_BODY = 12000;
 
+// Colapsa espacios y líneas en blanco sin perder los saltos de párrafo.
+function normalizeText(t) {
+  return (t || "")
+    .replace(/\r/g, "")
+    .split("\n")
+    .map((line) => line.replace(/[ \t ]+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function htmlToText(html) {
   const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll("style, script, head").forEach((n) => n.remove());
-  return (doc.body ? doc.body.textContent : "").replace(/\s+/g, " ").trim();
+  doc.querySelectorAll("style, script, head, noscript, title, link, meta").forEach((n) => n.remove());
+  // Representa las imágenes por su texto alternativo (no se puede enviar la imagen en sí).
+  doc.querySelectorAll("img").forEach((img) => {
+    const alt = (img.getAttribute("alt") || "").trim();
+    img.replaceWith(alt ? `[imagen: ${alt}]` : "");
+  });
+  // Convierte saltos y bloques en saltos de línea para conservar la estructura.
+  doc.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+  doc.querySelectorAll("p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote").forEach((el) => el.append("\n"));
+  return normalizeText(doc.body ? doc.body.textContent : "");
 }
 
 function findPart(part, type) {
@@ -48,12 +67,10 @@ function findPart(part, type) {
 
 async function extractBody(messageId) {
   const full = await messenger.messages.getFull(messageId);
-  let text = findPart(full, "text/plain");
-  if (!text) {
-    const html = findPart(full, "text/html");
-    if (html) text = htmlToText(html);
-  }
-  text = (text || "").trim();
+  // Prioriza el HTML (extraer solo el texto visible excluye CSS/scripts); si no hay, usa el texto plano.
+  const html = findPart(full, "text/html");
+  let text = html ? htmlToText(html) : normalizeText(findPart(full, "text/plain"));
+  text = text.trim();
   if (text.length > MAX_BODY) text = text.slice(0, MAX_BODY) + "\n[correo truncado]";
   return text;
 }
