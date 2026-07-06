@@ -11,4 +11,9 @@ Base de rama: 73d204c (tras Initial commit ddc4015)
 - Task 0.3: complete + VERIFICADA por el usuario (commits ...71e4c0f/16f0d6d/3beb954). FASE 0 CERRADA EN VERDE. Selectores: editor #m365-chat-editor-target-element, enviar button.fai-SendButton, nuevo chat [data-testid=newChatButton]. Escritura: único beforeinput insertText (dos eventos duplican). content-copilot.js ya tiene typeIntoEditor/clickSend/startNewChat/SELECTORS reales; falta selector de respuesta (fase 2). Código de spike (contentAlive, spikeSend) a retirar en Tasks 1.3/1.4.
 
 ## FASE 1 (envío del correo a Copilot)
-- (siguiente) Task 1.1: configuración y utilidades compartidas en common.js — base tras cerrar Fase 0
+- Task 1.1+1.2: complete (commit bb83c9e, review clean). common.js con DEFAULTS/getConfig/buildPrompt/matchPatternFromUrl/extractBody.
+- Task 1.3: complete (commit 9a55eee). content-copilot.js con listener sendPrompt, sin instrumentación de spike. Revisado por el controlador (transcripción mecánica del brief, node --check OK).
+- Task 1.4: complete (commit a695048, review clean). background.js real: registro por config, ventana única (storage.session), handshake, sendToCopilot. Minors (para revisión final): catch(_) tácito; sin validar copilotUrl en windows.create (fuera de scope).
+- Task 1.5+1.6: complete (commit 1ea702e, review clean). Popup del botón: monta prompt del correo, envía sendToCopilot, degradación al portapapeles. PENDIENTE: prueba extremo a extremo del usuario en TB (hito Fase 1). Riesgo a validar aquí: que windows.create popup inyecte el content script; si no, cambiar a tabs.create.
+- (pendiente) Task 1.7: página de opciones — base 1ea702e
+- Fase 2 (Tasks 2.1, 2.2) pendiente.
