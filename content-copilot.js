@@ -31,14 +31,24 @@ function clearEditor(el) {
   document.execCommand("delete", false);
 }
 
-function typeIntoEditor(text) {
-  const el = document.querySelector(SELECTORS.editor);
-  if (!el) return false;
-  clearEditor(el);
-  placeCaretAtEnd(el);
-  // Lexical registra el texto con un ÚNICO evento beforeinput; añadir 'input' lo duplica.
-  el.dispatchEvent(new InputEvent("beforeinput", { inputType: "insertText", data: text, bubbles: true, cancelable: true }));
-  return true;
+// Inserta el texto en el editor Lexical reintentando y verificando que entró (al cambiar de agente
+// el editor se rehace y tarda en estar listo; un único intento no basta).
+async function typeIntoEditor(text, attempts = 4) {
+  const probe = (text || "").slice(0, Math.min(8, (text || "").length));
+  for (let i = 0; i < attempts; i++) {
+    const el = document.querySelector(SELECTORS.editor);
+    if (el) {
+      clearEditor(el);
+      placeCaretAtEnd(el);
+      // Lexical registra el texto con un ÚNICO evento beforeinput; añadir 'input' lo duplica.
+      el.dispatchEvent(new InputEvent("beforeinput", { inputType: "insertText", data: text, bubbles: true, cancelable: true }));
+      await delay(300);
+      const check = document.querySelector(SELECTORS.editor);
+      if (check && check.textContent && check.textContent.includes(probe)) return true;
+    }
+    await delay(500);
+  }
+  return false;
 }
 
 function clickSend() {
@@ -144,11 +154,11 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (msg.type !== "sendPrompt") return;
   if (msg.agentId || msg.agentLabel) {
     selectAgent(msg.agentId, msg.agentLabel);
-    await delay(1000);
+    await delay(1500);
   } else if (msg.newChat) {
     await startNewChat();
   }
-  if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
+  if (!(await typeIntoEditor(msg.prompt))) return { ok: false, reason: "no-editor" };
   const baseNodes = document.querySelectorAll(SELECTORS.reply);
   const baseline = baseNodes.length;
   const baselineText = baseline ? baseNodes[baseline - 1].textContent.trim() : "";
