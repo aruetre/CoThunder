@@ -26,8 +26,10 @@ docs/                  Especificación y documentación
 - API de Thunderbird via el objeto global `messenger`, no `browser` ni `chrome`.
 - JavaScript vanilla con `"use strict"`. Sin frameworks, sin bundlers, sin dependencias npm en runtime. Node solo para validación y tooling.
 - Sin API ni claves: el contenido de los correos solo viaja a Microsoft 365 Copilot, el destino al que el usuario ya envía datos al usar Copilot. Ninguna otra red, ninguna telemetría. Relevante para RGPD: documentar cualquier cambio en el flujo de datos.
+- Permisos: `accountsRead`, `messagesRead`, `compose`, `storage`, `scripting`, `notifications` + `host_permissions` del dominio de Copilot.
 - No incrustar Copilot en un iframe (Microsoft lo bloquea): usar ventana/pestaña propia con content script. Toda dependencia del DOM de Copilot vive en `content-copilot.js` con selectores centralizados.
 - Degradación segura: si la automatización falla (interfaz cambiada o sin sesión), copiar el prompt al portapapeles y avisar; nunca fallar en silencio.
+- v2.1: la UI del botón es una **ventana** (no popup); desplegables de **agente** y **plantilla** (carpetas de Plantillas de TB); respuesta **maquetada en Markdown** siempre; correlación por `messageId`. Ver §17 del spec.
 - Textos de UI en español. Código y nombres de variables en inglés.
 - Estilo: prosa de commits en español, imperativo, una línea de resumen.
 
