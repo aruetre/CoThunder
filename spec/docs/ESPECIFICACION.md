@@ -169,7 +169,7 @@ Estilos (popup.css): `color-scheme: light dark`, fuente system-ui ~13 px, bordes
 
 ## 11. Composición (fase 2)
 
-Al recibir `copilotReply { text }`, el background abre `messenger.compose.beginReply(messageId, "replyToSender", { plainTextBody: text, isPlainText: true })`. El usuario revisa, edita y decide enviar. Requiere retener el `messageId` de origen desde el envío del prompt hasta que llega la respuesta.
+Al recibir `copilotReply { text }`, el background abre `messenger.compose.beginReply(messageId, "replyToSender", { body })` en **composición HTML** (para conservar la barra de formato y los complementos activos, que no aparecen en texto plano). El texto de Copilot se pega "tal cual": escapado y con los saltos de línea convertidos a `<br>` (los signos Markdown quedan literales, sin renderizar). El usuario revisa, edita y decide enviar. Requiere retener el `messageId` de origen desde el envío del prompt hasta que llega la respuesta. Alternativa no implementada: renderizar el Markdown a HTML real (§16).
 
 ## 12. Seguridad y protección de datos
 
