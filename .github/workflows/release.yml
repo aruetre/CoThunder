@@ -30,7 +30,7 @@ jobs:
         run: |
           node -e "
           const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json'));
-          const refs=[...(m.background?.scripts||[]),"content-copilot.js","popup/popup.html","popup/popup.js","popup/popup.css",m.options_ui?.page,...Object.values(m.icons||{})].filter(Boolean);
+          const refs=[...(m.background?.scripts||[]),'content-copilot.js','popup/popup.html','popup/popup.js','popup/popup.css',m.options_ui?.page,...Object.values(m.icons||{})].filter(Boolean);
           let ok=true;for(const r of refs){if(!fs.existsSync(r)){console.error('FALTA: '+r);ok=false;}}
           if(!ok)process.exit(1);console.log('Referencias del manifest OK ('+refs.length+')');
           "
