@@ -21,25 +21,18 @@ registerCopilotScript();
 
 // Instrumentación de spike: confirma en la consola del background que el content script se inyecta.
 messenger.runtime.onMessage.addListener((msg) => {
-  if (!msg) return;
-  if (msg.type === "contentAlive") {
+  if (msg && msg.type === "contentAlive") {
     console.log("[CoThunder] content script VIVO en", msg.url);
-  } else if (msg.type === "probe") {
-    console.log(`[CoThunder][SONDA ${msg.tag}] editors:`, msg.editors);
-    console.log(`[CoThunder][SONDA ${msg.tag}] sendButtons:`, msg.sendButtons);
-    console.log(`[CoThunder][SONDA ${msg.tag}] newChat:`, msg.newChat);
   }
 });
 
-// Helper de spike: llamable desde la consola del background. Escribe texto en Copilot
-// y muestra qué botón de enviar aparece una vez hay texto.
-async function spikeType(text = "Hola desde CoThunder") {
+// Helper de spike: llamable desde la consola del background.
+// spikeSend()               -> escribe y envía en el chat actual
+// spikeSend({ newChat:true }) -> abre chat nuevo, escribe y envía
+async function spikeSend(opts = {}) {
   const tabs = await messenger.tabs.query({});
   const t = tabs.find((t) => (t.url || "").includes("m365.cloud.microsoft"));
-  if (!t) { console.log("[CoThunder][spikeType] no hay pestaña de Copilot"); return; }
-  const res = await messenger.tabs.sendMessage(t.id, { type: "spikeType", text });
-  console.log("[CoThunder][spikeType] ok:", res && res.ok, "| método que funcionó:", res && res.worked);
-  console.log("[CoThunder][spikeType] resultados por método:", res && res.results);
-  console.log("[CoThunder][spikeType] editorText final:", res && res.editorText);
-  console.log("[CoThunder][spikeType] sendButtons:", res && res.sendButtons);
+  if (!t) { console.log("[CoThunder][spikeSend] no hay pestaña de Copilot"); return; }
+  const res = await messenger.tabs.sendMessage(t.id, { type: "spikeSend", text: opts.text, newChat: opts.newChat });
+  console.log("[CoThunder][spikeSend] resultado:", res);
 }

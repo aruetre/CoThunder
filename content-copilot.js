@@ -1,46 +1,17 @@
 "use strict";
+
+// Selectores reales del chat de M365 Copilot (descubiertos en el spike, 2026-07-06).
+const SELECTORS = {
+  editor: "#m365-chat-editor-target-element",                 // editor Lexical (contenteditable)
+  sendButton: "button.fai-SendButton, button.fai-ChatInput__send",
+  newChat: '[data-testid="newChatButton"]'
+};
+
 console.log("[CoThunder] content script activo en", location.href);
 messenger.runtime.sendMessage({ type: "contentAlive", url: location.href }).catch(() => {});
 
-// --- Sonda de spike (Task 0.3): descubre los selectores reales del chat de Copilot ---
-function describeEl(el) {
-  const attrs = [];
-  for (const { name, value } of el.attributes) {
-    if (name === "class" || name === "style") continue;
-    attrs.push(`${name}="${(value || "").slice(0, 70)}"`);
-  }
-  const cls = typeof el.className === "string" && el.className
-    ? "." + el.className.trim().split(/\s+/).slice(0, 4).join(".")
-    : "";
-  return `<${el.tagName.toLowerCase()}${cls}${attrs.length ? " " + attrs.join(" ") : ""}>`;
-}
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function matchText(el, re) {
-  return re.test(
-    (el.getAttribute("aria-label") || "") + " " +
-    (el.getAttribute("title") || "") + " " +
-    (el.getAttribute("data-testid") || "") + " " +
-    (el.getAttribute("placeholder") || "") + " " +
-    (el.textContent || "").slice(0, 40)
-  );
-}
-
-function probe(tag) {
-  const editors = [...document.querySelectorAll(
-    'textarea, [contenteditable="true"], [contenteditable=""], [role="textbox"]'
-  )].slice(0, 8).map(describeEl);
-  const sendButtons = [...document.querySelectorAll('button, [role="button"], [type="submit"]')]
-    .filter(b => matchText(b, /send|enviar|submit/i)).slice(0, 8).map(describeEl);
-  const newChat = [...document.querySelectorAll('button, [role="button"], a')]
-    .filter(b => matchText(b, /new chat|nuevo chat|new conversation|nueva conversaci/i)).slice(0, 8).map(describeEl);
-  messenger.runtime.sendMessage({ type: "probe", tag, editors, sendButtons, newChat }).catch(() => {});
-}
-
-probe("load");
-setTimeout(() => probe("+3s"), 3000);
-setTimeout(() => probe("+8s"), 8000);
-
-// Disparador de spike: prueba varios métodos de inserción en el editor Lexical y re-rastrea enviar.
 function placeCaretAtEnd(el) {
   el.focus();
   const sel = window.getSelection();
@@ -61,39 +32,39 @@ function clearEditor(el) {
   document.execCommand("delete", false);
 }
 
-function insertBy(el, text, method) {
+function typeIntoEditor(text) {
+  const el = document.querySelector(SELECTORS.editor);
+  if (!el) return false;
+  clearEditor(el);
   placeCaretAtEnd(el);
-  if (method === "execCommand") {
-    document.execCommand("insertText", false, text);
-  } else if (method === "beforeinput") {
-    el.dispatchEvent(new InputEvent("beforeinput", { inputType: "insertText", data: text, bubbles: true, cancelable: true }));
-    el.dispatchEvent(new InputEvent("input", { inputType: "insertText", data: text, bubbles: true }));
-  } else if (method === "paste") {
-    const dt = new DataTransfer();
-    dt.setData("text/plain", text);
-    el.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
-  }
+  // Lexical registra el texto con un ÚNICO evento beforeinput; añadir 'input' lo duplica.
+  el.dispatchEvent(new InputEvent("beforeinput", { inputType: "insertText", data: text, bubbles: true, cancelable: true }));
+  return true;
 }
 
-const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+function clickSend() {
+  const btn = document.querySelector(SELECTORS.sendButton);
+  if (!btn) return false;
+  btn.click();
+  return true;
+}
 
+async function startNewChat() {
+  const btn = document.querySelector(SELECTORS.newChat);
+  if (!btn) return false;
+  btn.click();
+  await delay(800);
+  return true;
+}
+
+// Cierre del spike: flujo completo escribir+enviar, disparable desde la consola del background.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg || msg.type !== "spikeType") return { ignored: true };
-  const el = document.querySelector("#m365-chat-editor-target-element");
-  if (!el) return { ok: false, reason: "no-editor" };
-  const text = msg.text || "Hola desde CoThunder";
-  const results = {};
-  let worked = null;
-  for (const method of ["paste", "beforeinput", "execCommand"]) {
-    clearEditor(el);
-    await delay(120);
-    insertBy(el, text, method);
-    await delay(180);
-    results[method] = el.textContent;
-    if (el.textContent && el.textContent.includes(text.slice(0, 6))) { worked = method; break; }
-  }
+  if (!msg || msg.type !== "spikeSend") return { ignored: true };
+  if (msg.newChat) await startNewChat();
+  if (!typeIntoEditor(msg.text || "Hola desde CoThunder")) return { ok: false, reason: "no-editor" };
   await delay(300);
-  const sendButtons = [...document.querySelectorAll('button, [role="button"], [type="submit"]')]
-    .filter(b => matchText(b, /send|enviar|submit/i)).slice(0, 8).map(describeEl);
-  return { ok: !!worked, worked, results, editorText: el.textContent, sendButtons };
+  const el = document.querySelector(SELECTORS.editor);
+  const editorText = el ? el.textContent : "";
+  if (!clickSend()) return { ok: false, reason: "no-send", editorText };
+  return { ok: true, editorText };
 });
