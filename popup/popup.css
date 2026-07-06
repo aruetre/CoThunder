@@ -1,15 +1,17 @@
 :root { color-scheme: light dark; }
-body { width: 780px; margin: 0; padding: 10px; font: 13px system-ui; }
+html, body { height: 100%; }
+body { margin: 0; padding: 10px; box-sizing: border-box; font: 13px system-ui;
+  display: flex; flex-direction: column; }
 #status { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
 #dot { width: 10px; height: 10px; border-radius: 50%; background: #888; }
 #dot.busy { background: #e5a50a; } #dot.ok { background: #26a269; } #dot.err { background: #c01c28; }
-textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 430px;
-  border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; padding: 6px; }
 label { display: block; margin: 8px 0; }
 label.row { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
 #agent, #template { flex: 1; box-sizing: border-box; padding: 4px;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; }
 #refreshAgents { width: auto; padding: 4px 10px; background: transparent; color: inherit;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; cursor: pointer; }
+textarea { width: 100%; box-sizing: border-box; flex: 1 1 auto; min-height: 120px; resize: none; overflow: auto;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; padding: 6px; }
 button { width: 100%; padding: 8px; border: 0; border-radius: 6px; background: #1a5fb4; color: #fff; cursor: pointer; }
 button:disabled { opacity: .5; cursor: default; }

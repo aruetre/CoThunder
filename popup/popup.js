@@ -18,12 +18,12 @@
 
   let message;
   try {
-    const [tab] = await messenger.tabs.query({ active: true, currentWindow: true });
-    // TB 140 solo expone getDisplayedMessages (plural), que devuelve una MessageList; getDisplayedMessage se eliminó.
-    const displayed = await messenger.messageDisplay.getDisplayedMessages(tab.id);
-    const messages = Array.isArray(displayed) ? displayed : (displayed && displayed.messages) || [];
-    message = messages[0];
-    if (!message) { setStatus("err", "No hay ningún correo abierto en esta pestaña"); return; }
+    // La ventana recibe el messageId por la URL (la abre el background al pulsar el botón).
+    const params = new URLSearchParams(location.search);
+    const messageId = params.get("messageId") != null ? Number(params.get("messageId")) : null;
+    if (messageId == null || Number.isNaN(messageId)) { setStatus("err", "No hay ningún correo asociado"); return; }
+    message = await messenger.messages.get(messageId);
+    if (!message) { setStatus("err", "No se pudo cargar el correo"); return; }
 
     const cfg = await getConfig();
     const body = await extractBody(message.id);

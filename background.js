@@ -22,6 +22,18 @@ messenger.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && changes.copilotUrl) registerCopilotScript();
 });
 
+// El botón del visor abre la UI en una ventana propia (redimensionable), pasándole el messageId.
+messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
+  let messageId = null;
+  try {
+    const displayed = await messenger.messageDisplay.getDisplayedMessages(tab.id);
+    const messages = Array.isArray(displayed) ? displayed : (displayed && displayed.messages) || [];
+    if (messages[0]) messageId = messages[0].id;
+  } catch (_) {}
+  const url = messenger.runtime.getURL("popup/popup.html") + (messageId != null ? "?messageId=" + messageId : "");
+  await messenger.windows.create({ url, type: "popup", width: 800, height: 800, allowScriptsToClose: true });
+});
+
 // Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
 async function ensureCopilotTab() {
   const { copilotUrl } = await getConfig();
