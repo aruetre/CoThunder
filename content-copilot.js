@@ -7,9 +7,6 @@ const SELECTORS = {
   newChat: '[data-testid="newChatButton"]'
 };
 
-console.log("[CoThunder] content script activo en", location.href);
-messenger.runtime.sendMessage({ type: "contentAlive", url: location.href }).catch(() => {});
-
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function placeCaretAtEnd(el) {
@@ -57,14 +54,12 @@ async function startNewChat() {
   return true;
 }
 
-// Cierre del spike: flujo completo escribir+enviar, disparable desde la consola del background.
+// Protocolo con el background: escribir (opcional nuevo chat) y enviar el prompt.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg || msg.type !== "spikeSend") return { ignored: true };
+  if (!msg || msg.type !== "sendPrompt") return;
   if (msg.newChat) await startNewChat();
-  if (!typeIntoEditor(msg.text || "Hola desde CoThunder")) return { ok: false, reason: "no-editor" };
+  if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
   await delay(300);
-  const el = document.querySelector(SELECTORS.editor);
-  const editorText = el ? el.textContent : "";
-  if (!clickSend()) return { ok: false, reason: "no-send", editorText };
-  return { ok: true, editorText };
+  if (!clickSend()) return { ok: false, reason: "no-send" };
+  return { ok: true };
 });
