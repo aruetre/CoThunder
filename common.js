@@ -113,8 +113,8 @@ function buildTemplatePrompt(message, body, templateBody) {
     "Usa la plantilla como base: si tiene huecos o marcadores (por ejemplo [nombre], [fecha], [motivo]), " +
     "rellénalos con los datos del correo; si es un modelo de estructura o de tono, síguelo. Aprovecha tu " +
     "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla. " +
-    "Devuelve solo el cuerpo del correo, maquetado en Markdown (encabezados, negrita, listas) para que quede " +
-    "claro y bien presentado, sin asunto ni explicaciones.\n\n" +
+    "Devuelve solo el cuerpo del correo en código fuente Markdown, usando encabezados (#), negrita (**) y " +
+    "listas para una maquetación clara y mejorada, sin asunto ni explicaciones.\n\n" +
     "--- PLANTILLA (Markdown) ---\n" + (templateBody || "") + "\n--- FIN PLANTILLA ---\n\n" +
     "--- CORREO ORIGINAL ---\nDe: " + (message.author || "") + "\nAsunto: " + (message.subject || "") + "\n\n" + (body || "");
 }
