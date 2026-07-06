@@ -589,7 +589,8 @@ button:disabled { opacity: .5; cursor: default; }
   const $ = id => document.getElementById(id);
   const setStatus = (cls, text) => { $("dot").className = cls; $("statusText").textContent = text; };
   const [tab] = await messenger.tabs.query({ active: true, currentWindow: true });
-  const message = await messenger.messageDisplay.getDisplayedMessage(tab.id);
+  const displayed = await messenger.messageDisplay.getDisplayedMessages(tab.id); // TB 140: solo plural
+  const message = (Array.isArray(displayed) ? displayed : (displayed && displayed.messages) || [])[0];
   if (!message) { setStatus("err", "No hay ningún correo abierto en esta pestaña"); return; }
 
   const cfg = await getConfig();

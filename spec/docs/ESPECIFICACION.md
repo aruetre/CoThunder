@@ -159,7 +159,7 @@ UI compacta (~420 px) con:
 
 Comportamiento (popup.js):
 
-1. Al abrir, localiza la pestaña activa y `messenger.messageDisplay.getDisplayedMessage(tab.id)`. Sin mensaje: estado de error "No hay ningún correo abierto en esta pestaña" y sin botón de envío.
+1. Al abrir, localiza la pestaña activa y usa `messenger.messageDisplay.getDisplayedMessages(tab.id)` (plural; en TB 140 el singular `getDisplayedMessage` ya no existe), cogiendo el primer mensaje de la lista. Sin mensaje: estado de error "No hay ningún correo abierto en esta pestaña" y sin botón de envío.
 2. Extrae el cuerpo, construye el prompt con la plantilla de la configuración y lo muestra editable.
 3. "Enviar a Copilot": manda `sendToCopilot { prompt, newChat }` al background con el texto actual del textarea (ediciones incluidas). Estado enviando; al confirmar, enviado y cierra; si error, estado de error con el motivo.
 
