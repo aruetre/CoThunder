@@ -37,3 +37,8 @@ Base de rama: 73d204c (tras Initial commit ddc4015)
 - Desplegable de agentes: lista los agentes de la barra lateral de Copilot (.fai-CopilotNavSubItem, id P_/T_/agent/gpt; filtra historial), recuerda el último, botón de refresco + refresco periódico. Selección por clic con escritura robusta (reintenta+verifica). Enfoque barra-lateral+fijar (el panel completo se descartó por frágil). Verificado por el usuario.
 - Endurecido Fase 2: messageId de ida y vuelta (sin pendingMessageId único) -> no cruza correos; notificación si la captura falla. Permiso notifications añadido.
 - PENDIENTE: prueba del usuario (agente + endurecido) y release v2.1.0 (bump manifest a 2.1.0, merge a main, tag).
+
+## RELEASE v2.1.0 (2026-07-07)
+- Revisión final: LISTO PARA RELEASE, escape HTML seguro. Arreglados: refreshAgents (lista vacía != éxito), notificación si beginReply falla, verificación de ficheros en el workflow. Backlog conocido: concurrencia entre ventanas (messageId ya no cruza correos, pero no hay lock), captura del último markdown-reply, dependencia del bloque ```markdown, panel completo de agentes.
+- Nota SemVer: v2.1 añade permisos y cambia UI (popup->ventana); por decisión del usuario se publica como 2.1.0.
+- Fusionado a main y etiquetado v2.1.0 -> Action publica cothunder-2.1.0.xpi.
