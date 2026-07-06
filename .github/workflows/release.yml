@@ -26,14 +26,14 @@ jobs:
           node -e "const m=JSON.parse(require('fs').readFileSync('manifest.json'));if(!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(m.version))throw new Error('version no SemVer: '+m.version);console.log('manifest OK, version '+m.version)"
           for f in common.js background.js content-copilot.js popup/popup.js options/options.js; do node --check "$f" && echo "$f OK"; done
 
-      - name: Verificar que existen los ficheros referenciados en el manifest
+      - name: Verificar que existen los ficheros de la extensión
         run: |
-          node -e "
-          const fs=require('fs');const m=JSON.parse(fs.readFileSync('manifest.json'));
-          const refs=[...(m.background?.scripts||[]),'content-copilot.js','popup/popup.html','popup/popup.js','popup/popup.css',m.options_ui?.page,...Object.values(m.icons||{})].filter(Boolean);
-          let ok=true;for(const r of refs){if(!fs.existsSync(r)){console.error('FALTA: '+r);ok=false;}}
-          if(!ok)process.exit(1);console.log('Referencias del manifest OK ('+refs.length+')');
-          "
+          for f in manifest.json common.js background.js content-copilot.js \
+                   popup/popup.html popup/popup.js popup/popup.css \
+                   options/options.html options/options.js icon.svg; do
+            test -f "$f" || { echo "FALTA: $f"; exit 1; }
+          done
+          echo "Ficheros de la extensión OK"
 
       - name: Empaquetar XPI
         id: pack
