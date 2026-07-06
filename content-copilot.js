@@ -56,8 +56,6 @@ async function startNewChat() {
   return true;
 }
 
-const diag = (m) => { try { messenger.runtime.sendMessage({ type: "diag", m }); } catch (_) {} };
-
 // Espera a que la respuesta del asistente aparezca (nodo nuevo o texto cambiado) y su texto se estabilice.
 function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
   return new Promise((resolve) => {
@@ -91,10 +89,8 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   const baselineText = baseline ? baseNodes[baseline - 1].textContent.trim() : "";
   await delay(300);
   if (!clickSend()) return { ok: false, reason: "no-send" };
-  diag("enviado; baseline=" + baseline);
   // Fase 2: en segundo plano, espera la respuesta y avisa al background.
   waitForReply(baseline, baselineText).then((text) => {
-    diag("waitForReply -> " + (text ? text.length + " chars" : "vacío"));
     if (text) messenger.runtime.sendMessage({ type: "copilotReply", text }).catch(() => {});
   });
   return { ok: true };
