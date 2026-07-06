@@ -29,14 +29,15 @@ function matchPatternFromUrl(url) {
 
 const MAX_BODY = 12000;
 
-// Colapsa espacios y líneas en blanco sin perder los saltos de párrafo.
+// Colapsa espacios y elimina las líneas en blanco (los correos anidan divs/tablas que dejan muchas).
 function normalizeText(t) {
   return (t || "")
+    .replace(/ /g, " ")
     .replace(/\r/g, "")
     .split("\n")
     .map((line) => line.replace(/[ \t ]+/g, " ").trim())
+    .filter((line) => line.length > 0)
     .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
