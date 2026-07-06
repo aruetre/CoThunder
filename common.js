@@ -12,10 +12,14 @@ const MARKDOWN_STYLE =
   "- Código en línea (`código`) y bloques de código con lenguaje (```).\n" +
   "- Enlaces [texto](url), imágenes ![alt](url) y líneas divisorias (---).";
 
+// Directiva de formato que se añade SIEMPRE en buildPrompt (independiente de la plantilla editable,
+// para que una plantilla guardada antigua no anule el Markdown de la respuesta).
+const MARKDOWN_INSTRUCTION =
+  "IMPORTANTE: devuelve solo el cuerpo del correo como código fuente Markdown SIN RENDERIZAR, dentro de un " +
+  "único bloque de código que empiece por ```markdown y termine con ```, sin asunto ni explicaciones.";
+
 const DEFAULT_PROMPT_TEMPLATE =
-  "Redacta una respuesta profesional y cordial a este correo, en el mismo idioma del mensaje. " +
-  "Responde solo con el cuerpo del correo, en código fuente Markdown, sin asunto ni explicaciones.\n\n" +
-  MARKDOWN_STYLE + "\n\n" +
+  "Redacta una respuesta profesional y cordial a este correo, en el mismo idioma del mensaje.\n\n" +
   "De: {{author}}\nAsunto: {{subject}}\n\n{{body}}";
 
 const DEFAULTS = {
@@ -29,10 +33,12 @@ function getConfig() {
 }
 
 function buildPrompt(message, body, template) {
-  return template
+  const filled = template
     .replaceAll("{{author}}", message.author || "")
     .replaceAll("{{subject}}", message.subject || "")
     .replaceAll("{{body}}", body || "");
+  // El Markdown se añade siempre, al margen de la plantilla (que el usuario puede haber personalizado).
+  return filled + "\n\n" + MARKDOWN_INSTRUCTION + "\n\n" + MARKDOWN_STYLE;
 }
 
 function matchPatternFromUrl(url) {
@@ -120,9 +126,8 @@ function buildTemplatePrompt(message, body, templateBody) {
     "(2) la plantilla en Markdown de abajo, y (3) tu conocimiento y experiencia como agente especializado. " +
     "Usa la plantilla como base: si tiene huecos o marcadores (por ejemplo [nombre], [fecha], [motivo]), " +
     "rellénalos con los datos del correo; si es un modelo de estructura o de tono, síguelo. Aprovecha tu " +
-    "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla. " +
-    "Devuelve solo el cuerpo del correo en código fuente Markdown, sin asunto ni explicaciones.\n\n" +
-    MARKDOWN_STYLE + "\n\n" +
+    "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla.\n\n" +
+    MARKDOWN_INSTRUCTION + "\n\n" + MARKDOWN_STYLE + "\n\n" +
     "--- PLANTILLA (Markdown) ---\n" + (templateBody || "") + "\n--- FIN PLANTILLA ---\n\n" +
     "--- CORREO ORIGINAL ---\nDe: " + (message.author || "") + "\nAsunto: " + (message.subject || "") + "\n\n" + (body || "");
 }
