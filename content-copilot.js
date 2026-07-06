@@ -103,7 +103,19 @@ function waitForReply(baselineCount, baselineText, timeoutMs = 120000) {
 
 // Protocolo con el background: escribir (opcional nuevo chat), enviar y capturar la respuesta.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg || msg.type !== "sendPrompt") return;
+  if (!msg) return;
+  if (msg.type === "probeAgents") {
+    // Sonda temporal (v2.1): enumera los agentes del nav de Copilot.
+    const items = [...document.querySelectorAll('.fai-CopilotNavSubItem, .fai-CopilotNavItem, [id*="declarativeAgent"], [id*="Agent"]')]
+      .map((el) => ({
+        label: (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 50),
+        id: el.id || null,
+        testid: el.getAttribute("data-testid") || null
+      }))
+      .filter((a) => a.label);
+    return { agents: items };
+  }
+  if (msg.type !== "sendPrompt") return;
   if (msg.newChat) await startNewChat();
   if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
   const baseNodes = document.querySelectorAll(SELECTORS.reply);

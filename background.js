@@ -87,3 +87,29 @@ messenger.runtime.onMessage.addListener(async (msg) => {
     return { ok: true };
   }
 });
+
+// Sonda temporal (v2.1 agentes): lista los agentes disponibles en el nav de Copilot.
+async function probeAgents() {
+  const ids = new Set();
+  const { copilotTabId } = await messenger.storage.session.get({ copilotTabId: null });
+  if (copilotTabId != null) ids.add(copilotTabId);
+  for (const t of await messenger.tabs.query({})) {
+    if ((t.url || "").includes("m365.cloud.microsoft")) ids.add(t.id);
+  }
+  try {
+    for (const w of await messenger.windows.getAll({ populate: true })) {
+      for (const t of w.tabs || []) {
+        if ((t.url || "").includes("m365.cloud.microsoft")) ids.add(t.id);
+      }
+    }
+  } catch (_) {}
+  for (const id of ids) {
+    try {
+      const res = await messenger.tabs.sendMessage(id, { type: "probeAgents" });
+      console.log("[CoThunder][probeAgents] tab", id, "— agentes:");
+      ((res && res.agents) || []).forEach((a, i) => console.log(i, JSON.stringify(a)));
+      return;
+    } catch (_) {}
+  }
+  console.log("[CoThunder][probeAgents] ninguna instancia de Copilot respondió; recarga su ventana (F5)");
+}
