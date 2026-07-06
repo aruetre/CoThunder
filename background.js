@@ -30,3 +30,15 @@ messenger.runtime.onMessage.addListener((msg) => {
     console.log(`[CoThunder][SONDA ${msg.tag}] newChat:`, msg.newChat);
   }
 });
+
+// Helper de spike: llamable desde la consola del background. Escribe texto en Copilot
+// y muestra qué botón de enviar aparece una vez hay texto.
+async function spikeType(text = "Hola desde CoThunder") {
+  const tabs = await messenger.tabs.query({});
+  const t = tabs.find((t) => (t.url || "").includes("m365.cloud.microsoft"));
+  if (!t) { console.log("[CoThunder][spikeType] no hay pestaña de Copilot"); return; }
+  const res = await messenger.tabs.sendMessage(t.id, { type: "spikeType", text });
+  console.log("[CoThunder][spikeType] ok:", res && res.ok, "| editorText:", res && res.editorText);
+  console.log("[CoThunder][spikeType] sendButtons:", res && res.sendButtons);
+  console.log("[CoThunder][spikeType] labeledButtons:", res && res.labeledButtons);
+}

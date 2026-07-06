@@ -39,3 +39,18 @@ function probe(tag) {
 probe("load");
 setTimeout(() => probe("+3s"), 3000);
 setTimeout(() => probe("+8s"), 8000);
+
+// Disparador de spike: escribe texto en el editor Lexical y re-rastrea el botón de enviar.
+messenger.runtime.onMessage.addListener((msg) => {
+  if (!msg || msg.type !== "spikeType") return;
+  const el = document.querySelector("#m365-chat-editor-target-element");
+  if (!el) return Promise.resolve({ ok: false, reason: "no-editor" });
+  el.focus();
+  const inserted = document.execCommand("insertText", false, msg.text || "Hola desde CoThunder");
+  const sendButtons = [...document.querySelectorAll('button, [role="button"], [type="submit"]')]
+    .filter(b => matchText(b, /send|enviar|submit/i)).slice(0, 8).map(describeEl);
+  const labeledButtons = [...document.querySelectorAll('button, [role="button"]')]
+    .filter(b => (b.getAttribute("aria-label") || b.getAttribute("data-testid") || "").trim())
+    .slice(0, 20).map(describeEl);
+  return Promise.resolve({ ok: inserted, editorText: el.textContent, sendButtons, labeledButtons });
+});
