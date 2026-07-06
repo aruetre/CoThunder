@@ -1,18 +1,21 @@
 "use strict";
 
+// Guía de estilo Markdown compartida por el prompt normal y el de plantilla (maquetación idéntica).
+const MARKDOWN_STYLE =
+  "Maqueta la respuesta aprovechando todos los elementos de Markdown estándar que aporten claridad:\n" +
+  "- Encabezados de nivel 1 a 6 (#, ##, ###, …) para estructurar; empieza con el saludo como encabezado.\n" +
+  "- Énfasis: negrita (**texto**), cursiva (*texto*) y tachado (~~texto~~).\n" +
+  "- Listas ordenadas (1., 2., 3.), con viñetas (-), anidadas y de tareas (- [ ] / - [x]).\n" +
+  "- Tablas para comparar datos o presentar información estructurada.\n" +
+  "- Citas (>), incluidas anidadas, para reproducir o destacar fragmentos del correo.\n" +
+  "- Código en línea (`código`) y bloques de código con lenguaje (```).\n" +
+  "- Enlaces [texto](url), imágenes ![alt](url) y líneas divisorias (---).\n" +
+  "No abuses del formato: úsalo donde mejore la claridad.";
+
 const DEFAULT_PROMPT_TEMPLATE =
   "Redacta una respuesta profesional y cordial a este correo, en el mismo idioma del mensaje. " +
   "Responde solo con el cuerpo del correo, en código fuente Markdown, sin asunto ni explicaciones.\n\n" +
-  "Estilo Markdown a aplicar:\n" +
-  "- Comienza con el saludo como encabezado de nivel 1 (por ejemplo: # Hola Juan).\n" +
-  "- Resalta las ideas o datos clave con **negrita**.\n" +
-  "- Usa listas cuando aporten claridad: ordenadas (1., 2., 3.) para pasos o secuencias, y con viñetas (-) para enumeraciones sin orden; elige el tipo según el contexto.\n" +
-  "- Usa tablas Markdown cuando compares datos o presentes información estructurada.\n" +
-  "- Usa citas (>) para reproducir o destacar fragmentos del correo original.\n" +
-  "- Usa admoniciones para avisos importantes, con formato de cita y etiqueta, por ejemplo:\n" +
-  "  > [!NOTE] Nota informativa\n" +
-  "  > [!WARNING] Advertencia importante\n" +
-  "- Mantén párrafos cortos y no abuses del formato.\n\n" +
+  MARKDOWN_STYLE + "\n\n" +
   "De: {{author}}\nAsunto: {{subject}}\n\n{{body}}";
 
 const DEFAULTS = {
@@ -118,9 +121,8 @@ function buildTemplatePrompt(message, body, templateBody) {
     "Usa la plantilla como base: si tiene huecos o marcadores (por ejemplo [nombre], [fecha], [motivo]), " +
     "rellénalos con los datos del correo; si es un modelo de estructura o de tono, síguelo. Aprovecha tu " +
     "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla. " +
-    "Devuelve solo el cuerpo del correo en código fuente Markdown, usando cuando aporten claridad: encabezados (#), " +
-    "negrita (**), listas, tablas, citas (>) y admoniciones (por ejemplo `> [!NOTE] ...` o `> [!WARNING] ...`), " +
-    "para una maquetación rica y mejorada, sin asunto ni explicaciones.\n\n" +
+    "Devuelve solo el cuerpo del correo en código fuente Markdown, sin asunto ni explicaciones.\n\n" +
+    MARKDOWN_STYLE + "\n\n" +
     "--- PLANTILLA (Markdown) ---\n" + (templateBody || "") + "\n--- FIN PLANTILLA ---\n\n" +
     "--- CORREO ORIGINAL ---\nDe: " + (message.author || "") + "\nAsunto: " + (message.subject || "") + "\n\n" + (body || "");
 }
