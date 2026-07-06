@@ -4,7 +4,9 @@
 const SELECTORS = {
   editor: "#m365-chat-editor-target-element",                 // editor Lexical (contenteditable)
   sendButton: "button.fai-SendButton, button.fai-ChatInput__send",
-  newChat: '[data-testid="newChatButton"]'
+  newChat: '[data-testid="newChatButton"]',
+  reply: '[data-testid="markdown-reply"]',                    // texto de la respuesta del asistente (el último)
+  loading: '[data-testid="loading-message"]'                 // presente mientras Copilot genera
 };
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -54,37 +56,41 @@ async function startNewChat() {
   return true;
 }
 
-// --- Sonda de Fase 2 (temporal): descubre el contenedor de respuesta del asistente ---
-function _describe(el) {
-  const attrs = [];
-  for (const { name, value } of el.attributes) {
-    if (name === "class" || name === "style") continue;
-    attrs.push(`${name}="${(value || "").slice(0, 60)}"`);
-  }
-  const cls = typeof el.className === "string" && el.className
-    ? "." + el.className.trim().split(/\s+/).slice(0, 5).join(".") : "";
-  return `<${el.tagName.toLowerCase()}${cls}${attrs.length ? " " + attrs.join(" ") : ""}>`;
+// Espera a que aparezca una respuesta NUEVA (más que baseline) y se estabilice sin indicador de carga.
+function waitForReply(baselineCount, timeoutMs = 120000) {
+  return new Promise((resolve) => {
+    const start = Date.now();
+    let last = "";
+    let stableSince = Date.now();
+    let appeared = false;
+    const tick = setInterval(() => {
+      const nodes = document.querySelectorAll(SELECTORS.reply);
+      if (nodes.length > baselineCount) appeared = true;
+      const loading = document.querySelector(SELECTORS.loading);
+      const el = nodes[nodes.length - 1];
+      const text = el ? el.textContent.trim() : "";
+      if (appeared && text && text === last && !loading) {
+        if (Date.now() - stableSince > 1500) { clearInterval(tick); resolve(text); }
+      } else {
+        last = text;
+        stableSince = Date.now();
+      }
+      if (Date.now() - start > timeoutMs) { clearInterval(tick); resolve(appeared ? last : ""); }
+    }, 500);
+  });
 }
 
-// Protocolo con el background: escribir (opcional nuevo chat) y enviar el prompt.
+// Protocolo con el background: escribir (opcional nuevo chat), enviar y capturar la respuesta.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg) return;
-  if (msg.type === "probeReply") {
-    const re = /message|response|bot|assistant|turn|copilot|answer|markdown|reply/i;
-    const candidates = [...document.querySelectorAll("[data-testid], [role], [aria-label]")]
-      .filter((el) => {
-        const key = (el.getAttribute("data-testid") || "") + " " + (el.getAttribute("role") || "") +
-          " " + (el.getAttribute("aria-label") || "") + " " + (typeof el.className === "string" ? el.className : "");
-        return re.test(key) && (el.textContent || "").trim().length > 25;
-      })
-      .slice(0, 30)
-      .map((el) => ({ sel: _describe(el), text: (el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 70) }));
-    return { candidates };
-  }
-  if (msg.type !== "sendPrompt") return;
+  if (!msg || msg.type !== "sendPrompt") return;
   if (msg.newChat) await startNewChat();
   if (!typeIntoEditor(msg.prompt)) return { ok: false, reason: "no-editor" };
+  const baseline = document.querySelectorAll(SELECTORS.reply).length;
   await delay(300);
   if (!clickSend()) return { ok: false, reason: "no-send" };
+  // Fase 2: en segundo plano, espera la respuesta y avisa al background.
+  waitForReply(baseline).then((text) => {
+    if (text) messenger.runtime.sendMessage({ type: "copilotReply", text }).catch(() => {});
+  });
   return { ok: true };
 });

@@ -20,7 +20,6 @@ registerCopilotScript();
 messenger.storage.onChanged.addListener(registerCopilotScript);
 
 // Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
-// El id se persiste en storage.session porque el background es event page no persistente.
 async function ensureCopilotTab() {
   const { copilotUrl } = await getConfig();
   const { copilotTabId } = await messenger.storage.session.get({ copilotTabId: null });
@@ -54,39 +53,21 @@ async function deliverWithRetry(tabId, payload, timeoutMs = 30000) {
   return { ok: false, reason: "timeout" };
 }
 
-// Puente desde el popup: asegura la ventana de Copilot y le pasa el prompt.
+// Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
-  if (!msg || msg.type !== "sendToCopilot") return;
-  const tabId = await ensureCopilotTab();
-  return deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat });
+  if (!msg) return;
+  if (msg.type === "sendToCopilot") {
+    await messenger.storage.session.set({ pendingMessageId: msg.messageId ?? null });
+    const tabId = await ensureCopilotTab();
+    return deliverWithRetry(tabId, { type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat });
+  }
+  if (msg.type === "copilotReply") {
+    const { pendingMessageId } = await messenger.storage.session.get({ pendingMessageId: null });
+    if (pendingMessageId == null) return;
+    await messenger.compose.beginReply(pendingMessageId, "replyToSender", {
+      plainTextBody: msg.text, isPlainText: true
+    });
+    await messenger.storage.session.set({ pendingMessageId: null });
+    return { ok: true };
+  }
 });
-
-// Sonda de Fase 2 (temporal): pide al content script los candidatos a contenedor de respuesta.
-// Busca la instancia de Copilot por todas las vías (id guardado, pestañas, ventanas popup) y prueba cada una.
-async function probeReply() {
-  const ids = new Set();
-  const { copilotTabId } = await messenger.storage.session.get({ copilotTabId: null });
-  if (copilotTabId != null) ids.add(copilotTabId);
-  for (const t of await messenger.tabs.query({})) {
-    if ((t.url || "").includes("m365.cloud.microsoft")) ids.add(t.id);
-  }
-  try {
-    for (const w of await messenger.windows.getAll({ populate: true })) {
-      for (const t of w.tabs || []) {
-        if ((t.url || "").includes("m365.cloud.microsoft")) ids.add(t.id);
-      }
-    }
-  } catch (_) {}
-  if (!ids.size) { console.log("[CoThunder][probeReply] no encuentro ninguna instancia de Copilot"); return; }
-  for (const id of ids) {
-    try {
-      const res = await messenger.tabs.sendMessage(id, { type: "probeReply" });
-      console.log("[CoThunder][probeReply] respondió la instancia tab", id, "— candidatos:");
-      ((res && res.candidates) || []).forEach((c, i) => console.log(i, c.sel, "=>", c.text));
-      return;
-    } catch (_) {
-      console.log("[CoThunder][probeReply] tab", id, "no responde, probando siguiente…");
-    }
-  }
-  console.log("[CoThunder][probeReply] ninguna instancia respondió; recarga la ventana de Copilot (F5) y reintenta");
-}

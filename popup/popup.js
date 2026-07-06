@@ -21,7 +21,7 @@
     $("send").disabled = true;
     setStatus("busy", "Enviando a Copilot…");
     const res = await messenger.runtime.sendMessage({
-      type: "sendToCopilot", prompt: $("prompt").value, newChat: $("newChat").checked
+      type: "sendToCopilot", prompt: $("prompt").value, newChat: $("newChat").checked, messageId: message.id
     });
     if (res && res.ok) {
       setStatus("ok", "Enviado");
