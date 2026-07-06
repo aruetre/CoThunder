@@ -74,6 +74,27 @@ async function findCopilotTabIds() {
   return [...ids];
 }
 
+// Sonda temporal: confirma la API para localizar la carpeta Plantillas y listar sus mensajes.
+async function probeTemplates() {
+  console.log("[CoThunder][tpl] folders.query =", typeof (messenger.folders && messenger.folders.query));
+  let folders = null;
+  try { folders = await messenger.folders.query({ specialUse: ["templates"] }); console.log("[CoThunder][tpl] query specialUse ->", JSON.stringify(folders)); }
+  catch (e) { console.log("[CoThunder][tpl] query specialUse ERR:", e.message); }
+  if (!folders || !folders.length) {
+    try { folders = await messenger.folders.query({ type: "templates" }); console.log("[CoThunder][tpl] query type ->", JSON.stringify(folders)); }
+    catch (e) { console.log("[CoThunder][tpl] query type ERR:", e.message); }
+  }
+  if (folders && folders.length) {
+    const f = folders[0];
+    try {
+      const page = await messenger.messages.list(f.id != null ? f.id : f);
+      console.log("[CoThunder][tpl] mensajes:", JSON.stringify((page.messages || []).map((m) => ({ id: m.id, subject: m.subject }))));
+    } catch (e) { console.log("[CoThunder][tpl] messages.list ERR:", e.message); }
+  } else {
+    console.log("[CoThunder][tpl] no se encontró carpeta de plantillas por query; habrá que recorrer cuentas");
+  }
+}
+
 // Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
