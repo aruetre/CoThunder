@@ -183,9 +183,9 @@ El entregable es `cothunder-<version>.xpi`: zip de la raíz del proyecto excluye
 
 ## 15. Riesgos conocidos
 
-### 15.1 Registro del content script en MV3 (spike bloqueante)
+### 15.1 Registro del content script en MV3 (spike bloqueante) — RESUELTO EN VERDE
 
-En MV3 no hay `content_scripts` declarativo y la API `scripting` **no aparece en la documentación de APIs soportadas de Thunderbird**. El primer spike debe confirmar que en TB 140 se puede registrar e inyectar `content-copilot.js` sobre el dominio de Copilot, ya sea con `scripting.registerContentScripts` o con `contentScripts.register`. Si ninguna funciona de forma fiable, hay que reconsiderar la decisión de MV3 (volver a MV2, que sí soporta `content_scripts` declarativo). Es bloqueante: sin esto, el enfoque entero no se sostiene.
+En MV3 no hay `content_scripts` declarativo y la API `scripting` no aparece en la documentación de APIs soportadas de Thunderbird. El spike lo validó en TB 140.11.1 (2026-07-06): **`messenger.scripting.registerContentScripts` funciona**, el content script se inyecta en el chat de Copilot, y `messenger.tabs.create` abre la URL externa dentro de Thunderbird. URL real del chat: `https://m365.cloud.microsoft/chat/`. No hace falta recurrir a `contentScripts.register` ni reconsiderar MV2. Observación: el content script se inyecta más de una vez por los redirects de carga de la página; los manejadores deben ser idempotentes.
 
 ### 15.2 Otros riesgos
 
