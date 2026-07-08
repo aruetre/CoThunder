@@ -3,19 +3,26 @@
   const $ = (id) => document.getElementById(id);
   const setStatus = (cls, text) => { $("dot").className = cls; $("statusText").textContent = text; };
 
-  // Ajusta la ventana a la pantalla real (alta densidad / escalado del SO): que no se salga ni quede diminuta.
+  // Detecta resolución y densidad y adapta ventana y contenido para que se vea consistente.
   try {
-    const win = await messenger.windows.getCurrent();
     const availW = screen.availWidth;
     const availH = screen.availHeight;
-    const w = Math.min(820, Math.round(availW * 0.9));
-    const h = Math.min(820, Math.round(availH * 0.9));
+    const dpr = window.devicePixelRatio || 1;
+    // Ventana proporcional a la pantalla, con mínimos legibles y sin salirse (máx. 90% del área).
+    const w = Math.min(Math.round(availW * 0.9), Math.max(600, Math.min(1000, Math.round(availW * 0.5))));
+    const h = Math.min(Math.round(availH * 0.9), Math.max(560, Math.min(1000, Math.round(availH * 0.85))));
+    const win = await messenger.windows.getCurrent();
     await messenger.windows.update(win.id, {
       width: w,
       height: h,
       left: Math.max(0, Math.round((availW - w) / 2)),
       top: Math.max(0, Math.round((availH - h) / 2))
     });
+    // En pantallas de mucha resolución sin escalado del SO (dpr≈1) la UI se ve diminuta: agrándala.
+    let scale = 1;
+    if (dpr <= 1 && screen.width >= 2400) scale = 1.35;
+    else if (dpr <= 1 && screen.width >= 1800) scale = 1.15;
+    if (scale !== 1) document.body.style.zoom = String(scale);
   } catch (_) {}
 
   const populateAgents = (agents, selectedId) => {
