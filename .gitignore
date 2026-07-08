@@ -1,0 +1,6 @@
+# Artefactos de empaquetado (los genera la skill empaquetado-xpi y el workflow de release)
+*.xpi
+*.zip
+
+# Node
+node_modules/

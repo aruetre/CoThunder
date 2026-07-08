@@ -2,7 +2,7 @@
 
 Extensión MailExtension para Thunderbird 140 o superior. Lee el correo abierto, monta un prompt editable con su contenido y lo envía a la web de **Microsoft 365 Copilot** automatizando el chat con la sesión que el usuario ya tiene iniciada. No usa ninguna API ni clave: pilota la interfaz web de Copilot mediante un content script.
 
-Versión de esta especificación: 2.1.0. Corresponde a la versión 2.1.0 de la extensión. La 1.x se basaba en llamadas directas a una API compatible OpenAI/Azure; se sustituyó por completo por automatización de Copilot web al no disponer de acceso a API. La 2.1 añade selección de agente, plantillas de Thunderbird, respuesta maquetada en Markdown y una ventana de UI redimensionable (ver §17, novedades v2.1).
+Versión de esta especificación: 2.2.0. Corresponde a la versión 2.2.0 de la extensión. La 1.x se basaba en llamadas directas a una API compatible OpenAI/Azure; se sustituyó por completo por automatización de Copilot web al no disponer de acceso a API. La 2.1 añadió selección de agente, plantillas de Thunderbird, respuesta maquetada en Markdown y una ventana de UI redimensionable (ver §17). La 2.2 separa Prompts y Formatos, añade tono/longitud, firma/cita/hilo, blindaje anti-inyección, una biblioteca de plantillas sembrada al instalar y un rediseño de la ventana (ver §18, novedades v2.2).
 
 Plataforma objetivo: Thunderbird ESR 140 (probado en 140.11.1), **Manifest V3**. Decisión explícita del proyecto; ver §2 y el riesgo asociado en §15.
 
@@ -209,8 +209,8 @@ En MV3 no hay `content_scripts` declarativo y la API `scripting` no aparece en l
 
 ## 16. Mejoras candidatas (no incluidas)
 
-- Selección de tono por correo (formal, breve, negativa cordial).
-- Soporte de hilos (incluir mensajes anteriores en el prompt).
+- ~~Selección de tono por correo (formal, breve, negativa cordial).~~ Implementado en v2.2 (§18.2).
+- ~~Soporte de hilos (incluir mensajes anteriores en el prompt).~~ Implementado en v2.2 (§18.3).
 - Atajo de teclado e internacionalización de la UI con `_locales`.
 - **Imágenes reales** en el prompt: no factible con la inyección de texto actual (solo se incluye el `alt` de las imágenes); requeriría pegar datos de imagen en Copilot.
 - **Panel completo de agentes**: hoy solo se listan los agentes fijados en la barra lateral (id estable); los del panel "Ver más" no tienen id y su selección sería frágil (§17).
@@ -237,3 +237,38 @@ Una guía compartida (`MARKDOWN_STYLE`) y una directiva (`MARKDOWN_INSTRUCTION`)
 ### 17.5 Endurecido de la captura
 
 Cada respuesta viaja con su `messageId` de ida (popup → background → content script) y vuelta (`copilotReply { text, messageId }`), eliminando el `pendingMessageId` único: dos envíos simultáneos ya no cruzan la respuesta de correo. Si `waitForReply` no captura texto, el background muestra una notificación (el popup ya se cerró).
+
+## 18. Novedades v2.2
+
+### 18.1 Ventana de UI adaptada
+
+La ventana del botón se abre **compacta y centrada** (600×560), redimensionable, pensada para caber en 1080p y comportarse igual en pantallas de distinta resolución o con escalado del SO. `popup.js` la sitúa con `windows.getCurrent` + `windows.update` usando `screen.availWidth/Height`, y **recuerda tamaño y posición** en `storage.local` (`winBounds`), guardando con rebote al redimensionar/mover y en `pagehide`. Al reabrir, encaja los límites guardados dentro del área visible actual. Tras enviar, la ventana ya **no se cierra sola** (permite regenerar).
+
+### 18.2 Prompt compuesto: Prompts, Formatos, tono y longitud
+
+El prompt se arma en `buildComposedPrompt(message, body, opts)` combinando, en orden: (1) el **blindaje anti-inyección** (§18.4), (2) el **Prompt** prioritario del usuario, (3) el **hilo** anterior (§18.3), (4) la instrucción base + correo (`buildPrompt`), (5) el **Formato** de referencia, (6) **tono/longitud** (`toneLengthInstruction`) y (7) la maquetación Markdown (`MARKDOWN_INSTRUCTION` + `MARKDOWN_STYLE`). Cada bloque se separa con una **línea divisoria** (`SECTION_SEP`) para que el usuario localice y edite las partes con facilidad en el `textarea`.
+
+Prompts y Formatos son **plantillas de Thunderbird distinguidas por el asunto**: `Prompt - Título` (instrucción prioritaria) y `Formato - Título` (referencia de estructura; también las plantillas sin prefijo). El popup las reparte en dos desplegables. Tono (formal / cercano / directo / negativa cordial) y longitud (breve / normal / detallada) se eligen en la ventana y se recuerdan en `storage.local`.
+
+### 18.3 Firma, cita e hilo
+
+Tres casillas controlan qué se añade a la respuesta, recordadas como preferencias:
+
+- **Incluir mi firma**: al componer la respuesta, se añade la firma de la identidad (`identities.get`, `signature`/`signatureIsPlainText`), en vez de dejar que `beginReply` con `body` la elimine.
+- **Incluir el correo citado**: añade la cita del original (del `body` de la composición, sin la `.moz-signature` para no duplicarla).
+- **Incluir el hilo**: `buildThreadContext` reconstruye la conversación anterior siguiendo las cabeceras `References` e `In-Reply-To` (`messages.getFull` → `messages.query({ headerMessageId })`), toma hasta 10 ancestros (2000 caracteres cada uno), los ordena cronológicamente y los aporta como *CONTEXTO DEL HILO*. Se carga con caché al marcar la casilla, avisa si el correo no tiene hilo previo y **también se revisa contra inyección**. No requiere permisos nuevos (`messagesRead`).
+
+### 18.4 Blindaje anti-inyección
+
+Como la extensión lee correos recibidos de terceros, el contenido entrante se trata como **datos, nunca como instrucciones**. Dos capas, en `common.js`:
+
+- **Píldora en el prompt** (`INJECTION_GUARD`): se antepone **siempre** (con o sin Prompt seleccionado). Ordena a Copilot ignorar y señalar cualquier intento incrustado en el correo o el hilo de cambiar su rol, anular indicaciones, revelar su *system prompt*, cambiar objetivo o formato, o plantear escenarios para saltarse límites.
+- **Detección local** (`detectInjection` + `INJECTION_PATTERNS`): escanea el cuerpo y el hilo con patrones de seis categorías y severidad (rol/anulación/divulgación = crítico; override de formato/cambio de objetivo = alto; contexto hipotético = medio). El popup **avisa** antes de enviar sin bloquear la acción del usuario, que es quien revisa y decide.
+
+### 18.5 Biblioteca de plantillas sembrada
+
+Al instalar (`runtime.onInstalled`, `reason === "install"`), `seedTemplates` crea una biblioteca de ejemplos de Prompts y Formatos en la carpeta de plantillas (`folders.query` templates + `messages.import` de un EML con asunto codificado RFC 2047, marcado leído), deduplicando por asunto. Incluye un **Formato - Identidad UPO** adaptado a correo (estructura institucional y guía de marca: azul #003772 / amarillo #FCC100 como acento puntual, tipografía Franklin Gothic o Arial; sin inventar colores ni tipografías). Requiere el permiso `messagesImport`.
+
+### 18.6 Rediseño de la ventana
+
+Cabecera con **logo de Copilot + "Preguntar a Copilot"** y el estado (punto + texto) alineado a la derecha, y un botón **"?"** que abre la guía de uso en Opciones. Los campos llevan **título en negrita con icono** (🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, ✍️ Prompt a enviar), con Prompt/Formato y Tono/Longitud en rejilla de dos columnas. Sobre el `textarea`, una **mini barra Markdown** inserta formato (negrita, cursiva, encabezado, listas, cita, código, enlace). El botón **Regenerar** reenvía el prompt en un chat nuevo para otra versión; "Enviar" (azul) y "Regenerar" (verde teal) van en color sólido con el texto en negrita.
