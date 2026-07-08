@@ -121,16 +121,19 @@ messenger.runtime.onMessage.addListener(async (msg) => {
       .replace(/>/g, "&gt;")
       .replace(/\n/g, "<br>");
     try {
-      // Abre la respuesta con el contenido por defecto (firma del usuario + cita del original) y
-      // antepone el texto de Copilot, para no perder la firma que Thunderbird añade.
       const tab = await messenger.compose.beginReply(msg.messageId, "replyToSender");
-      let details = { body: "" };
-      for (let i = 0; i < 15; i++) {
-        details = await messenger.compose.getComposeDetails(tab.id);
-        if (details.body) break;
-        await new Promise((r) => setTimeout(r, 200));
-      }
-      await messenger.compose.setComposeDetails(tab.id, { body: html + "<br><br>" + (details.body || "") });
+      // Añade la firma configurada del usuario, leída de la identidad que Thunderbird eligió para la respuesta.
+      let signature = "";
+      try {
+        const details = await messenger.compose.getComposeDetails(tab.id);
+        const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
+        if (identity && identity.signature) {
+          signature = "<br><br>" + (identity.signatureIsPlainText
+            ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+            : identity.signature);
+        }
+      } catch (_) {}
+      await messenger.compose.setComposeDetails(tab.id, { body: html + signature });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
       messenger.notifications.create({
