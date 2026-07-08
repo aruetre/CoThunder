@@ -35,13 +35,12 @@ function getConfig() {
   return messenger.storage.local.get(DEFAULTS);
 }
 
+// Rellena la plantilla base editable (instrucción + correo) con los datos del mensaje.
 function buildPrompt(message, body, template) {
-  const filled = template
+  return template
     .replaceAll("{{author}}", message.author || "")
     .replaceAll("{{subject}}", message.subject || "")
     .replaceAll("{{body}}", body || "");
-  // El Markdown se añade siempre, al margen de la plantilla (que el usuario puede haber personalizado).
-  return filled + "\n\n" + MARKDOWN_INSTRUCTION + "\n\n" + MARKDOWN_STYLE;
 }
 
 // Instrucción opcional de tono y longitud, para añadir al prompt.
@@ -141,17 +140,28 @@ async function listTemplates() {
   return out;
 }
 
-// Prompt cuando se elige una plantilla: mezcla el correo original + la plantilla (en Markdown) +
-// el conocimiento del agente, y devuelve una respuesta enriquecida y maquetada en Markdown.
-function buildTemplatePrompt(message, body, templateBody) {
-  return "Redacta la respuesta a este correo combinando tres fuentes: (1) el correo original de abajo, " +
-    "(2) la plantilla en Markdown de abajo, y (3) tu conocimiento y experiencia como agente especializado. " +
-    "Usa la plantilla como base: si tiene huecos o marcadores (por ejemplo [nombre], [fecha], [motivo]), " +
-    "rellénalos con los datos del correo; si es un modelo de estructura o de tono, síguelo. Aprovecha tu " +
-    "conocimiento del tema para enriquecer y mejorar la respuesta, no te limites a copiar la plantilla.\n\n" +
-    MARKDOWN_INSTRUCTION + "\n\n" + MARKDOWN_STYLE + "\n\n" +
-    "--- PLANTILLA (Markdown) ---\n" + (templateBody || "") + "\n--- FIN PLANTILLA ---\n\n" +
-    "--- CORREO ORIGINAL ---\nDe: " + (message.author || "") + "\nAsunto: " + (message.subject || "") + "\n\n" + (body || "");
+// Monta el prompt final combinando, en orden de prioridad:
+// (1) el prompt prioritario del usuario, (2) la instrucción base + correo, (3) el formato de referencia,
+// (4) tono/longitud, y (5) la maquetación Markdown. promptBody y formatBody son opcionales.
+function buildComposedPrompt(message, body, opts) {
+  const o = opts || {};
+  const parts = [];
+  if (o.promptBody && o.promptBody.trim()) {
+    parts.push("INSTRUCCIÓN PRIORITARIA DEL USUARIO (tiene prioridad sobre el resto de indicaciones):\n" +
+      o.promptBody.trim());
+  }
+  parts.push(buildPrompt(message, body, o.template || DEFAULT_PROMPT_TEMPLATE));
+  if (o.formatBody && o.formatBody.trim()) {
+    parts.push("Usa la siguiente plantilla como REFERENCIA de estructura y formato de la respuesta: síguela, " +
+      "rellenando sus huecos o marcadores con los datos del correo y adaptando su estructura y tono; " +
+      "aprovecha tu conocimiento para enriquecerla, sin limitarte a copiarla.\n" +
+      "--- FORMATO DE REFERENCIA (Markdown) ---\n" + o.formatBody.trim() + "\n--- FIN FORMATO ---");
+  }
+  const tl = toneLengthInstruction(o.tone, o.length);
+  if (tl) parts.push(tl);
+  parts.push(MARKDOWN_INSTRUCTION);
+  parts.push(MARKDOWN_STYLE);
+  return parts.join("\n\n");
 }
 
 // Lee una plantilla conservando su Markdown fuente: prioriza texto plano y no colapsa los saltos de párrafo.

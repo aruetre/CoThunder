@@ -46,16 +46,16 @@
     if (selectedId && agents.some((a) => a.id === selectedId)) sel.value = selectedId;
   };
 
-  let message, body, cfg, templateBody = null;
+  let message, body, cfg, promptBody = null, formatBody = null;
 
-  // Compone el prompt según plantilla + tono + longitud.
-  const composePrompt = () => {
-    const base = templateBody != null
-      ? buildTemplatePrompt(message, body, templateBody)
-      : buildPrompt(message, body, cfg.promptTemplate);
-    const tl = toneLengthInstruction($("tone").value, $("length").value);
-    return tl ? base + "\n\n" + tl : base;
-  };
+  // Compone el prompt: prompt prioritario + base/correo + formato de referencia + tono/longitud + Markdown.
+  const composePrompt = () => buildComposedPrompt(message, body, {
+    template: cfg.promptTemplate,
+    promptBody,
+    formatBody,
+    tone: $("tone").value,
+    length: $("length").value
+  });
   const rebuildPrompt = () => { $("prompt").value = composePrompt(); };
 
   try {
@@ -80,28 +80,38 @@
     rebuildPrompt();
     populateAgents(prefs.agents, prefs.lastAgentId);
 
-    // Desplegable de plantillas.
+    // Desplegables de Prompt y Formato: plantillas de Thunderbird distinguidas por el asunto
+    // ("Prompt - ..." = instrucción prioritaria; "Formato - ..." o sin prefijo = referencia de formato).
     const templates = await listTemplates().catch(() => []);
-    const tsel = $("template");
     const multiSource = new Set(templates.map((t) => t.source)).size > 1;
-    for (const t of templates) {
-      const opt = document.createElement("option");
-      opt.value = String(t.id);
-      opt.textContent = multiSource ? `${t.subject} — ${t.source}` : t.subject;
-      tsel.appendChild(opt);
-    }
-    tsel.addEventListener("change", async () => {
+    const promptRe = /^\s*prompt\s*-\s*/i;
+    const formatRe = /^\s*formato\s*-\s*/i;
+    const fill = (sel, items, re) => {
+      for (const t of items) {
+        const opt = document.createElement("option");
+        opt.value = String(t.id);
+        const label = t.subject.replace(re, "").trim() || t.subject;
+        opt.textContent = multiSource ? `${label} — ${t.source}` : label;
+        sel.appendChild(opt);
+      }
+    };
+    fill($("prompt-sel"), templates.filter((t) => promptRe.test(t.subject)), promptRe);
+    fill($("format-sel"), templates.filter((t) => formatRe.test(t.subject) || !promptRe.test(t.subject)), formatRe);
+
+    const onSelChange = async (sel, assign, busyMsg) => {
       $("send").disabled = true;
-      setStatus("busy", "Cargando plantilla…");
+      setStatus("busy", busyMsg);
       try {
-        templateBody = tsel.value ? await extractTemplateBody(Number(tsel.value)) : null;
+        assign(sel.value ? await extractTemplateBody(Number(sel.value)) : null);
         rebuildPrompt();
-        setStatus("", tsel.value ? "Plantilla cargada" : "Sin plantilla");
+        setStatus("", "Listo");
       } catch (_) {
         setStatus("err", "No se pudo leer la plantilla");
       }
       $("send").disabled = false;
-    });
+    };
+    $("prompt-sel").addEventListener("change", () => onSelChange($("prompt-sel"), (v) => { promptBody = v; }, "Cargando prompt…"));
+    $("format-sel").addEventListener("change", () => onSelChange($("format-sel"), (v) => { formatBody = v; }, "Cargando formato…"));
 
     $("tone").addEventListener("change", () => { rebuildPrompt(); messenger.storage.local.set({ prefTone: $("tone").value }).catch(() => {}); });
     $("length").addEventListener("change", () => { rebuildPrompt(); messenger.storage.local.set({ prefLength: $("length").value }).catch(() => {}); });
