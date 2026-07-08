@@ -153,7 +153,15 @@
     $("includeSignature").addEventListener("change", () => messenger.storage.local.set({ prefSignature: $("includeSignature").checked }).catch(() => {}));
     $("includeQuote").addEventListener("change", () => messenger.storage.local.set({ prefQuote: $("includeQuote").checked }).catch(() => {}));
 
-    setStatus("", "Listo");
+    // Aviso de posible inyección en el correo (la píldora del prompt ya blinda a Copilot).
+    const inj = detectInjection(body);
+    if (inj.detected) {
+      setStatus("err", inj.severity === "crit"
+        ? "⚠️ Posible manipulación en el correo (protegido)"
+        : "⚠️ Patrón sospechoso en el correo (protegido)");
+    } else {
+      setStatus("", "Listo");
+    }
     $("send").disabled = false;
   } catch (e) {
     setStatus("err", "No se pudo preparar el prompt: " + (e && e.message ? e.message : e));

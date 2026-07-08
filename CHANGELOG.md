@@ -11,6 +11,14 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 - **Casilla «Incluir el correo citado»**: añade la cita del mensaje original, sin duplicar la firma.
 - **La ventana recuerda su tamaño y posición** entre aperturas.
 - **Botón «Regenerar»**: reenvía el prompt en un chat nuevo para obtener otra versión; tras enviar, la ventana ya no se cierra sola.
+- **Prompts y Formatos separados** mediante el asunto de la plantilla: «Prompt - …» (instrucción prioritaria) y «Formato - …» (referencia de estructura); dos desplegables independientes.
+- **Biblioteca de ejemplos** sembrada al instalar (varios Prompts y Formatos listos para usar), incluido un **Formato - Identidad UPO** adaptado a correo (estructura institucional y guía de marca: azul #003772 / amarillo #FCC100, tipografía Franklin Gothic o Arial).
+- **Mini editor Markdown** sobre el prompt (negrita, cursiva, encabezado, listas, cita, código, enlace).
+- **Rediseño de la ventana**: cabecera «Preguntar a Copilot» con logo y estado, campos con títulos e iconos, y botón de **ayuda** (guía de uso en Opciones).
+
+### Seguridad
+- **Píldora anti-inyección** en todos los prompts (con o sin Prompt seleccionado): el correo entrante se trata como **datos**, nunca como instrucciones; se ignora y avisa cualquier intento de cambiar el rol, anular indicaciones, revelar el *system prompt*, cambiar el objetivo o el formato, o plantear escenarios para saltarse límites.
+- **Detección local** de patrones de inyección en el cuerpo del correo, con **aviso en la ventana** antes de enviar.
 
 ### Cambiado
 - La respuesta conserva la **firma configurada del usuario** (se lee de la identidad de la respuesta).
