@@ -2,6 +2,8 @@
 
 Extensión MailExtension para **Thunderbird 140+** que integra **Microsoft 365 Copilot** en el correo: lee el mensaje abierto, monta un prompt editable con su contenido y lo envía al chat web de Copilot usando tu sesión ya iniciada. Copilot redacta la respuesta y CoThunder la trae de vuelta a una ventana de composición, formateada en Markdown. **Sin API ni claves.**
 
+Historial de mejoras y correcciones por versión: [CHANGELOG.md](CHANGELOG.md).
+
 ## Características
 
 - **Un botón en el visor de mensajes** (con el logo de Copilot): abre una ventana con el prompt ya montado a partir del correo (remitente, asunto y cuerpo, limpio de CSS, espacios y caracteres invisibles).

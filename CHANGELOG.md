@@ -1,0 +1,64 @@
+# Registro de cambios
+
+Todas las mejoras y correcciones notables de CoThunder. Formato basado en
+[Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
+
+## [2.2.0] — En desarrollo
+
+### Añadido
+- **Selectores de tono y longitud** en la ventana (formal / cercano / directo / negativa cordial y breve / normal / detallada); ajustan el prompt y recuerdan tu elección.
+- **Casilla «Incluir mi firma»**: añade a la respuesta la firma configurada en tu identidad de Thunderbird.
+- **Casilla «Incluir el correo citado»**: añade la cita del mensaje original, sin duplicar la firma.
+- **La ventana recuerda su tamaño y posición** entre aperturas.
+- **Botón «Regenerar»**: reenvía el prompt en un chat nuevo para obtener otra versión; tras enviar, la ventana ya no se cierra sola.
+
+### Cambiado
+- La respuesta conserva la **firma configurada del usuario** (se lee de la identidad de la respuesta).
+- Ventana **compacta 600×560, centrada y redimensionable**, pensada para caber en 1080p y comportarse igual en pantallas de distinta resolución.
+
+### Corregido
+- La **firma no aparecía**: al pasar `body` a `beginReply` se reemplazaba todo el contenido; ahora se compone respetando firma y cita.
+- En pantallas de **alta densidad / escalado del SO al 125 %** la ventana se veía diminuta o se salía de pantalla.
+
+## [2.1.0] — 2026-07-07
+
+### Añadido
+- **Desplegable de agentes**: lista los agentes fijados en la barra lateral de Copilot, recuerda el último usado y tiene un botón de refresco (↻).
+- **Desplegable de plantillas**: usa las plantillas de las carpetas *Plantillas* de Thunderbird (cualquier cuenta); combina el correo original + la plantilla en Markdown + el conocimiento del agente.
+- **Maquetación Markdown** de la respuesta, con un mínimo garantizado (saludo como encabezado, despedida en negrita, lo importante en cita) y el resto de elementos estándar según convenga.
+- **Ventana de UI redimensionable** al pulsar el botón (en lugar de un panel limitado).
+- **Logo oficial de Copilot** en el botón del visor.
+- **Notificación** si no se puede capturar la respuesta o abrir la composición.
+
+### Cambiado
+- La respuesta se abre en **composición HTML**, conservando la barra de formato y los complementos (p. ej. *Markdown Here Revival*, que renderiza el Markdown).
+- **Correlación por `messageId`** de ida y vuelta (en lugar de un único identificador): dos envíos simultáneos ya no cruzan la respuesta de correo.
+- Permisos añadidos: `accountsRead` (carpetas/plantillas) y `notifications`.
+
+### Corregido
+- **Limpieza del cuerpo del correo**: se prioriza el HTML y se extrae solo el texto visible (sin CSS ni scripts), se eliminan los **caracteres invisibles** (zero-width, BOM, etc.) y las líneas en blanco sobrantes.
+- **Escritura en Copilot** no duplicada (un único evento `beforeinput`) y robusta al cambiar de agente (reintenta y verifica que el texto entró).
+- La instrucción de **Markdown se añade siempre**, al margen de la plantilla del prompt guardada (una plantilla antigua ya no anula el formato).
+- El desplegable de agentes ya no incluye el **historial de chats** (se filtra por el id del agente) ni trata una lista vacía como éxito al refrescar.
+- **CI/Release**: acciones actualizadas a v5 (Node 24), verificación de ficheros en bash, publicación idempotente de la Release y artefacto solo en ejecuciones manuales.
+
+## [2.0.0] — 2026-07-06
+
+Reescritura completa: de llamar a una API compatible OpenAI/Azure a **automatizar la web de Microsoft 365 Copilot** con la sesión ya iniciada del usuario. Sin API ni claves.
+
+### Añadido
+- Registro en runtime de un **content script** (API `scripting` de MV3) sobre el dominio de Copilot; el botón del visor abre Copilot dentro de Thunderbird, escribe el prompt en el editor Lexical y lo envía.
+- **Popup del botón** con el prompt editable (instrucción + remitente, asunto y cuerpo) y opción de empezar un chat nuevo.
+- **Captura de la respuesta** (fin del streaming) y apertura de una ventana de composición como respuesta al remitente.
+- **Página de opciones** (URL del chat de Copilot y plantilla del prompt).
+- **Degradación segura**: si la automatización falla, el prompt se copia al portapapeles y se avisa.
+- **CI y release automática** con GitHub Actions (empaqueta el `.xpi` y publica la Release al etiquetar).
+
+### Decisiones de plataforma
+- **Manifest V3** con `browser_specific_settings.gecko` (no `applications`) y sin `persistent` (evita advertencias en Thunderbird 140).
+- Se usa `messageDisplay.getDisplayedMessages` (plural), ya que el singular no existe en Thunderbird 140.
+- No se incrusta Copilot en un iframe (Microsoft lo bloquea): se abre en ventana/pestaña propia con content script.
+
+[2.2.0]: https://github.com/aruetre/CoThunder/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.1.0
+[2.0.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.0.0
