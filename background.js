@@ -121,7 +121,16 @@ messenger.runtime.onMessage.addListener(async (msg) => {
       .replace(/>/g, "&gt;")
       .replace(/\n/g, "<br>");
     try {
-      await messenger.compose.beginReply(msg.messageId, "replyToSender", { body: html });
+      // Abre la respuesta con el contenido por defecto (firma del usuario + cita del original) y
+      // antepone el texto de Copilot, para no perder la firma que Thunderbird añade.
+      const tab = await messenger.compose.beginReply(msg.messageId, "replyToSender");
+      let details = { body: "" };
+      for (let i = 0; i < 15; i++) {
+        details = await messenger.compose.getComposeDetails(tab.id);
+        if (details.body) break;
+        await new Promise((r) => setTimeout(r, 200));
+      }
+      await messenger.compose.setComposeDetails(tab.id, { body: html + "<br><br>" + (details.body || "") });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
       messenger.notifications.create({
