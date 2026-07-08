@@ -91,6 +91,12 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
   if (msg.type === "sendToCopilot") {
     try {
+      // Guarda las opciones de composición (firma/cita) asociadas a este correo, para usarlas al llegar la respuesta.
+      if (msg.messageId != null) {
+        await messenger.storage.session.set({
+          ["opts_" + msg.messageId]: { includeSignature: msg.includeSignature !== false, includeQuote: !!msg.includeQuote }
+        });
+      }
       const tabId = await ensureCopilotTab();
       // El messageId viaja con el prompt y vuelve con la respuesta, así cada respuesta va a su correo.
       return await deliverWithRetry(tabId, {
@@ -120,20 +126,38 @@ messenger.runtime.onMessage.addListener(async (msg) => {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/\n/g, "<br>");
+    // Recupera las opciones de composición (firma/cita) guardadas al enviar.
+    const optsKey = "opts_" + msg.messageId;
+    const store = await messenger.storage.session.get({ [optsKey]: { includeSignature: true, includeQuote: false } });
+    const opts = store[optsKey] || { includeSignature: true, includeQuote: false };
+    messenger.storage.session.remove(optsKey).catch(() => {});
     try {
       const tab = await messenger.compose.beginReply(msg.messageId, "replyToSender");
-      // Añade la firma configurada del usuario, leída de la identidad que Thunderbird eligió para la respuesta.
+      const details = await messenger.compose.getComposeDetails(tab.id);
+      // Firma configurada del usuario (leída de la identidad de la respuesta), si se pidió incluirla.
       let signature = "";
-      try {
-        const details = await messenger.compose.getComposeDetails(tab.id);
-        const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
-        if (identity && identity.signature) {
-          signature = "<br><br>" + (identity.signatureIsPlainText
-            ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
-            : identity.signature);
+      if (opts.includeSignature) {
+        try {
+          const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
+          if (identity && identity.signature) {
+            signature = "<br><br>" + (identity.signatureIsPlainText
+              ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+              : identity.signature);
+          }
+        } catch (_) {}
+      }
+      // Cita del original (el cuerpo por defecto de la respuesta, sin la firma que Thunderbird pudiera añadir).
+      let quote = "";
+      if (opts.includeQuote && details.body) {
+        try {
+          const doc = new DOMParser().parseFromString(details.body, "text/html");
+          doc.querySelectorAll(".moz-signature").forEach((n) => n.remove());
+          quote = "<br><br>" + (doc.body ? doc.body.innerHTML : "");
+        } catch (_) {
+          quote = "<br><br>" + details.body;
         }
-      } catch (_) {}
-      await messenger.compose.setComposeDetails(tab.id, { body: html + signature });
+      }
+      await messenger.compose.setComposeDetails(tab.id, { body: html + signature + quote });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
       messenger.notifications.create({

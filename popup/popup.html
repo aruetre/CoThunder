@@ -4,9 +4,33 @@
   <div id="status"><span id="dot"></span><span id="statusText">Preparando…</span></div>
   <label class="row">Agente: <select id="agent"><option value="">Copilot por defecto</option></select> <button type="button" id="refreshAgents" title="Actualizar la lista de agentes desde Copilot">↻</button></label>
   <label class="row">Plantilla: <select id="template"><option value="">Sin plantilla</option></select></label>
-  <textarea id="prompt" rows="12"></textarea>
-  <label><input type="checkbox" id="newChat"> Empezar chat nuevo</label>
+  <div class="row">
+    <label style="flex:1;margin:0">Tono
+      <select id="tone">
+        <option value="">Automático</option>
+        <option value="formal">Formal</option>
+        <option value="cercano">Cercano</option>
+        <option value="breve">Directo</option>
+        <option value="negativa">Negativa cordial</option>
+      </select>
+    </label>
+    <label style="flex:1;margin:0">Longitud
+      <select id="length">
+        <option value="">Automática</option>
+        <option value="breve">Breve</option>
+        <option value="normal">Normal</option>
+        <option value="detallada">Detallada</option>
+      </select>
+    </label>
+  </div>
+  <textarea id="prompt" rows="8"></textarea>
+  <div class="opts">
+    <label><input type="checkbox" id="newChat"> Empezar chat nuevo</label>
+    <label><input type="checkbox" id="includeSignature" checked> Incluir mi firma</label>
+    <label><input type="checkbox" id="includeQuote"> Incluir el correo citado</label>
+  </div>
   <button id="send" disabled>Enviar a Copilot</button>
+  <button id="regen" type="button" hidden>Regenerar (otra versión)</button>
   <script src="../common.js"></script>
   <script src="popup.js"></script>
 </body></html>

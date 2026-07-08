@@ -11,6 +11,12 @@ label.row { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; }
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; }
 #refreshAgents { width: auto; padding: 4px 10px; background: transparent; color: inherit;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; cursor: pointer; }
+#tone, #length { width: 100%; box-sizing: border-box; padding: 4px; margin-top: 2px;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; }
+.opts { margin: 6px 0; }
+.opts label { display: block; margin: 3px 0; }
+#regen { margin-top: 6px; background: transparent; color: inherit;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent); }
 textarea { width: 100%; box-sizing: border-box; flex: 1 1 auto; min-height: 120px; resize: none; overflow: auto;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 6px; padding: 6px; }
 button { width: 100%; padding: 8px; border: 0; border-radius: 6px; background: #1a5fb4; color: #fff; cursor: pointer; }

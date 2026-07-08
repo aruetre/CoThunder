@@ -44,6 +44,25 @@ function buildPrompt(message, body, template) {
   return filled + "\n\n" + MARKDOWN_INSTRUCTION + "\n\n" + MARKDOWN_STYLE;
 }
 
+// Instrucción opcional de tono y longitud, para añadir al prompt.
+function toneLengthInstruction(tone, length) {
+  const tones = {
+    formal: "Usa un tono formal y profesional.",
+    cercano: "Usa un tono cercano y cordial.",
+    breve: "Usa un tono directo y sin rodeos.",
+    negativa: "La respuesta es una negativa: comunícala de forma cordial y respetuosa, agradeciendo y explicando el motivo con tacto."
+  };
+  const lengths = {
+    breve: "Que la respuesta sea breve (2-4 frases).",
+    normal: "Longitud media, la justa para el asunto.",
+    detallada: "Respuesta detallada y completa."
+  };
+  const parts = [];
+  if (tones[tone]) parts.push(tones[tone]);
+  if (lengths[length]) parts.push(lengths[length]);
+  return parts.length ? parts.join(" ") : "";
+}
+
 function matchPatternFromUrl(url) {
   const u = new URL(url);
   return `${u.protocol}//${u.host}/*`;
