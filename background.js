@@ -184,3 +184,65 @@ messenger.runtime.onMessage.addListener(async (msg) => {
     return responded ? { ok: true, agents: [] } : { ok: false, reason: "no-copilot" };
   }
 });
+
+// --- Biblioteca inicial de Prompts y Formatos, sembrada en la carpeta Plantillas al instalar ---
+const SEED_ITEMS = [
+  { subject: "Prompt - Afirmación / Aceptación", body: "Redacta una respuesta afirmativa y cordial: confirma o acepta lo solicitado, deja claros los siguientes pasos y muestra disposición a colaborar." },
+  { subject: "Prompt - Negación cordial", body: "Redacta una respuesta que declina lo solicitado de forma cordial y respetuosa: agradece el mensaje, explica el motivo con tacto y, si es posible, ofrece una alternativa." },
+  { subject: "Prompt - Negociación", body: "Redacta una respuesta orientada a negociar: reconoce la propuesta recibida, expón tu posición y tus condiciones, plantea una contraoferta o un punto intermedio y mantén un tono constructivo." },
+  { subject: "Prompt - Investigación / Petición de datos", body: "Redacta una respuesta solicitando la información o las aclaraciones necesarias para poder avanzar. Enumera de forma clara las preguntas o los datos que faltan." },
+  { subject: "Prompt - Recopilación de documentación", body: "Redacta una respuesta pidiendo que se aporte la documentación o los datos requeridos. Enuméralos con claridad e indica, si procede, el plazo y el formato de entrega." },
+  { subject: "Prompt - Acuse de recibo", body: "Redacta un acuse de recibo: confirma que se ha recibido el mensaje, indica que se revisará y da un plazo aproximado de respuesta." },
+  { subject: "Prompt - Reclamación", body: "Redacta una reclamación firme pero educada: expón los hechos con fechas y datos concretos, indica claramente lo que solicitas y establece un plazo de respuesta." },
+  { subject: "Prompt - Agradecimiento", body: "Redacta un agradecimiento sincero y breve por lo indicado en el correo, cerrando con una nota cordial." },
+  { subject: "Prompt - Seguimiento / Recordatorio", body: "Redacta un recordatorio cordial sobre un asunto pendiente: referencia el mensaje anterior, resume lo que queda por resolver y pide una actualización." },
+  { subject: "Prompt - Disculpa / Incidencia", body: "Redacta una disculpa profesional: reconoce el problema o el retraso, explica brevemente qué ha pasado y propón una solución o los próximos pasos." },
+  { subject: "Formato - Carta institucional", body: "# [Saludo formal]\n\n[Introducción: motivo del mensaje]\n\n[Desarrollo: expón el asunto con detalle]\n\n**[Petición o conclusión concreta]**\n\n[Despedida formal]\n\n[Nombre y cargo]" },
+  { subject: "Formato - Respuesta breve", body: "[Saludo]\n\n[Respuesta directa en 2-3 frases]\n\n[Despedida]" },
+  { subject: "Formato - Lista de puntos", body: "# [Saludo]\n\n[Frase introductoria]\n\n- [Punto 1]\n- [Punto 2]\n- [Punto 3]\n\n[Cierre]" },
+  { subject: "Formato - Tabla comparativa", body: "# [Saludo]\n\n[Introducción breve]\n\n| [Concepto] | [Detalle] |\n|---|---|\n| [elemento] | [valor] |\n| [elemento] | [valor] |\n\n[Cierre]" },
+  { subject: "Formato - Propuesta / Oferta", body: "# [Saludo]\n\n[Contexto de la propuesta]\n\n## Propuesta\n- **Alcance:** [descripción]\n- **Plazo:** [plazo]\n- **Condiciones:** [condiciones]\n\n> [Nota o salvedad importante]\n\n[Cierre y llamada a la acción]" }
+];
+
+// Codifica el asunto en RFC 2047 (UTF-8/Base64) para permitir acentos en la cabecera.
+function encodeSubject(s) {
+  const bytes = new TextEncoder().encode(s);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return "=?UTF-8?B?" + btoa(bin) + "?=";
+}
+
+// Siembra los Prompts y Formatos de ejemplo en la carpeta Plantillas (solo los que aún no existan).
+async function seedTemplates() {
+  try {
+    const folders = await messenger.folders.query({ specialUse: ["templates"] });
+    if (!folders || !folders.length) return;
+    const folder = folders[0];
+    const existing = new Set();
+    let page = await messenger.messages.list(folder.id).catch(() => null);
+    while (page) {
+      for (const m of page.messages || []) existing.add((m.subject || "").trim());
+      page = page.id ? await messenger.messages.continueList(page.id).catch(() => null) : null;
+    }
+    const date = new Date().toUTCString();
+    for (const it of SEED_ITEMS) {
+      if (existing.has(it.subject)) continue;
+      const eml =
+        "From: CoThunder <cothunder@local>\r\n" +
+        "Date: " + date + "\r\n" +
+        "Subject: " + encodeSubject(it.subject) + "\r\n" +
+        "Content-Type: text/plain; charset=utf-8\r\n" +
+        "Content-Transfer-Encoding: 8bit\r\n\r\n" +
+        it.body;
+      const file = new File([eml], "seed.eml", { type: "message/rfc822" });
+      await messenger.messages.import(file, folder.id, { read: true })
+        .catch((e) => console.error("[CoThunder] seed import:", it.subject, e));
+    }
+  } catch (e) {
+    console.error("[CoThunder] seedTemplates:", e);
+  }
+}
+
+messenger.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") seedTemplates();
+});
