@@ -2,11 +2,29 @@
 <html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="popup.css"></head>
 <body>
   <div id="status"><span id="dot"></span><span id="statusText">Preparando…</span></div>
-  <label class="row">Agente: <select id="agent"><option value="">Copilot por defecto</option></select> <button type="button" id="refreshAgents" title="Actualizar la lista de agentes desde Copilot">↻</button></label>
-  <label class="row">Prompt: <select id="prompt-sel"><option value="">Ninguno</option></select></label>
-  <label class="row">Formato: <select id="format-sel"><option value="">Ninguno</option></select></label>
-  <div class="row">
-    <label style="flex:1;margin:0">Tono
+
+  <div class="field">
+    <label for="agent">Agente</label>
+    <div class="inline">
+      <select id="agent"><option value="">Copilot por defecto</option></select>
+      <button type="button" id="refreshAgents" title="Actualizar la lista de agentes desde Copilot">↻</button>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="field">
+      <label for="prompt-sel">Prompt</label>
+      <select id="prompt-sel"><option value="">Ninguno</option></select>
+    </div>
+    <div class="field">
+      <label for="format-sel">Formato</label>
+      <select id="format-sel"><option value="">Ninguno</option></select>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="field">
+      <label for="tone">Tono</label>
       <select id="tone">
         <option value="">Automático</option>
         <option value="formal">Formal</option>
@@ -14,24 +32,32 @@
         <option value="breve">Directo</option>
         <option value="negativa">Negativa cordial</option>
       </select>
-    </label>
-    <label style="flex:1;margin:0">Longitud
+    </div>
+    <div class="field">
+      <label for="length">Longitud</label>
       <select id="length">
         <option value="">Automática</option>
         <option value="breve">Breve</option>
         <option value="normal">Normal</option>
         <option value="detallada">Detallada</option>
       </select>
-    </label>
+    </div>
   </div>
-  <textarea id="prompt" rows="8"></textarea>
+
+  <div class="field grow">
+    <label for="prompt">Prompt a enviar</label>
+    <textarea id="prompt"></textarea>
+  </div>
+
   <div class="opts">
     <label><input type="checkbox" id="newChat"> Empezar chat nuevo</label>
     <label><input type="checkbox" id="includeSignature" checked> Incluir mi firma</label>
     <label><input type="checkbox" id="includeQuote"> Incluir el correo citado</label>
   </div>
+
   <button id="send" disabled>Enviar a Copilot</button>
   <button id="regen" type="button" hidden>Regenerar (otra versión)</button>
+
   <script src="../common.js"></script>
   <script src="popup.js"></script>
 </body></html>
