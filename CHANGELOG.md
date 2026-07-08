@@ -9,6 +9,7 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 - **Selectores de tono y longitud** en la ventana (formal / cercano / directo / negativa cordial y breve / normal / detallada); ajustan el prompt y recuerdan tu elección.
 - **Casilla «Incluir mi firma»**: añade a la respuesta la firma configurada en tu identidad de Thunderbird.
 - **Casilla «Incluir el correo citado»**: añade la cita del mensaje original, sin duplicar la firma.
+- **Casilla «Incluir el hilo»**: reconstruye la conversación anterior (por las cabeceras `References`/`In-Reply-To`) y la aporta como contexto; también se revisa contra inyección.
 - **La ventana recuerda su tamaño y posición** entre aperturas.
 - **Botón «Regenerar»**: reenvía el prompt en un chat nuevo para obtener otra versión; tras enviar, la ventana ya no se cierra sola.
 - **Prompts y Formatos separados** mediante el asunto de la plantilla: «Prompt - …» (instrucción prioritaria) y «Formato - …» (referencia de estructura); dos desplegables independientes.
@@ -23,6 +24,8 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 ### Cambiado
 - La respuesta conserva la **firma configurada del usuario** (se lee de la identidad de la respuesta).
 - Ventana **compacta 600×560, centrada y redimensionable**, pensada para caber en 1080p y comportarse igual en pantallas de distinta resolución.
+- El **prompt a enviar se separa en bloques** con una línea divisoria (seguridad, prompt, hilo, correo, formato, tono, Markdown) para localizarlos y editarlos con facilidad.
+- **Botones «Enviar» y «Regenerar»** en color sólido (azul / verde teal) y con el texto en negrita.
 
 ### Corregido
 - La **firma no aparecía**: al pasar `body` a `beginReply` se reemplazaba todo el contenido; ahora se compone respetando firma y cita.

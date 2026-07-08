@@ -81,13 +81,14 @@
     });
   })();
 
-  let message, body, cfg, promptBody = null, formatBody = null;
+  let message, body, cfg, promptBody = null, formatBody = null, threadBody = null;
 
-  // Compone el prompt: prompt prioritario + base/correo + formato de referencia + tono/longitud + Markdown.
+  // Compone el prompt: prompt prioritario + hilo + base/correo + formato + tono/longitud + Markdown.
   const composePrompt = () => buildComposedPrompt(message, body, {
     template: cfg.promptTemplate,
     promptBody,
     formatBody,
+    thread: $("includeThread").checked ? threadBody : null,
     tone: $("tone").value,
     length: $("length").value
   });
@@ -104,13 +105,14 @@
     body = await extractBody(message.id);
 
     const prefs = await messenger.storage.local.get({
-      lastAgentId: "", agents: [], prefTone: "", prefLength: "", prefSignature: true, prefQuote: false
+      lastAgentId: "", agents: [], prefTone: "", prefLength: "", prefSignature: true, prefQuote: false, prefThread: false
     });
     $("tone").value = prefs.prefTone;
     $("length").value = prefs.prefLength;
     $("newChat").checked = cfg.newChatByDefault;
     $("includeSignature").checked = prefs.prefSignature;
     $("includeQuote").checked = prefs.prefQuote;
+    $("includeThread").checked = prefs.prefThread;
 
     rebuildPrompt();
     populateAgents(prefs.agents, prefs.lastAgentId);
@@ -153,8 +155,33 @@
     $("includeSignature").addEventListener("change", () => messenger.storage.local.set({ prefSignature: $("includeSignature").checked }).catch(() => {}));
     $("includeQuote").addEventListener("change", () => messenger.storage.local.set({ prefQuote: $("includeQuote").checked }).catch(() => {}));
 
-    // Aviso de posible inyección en el correo (la píldora del prompt ya blinda a Copilot).
-    const inj = detectInjection(body);
+    // Carga (con caché) el hilo anterior; devuelve true si hay hilo, false si no lo hay o falla.
+    const loadThread = async () => {
+      if (threadBody != null) return threadBody.length > 0;
+      threadBody = await buildThreadContext(message.id).catch(() => "");
+      return threadBody.length > 0;
+    };
+    $("includeThread").addEventListener("change", async () => {
+      const on = $("includeThread").checked;
+      messenger.storage.local.set({ prefThread: on }).catch(() => {});
+      if (on) {
+        $("send").disabled = true; $("regen").disabled = true;
+        setStatus("busy", "Cargando el hilo…");
+        const has = await loadThread();
+        if (!has) { $("includeThread").checked = false; setStatus("err", "El correo no tiene hilo anterior"); }
+        else setStatus("", "Hilo cargado");
+        $("send").disabled = false; $("regen").disabled = false;
+      }
+      rebuildPrompt();
+    });
+
+    // Carga inicial del hilo si la preferencia estaba activa (antes de avisar de inyección).
+    if ($("includeThread").checked) {
+      if (await loadThread()) rebuildPrompt(); else $("includeThread").checked = false;
+    }
+
+    // Aviso de posible inyección en el correo o el hilo (la píldora del prompt ya blinda a Copilot).
+    const inj = detectInjection(body + "\n" + (threadBody || ""));
     if (inj.detected) {
       setStatus("err", inj.severity === "crit"
         ? "⚠️ Posible manipulación en el correo (protegido)"

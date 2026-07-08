@@ -2,6 +2,7 @@
   color-scheme: light dark;
   --border: color-mix(in srgb, currentColor 28%, transparent);
   --accent: #1a5fb4;
+  --accent-2: #1a9c7a;
 }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -79,9 +80,14 @@ select, textarea {
   width: 100%;
   padding: 9px;
   font: inherit;
+  font-weight: 700;
+  border: 0;
   border-radius: 6px;
+  color: #fff;
   cursor: pointer;
 }
-#send { border: 0; background: var(--accent); color: #fff; }
-#regen { background: transparent; color: inherit; border: 1px solid var(--border); }
+#send { background: var(--accent); }
+#send:hover { background: color-mix(in srgb, var(--accent) 88%, #000); }
+#regen { background: var(--accent-2); }
+#regen:hover { background: color-mix(in srgb, var(--accent-2) 88%, #000); }
 #send:disabled, #regen:disabled { opacity: .5; cursor: default; }
