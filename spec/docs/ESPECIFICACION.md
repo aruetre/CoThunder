@@ -272,3 +272,34 @@ Al instalar (`runtime.onInstalled`, `reason === "install"`), `seedTemplates` cre
 ### 18.6 Rediseño de la ventana
 
 Cabecera con **logo de Copilot + "Preguntar a Copilot"** y el estado (punto + texto) alineado a la derecha, y un botón **"?"** que abre la guía de uso en Opciones. Los campos llevan **título en negrita con icono** (🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, ✍️ Prompt a enviar), con Prompt/Formato y Tono/Longitud en rejilla de dos columnas. Sobre el `textarea`, una **mini barra Markdown** inserta formato (negrita, cursiva, encabezado, listas, cita, código, enlace). El botón **Regenerar** reenvía el prompt en un chat nuevo para otra versión; "Enviar" (azul) y "Regenerar" (verde teal) van en color sólido con el texto en negrita.
+
+## 19. Crear desde Copilot — Fase 1 (planificado, v2.3)
+
+Diseño aprobado, aún sin implementar (el código actual corresponde a v2.2). Añade un segundo botón para **redactar correos desde cero** (no una respuesta), reutilizando el popup. Es la Fase 1 de una suite de creación mayor (Fase 2: botón en la ventana de redacción con "Crear" y "Mejorar"; Fase 3: pulido), aquí solo se especifica la Fase 1.
+
+### 19.1 Botón y modo
+
+Un botón `action` en la **barra principal** de Thunderbird (icono de Copilot, título "Crear desde Copilot"), independiente de que haya un correo abierto. Al pulsar abre `popup/popup.html?mode=create` en la misma ventana propia (`windows.create`, redimensionable y con memoria de tamaño, como §18.1); no lleva `messageId`. El popup lee `mode` de la URL (`reply` por defecto, `create` en este botón) y ajusta la UI y el flujo. **No requiere permisos nuevos**: `action` no lleva permiso propio y `compose` (para `beginNew`) ya está declarado.
+
+### 19.2 UI en modo creación
+
+Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, editor Markdown, "Empezar chat nuevo", "Incluir mi firma" y "Regenerar". **Oculta** las opciones propias de respuesta ("Incluir el correo citado" e "Incluir el hilo"), que no aplican sin correo de origen. **Añade**:
+
+- 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
+- 👤 **Para / contexto** (texto libre): destinatario, propósito y puntos a incluir; enriquece el prompt.
+- ✉️ **Destinatario (correo)** (opcional): si es una dirección válida, prefija el campo *Para* del correo nuevo.
+- El `textarea` principal pasa a titularse **"¿Qué quieres crear?"** (la instrucción base de la creación).
+
+Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta.
+
+### 19.3 Prompt de creación
+
+`buildCreatePrompt` compone, en orden: la píldora anti-inyección (relajada, ya que el contenido es del propio usuario), el Prompt prioritario, la **instrucción de creación** con el contexto/idioma, el Formato de referencia, tono/longitud, y una directiva Markdown específica `MARKDOWN_INSTRUCTION_CREATE` que pide **asunto y cuerpo**: primero una línea `Asunto: …` con un asunto breve y, a continuación, el cuerpo como código fuente Markdown sin renderizar dentro de un único bloque ```` ```markdown ````. Se mantiene la separación en bloques con `SECTION_SEP` (§18.2) para editarlo con facilidad.
+
+### 19.4 Captura y composición
+
+El content script captura la respuesta igual que en modo respuesta (`waitForReply`, misma tubería y selectores centralizados). En modo creación, el background **separa la línea `Asunto:` del cuerpo Markdown** y abre `messenger.compose.beginNew({ subject, body, to })` en composición **HTML**, prefijando `to` si se indicó un destinatario válido y añadiendo la firma de la identidad por defecto si "Incluir mi firma" está marcado. La correlación de ida y vuelta usa un `requestId` generado (no hay `messageId`). Degradación idéntica a §17.5: si `waitForReply` no captura texto, se copia el prompt al portapapeles y se notifica.
+
+### 19.5 Reutilización
+
+Sin cambios en `content-copilot.js` ni nuevas dependencias del DOM de Copilot: la única diferencia respecto a la respuesta es la construcción del prompt (`buildCreatePrompt`) y el destino final (`beginNew` en vez de `beginReply`). El popup es el mismo, parametrizado por `mode`.
