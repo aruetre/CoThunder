@@ -46,6 +46,38 @@
     if (selectedId && agents.some((a) => a.id === selectedId)) sel.value = selectedId;
   };
 
+  // Mini editor Markdown para el textarea del prompt (envuelve la selección o prefija las líneas).
+  (() => {
+    const ta = $("prompt");
+    const surround = (before, after) => {
+      const s = ta.selectionStart, e = ta.selectionEnd;
+      ta.setRangeText(before + ta.value.slice(s, e) + after, s, e, "select");
+      ta.focus();
+    };
+    const prefixLines = (mk) => {
+      const s = ta.selectionStart, e = ta.selectionEnd;
+      const start = ta.value.lastIndexOf("\n", s - 1) + 1;
+      let end = ta.value.indexOf("\n", e);
+      if (end === -1) end = ta.value.length;
+      const block = ta.value.slice(start, end).split("\n").map((l, i) => mk(i + 1) + l).join("\n");
+      ta.setRangeText(block, start, end, "select");
+      ta.focus();
+    };
+    const actions = {
+      bold: () => surround("**", "**"),
+      italic: () => surround("*", "*"),
+      code: () => surround("`", "`"),
+      link: () => surround("[", "](url)"),
+      h: () => prefixLines(() => "# "),
+      ul: () => prefixLines(() => "- "),
+      ol: () => prefixLines((n) => n + ". "),
+      quote: () => prefixLines(() => "> ")
+    };
+    document.querySelectorAll(".mdbar button").forEach((b) => {
+      b.addEventListener("click", () => { const a = actions[b.dataset.md]; if (a) a(); });
+    });
+  })();
+
   let message, body, cfg, promptBody = null, formatBody = null;
 
   // Compone el prompt: prompt prioritario + base/correo + formato de referencia + tono/longitud + Markdown.

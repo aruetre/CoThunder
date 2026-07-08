@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"><link rel="stylesheet" href="popup.css"></head>
 <body>
+  <div class="header"><img class="logo" src="../icon.svg" alt=""> <span>Preguntar a Copilot</span></div>
   <div id="status"><span id="dot"></span><span id="statusText">Preparando…</span></div>
 
   <div class="field">
-    <label for="agent">Agente</label>
+    <label for="agent">🤖 Agente</label>
     <div class="inline">
       <select id="agent"><option value="">Copilot por defecto</option></select>
       <button type="button" id="refreshAgents" title="Actualizar la lista de agentes desde Copilot">↻</button>
@@ -13,18 +14,18 @@
 
   <div class="grid2">
     <div class="field">
-      <label for="prompt-sel">Prompt</label>
+      <label for="prompt-sel">⭐ Prompt</label>
       <select id="prompt-sel"><option value="">Ninguno</option></select>
     </div>
     <div class="field">
-      <label for="format-sel">Formato</label>
+      <label for="format-sel">📄 Formato</label>
       <select id="format-sel"><option value="">Ninguno</option></select>
     </div>
   </div>
 
   <div class="grid2">
     <div class="field">
-      <label for="tone">Tono</label>
+      <label for="tone">🎭 Tono</label>
       <select id="tone">
         <option value="">Automático</option>
         <option value="formal">Formal</option>
@@ -34,7 +35,7 @@
       </select>
     </div>
     <div class="field">
-      <label for="length">Longitud</label>
+      <label for="length">📏 Longitud</label>
       <select id="length">
         <option value="">Automática</option>
         <option value="breve">Breve</option>
@@ -45,7 +46,17 @@
   </div>
 
   <div class="field grow">
-    <label for="prompt">Prompt a enviar</label>
+    <label for="prompt">✍️ Prompt a enviar</label>
+    <div class="mdbar">
+      <button type="button" data-md="bold" title="Negrita"><b>B</b></button>
+      <button type="button" data-md="italic" title="Cursiva"><i>I</i></button>
+      <button type="button" data-md="h" title="Encabezado">H</button>
+      <button type="button" data-md="ul" title="Lista con viñetas">•</button>
+      <button type="button" data-md="ol" title="Lista numerada">1.</button>
+      <button type="button" data-md="quote" title="Cita">❝</button>
+      <button type="button" data-md="code" title="Código">&lt;/&gt;</button>
+      <button type="button" data-md="link" title="Enlace">🔗</button>
+    </div>
     <textarea id="prompt"></textarea>
   </div>
 

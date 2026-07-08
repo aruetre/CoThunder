@@ -14,6 +14,9 @@ body {
   gap: 10px;
 }
 
+.header { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+.header .logo { width: 22px; height: 22px; flex: none; }
+
 #status { display: flex; gap: 6px; align-items: flex-start; }
 #dot { width: 10px; height: 10px; border-radius: 50%; background: #888; flex: none; margin-top: 3px; }
 #dot.busy { background: #e5a50a; }
@@ -22,9 +25,22 @@ body {
 #statusText { flex: 1; }
 
 .field { display: flex; flex-direction: column; gap: 3px; }
-.field > label { font-size: 12px; opacity: .75; }
+.field > label { font-size: 12px; font-weight: 700; opacity: .85; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .inline { display: flex; gap: 6px; }
+
+.mdbar { display: flex; gap: 3px; flex-wrap: wrap; }
+.mdbar button {
+  min-width: 26px;
+  padding: 2px 7px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  cursor: pointer;
+}
+.mdbar button:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
 
 select, textarea {
   width: 100%;
