@@ -3,6 +3,21 @@
   const $ = (id) => document.getElementById(id);
   const setStatus = (cls, text) => { $("dot").className = cls; $("statusText").textContent = text; };
 
+  // Ajusta la ventana a la pantalla real (alta densidad / escalado del SO): que no se salga ni quede diminuta.
+  try {
+    const win = await messenger.windows.getCurrent();
+    const availW = screen.availWidth;
+    const availH = screen.availHeight;
+    const w = Math.min(820, Math.round(availW * 0.9));
+    const h = Math.min(820, Math.round(availH * 0.9));
+    await messenger.windows.update(win.id, {
+      width: w,
+      height: h,
+      left: Math.max(0, Math.round((availW - w) / 2)),
+      top: Math.max(0, Math.round((availH - h) / 2))
+    });
+  } catch (_) {}
+
   const populateAgents = (agents, selectedId) => {
     const sel = $("agent");
     sel.length = 1; // conserva la primera opción "Copilot por defecto"
