@@ -201,7 +201,23 @@ const SEED_ITEMS = [
   { subject: "Formato - Respuesta breve", body: "[Saludo]\n\n[Respuesta directa en 2-3 frases]\n\n[Despedida]" },
   { subject: "Formato - Lista de puntos", body: "# [Saludo]\n\n[Frase introductoria]\n\n- [Punto 1]\n- [Punto 2]\n- [Punto 3]\n\n[Cierre]" },
   { subject: "Formato - Tabla comparativa", body: "# [Saludo]\n\n[Introducción breve]\n\n| [Concepto] | [Detalle] |\n|---|---|\n| [elemento] | [valor] |\n| [elemento] | [valor] |\n\n[Cierre]" },
-  { subject: "Formato - Propuesta / Oferta", body: "# [Saludo]\n\n[Contexto de la propuesta]\n\n## Propuesta\n- **Alcance:** [descripción]\n- **Plazo:** [plazo]\n- **Condiciones:** [condiciones]\n\n> [Nota o salvedad importante]\n\n[Cierre y llamada a la acción]" }
+  { subject: "Formato - Propuesta / Oferta", body: "# [Saludo]\n\n[Contexto de la propuesta]\n\n## Propuesta\n- **Alcance:** [descripción]\n- **Plazo:** [plazo]\n- **Condiciones:** [condiciones]\n\n> [Nota o salvedad importante]\n\n[Cierre y llamada a la acción]" },
+  { subject: "Prompt - Confirmación de reunión", body: "Confirma la reunión o cita propuesta, reiterando fecha, hora, lugar o enlace y, si procede, el orden del día." },
+  { subject: "Prompt - Propuesta de reunión", body: "Propón una reunión: sugiere dos o tres franjas horarias, indica el objetivo y pide que confirmen la que mejor convenga." },
+  { subject: "Prompt - Delegación / Reenvío", body: "Indica que trasladas el asunto a la persona o departamento competente: di a quién, por qué y qué puede esperar el remitente a continuación." },
+  { subject: "Prompt - Explicación / Aclaración", body: "Explica con claridad y de forma didáctica el asunto planteado, evitando jerga innecesaria y con ejemplos si ayudan a entenderlo." },
+  { subject: "Prompt - Oferta económica / Presupuesto", body: "Redacta una respuesta con una oferta económica: detalla los conceptos, los importes, las condiciones y la validez de la oferta." },
+  { subject: "Prompt - Rechazo de oferta / candidatura", body: "Comunica de forma respetuosa que no se sigue adelante con la propuesta o candidatura, agradeciendo el interés y dejando la puerta abierta si procede." },
+  { subject: "Prompt - Bienvenida / Onboarding", body: "Da la bienvenida y explica los primeros pasos, los recursos disponibles y a quién dirigirse ante cualquier duda." },
+  { subject: "Prompt - Escalado / Urgencia", body: "Comunica que el asunto se escala por su urgencia o gravedad: indica a qué nivel se eleva y el plazo de actuación previsto." },
+  { subject: "Prompt - Resumen ejecutivo", body: "Resume el correo o el hilo en los puntos clave, las decisiones tomadas y las acciones pendientes, de forma concisa." },
+  { subject: "Prompt - Traducción", body: "Traduce el contenido del correo al idioma solicitado, manteniendo el tono, el registro y el significado del original." },
+  { subject: "Formato - Correo formal con firma", body: "Estimado/a [Nombre]:\n\n[Párrafo 1]\n\n[Párrafo 2]\n\nQuedo a su disposición para cualquier aclaración.\n\nUn cordial saludo,\n[Nombre]\n[Cargo] · [Organización]\n[Teléfono] · [Correo]" },
+  { subject: "Formato - Pasos numerados", body: "# [Título o saludo]\n\n[Contexto breve]\n\n1. [Paso 1]\n2. [Paso 2]\n3. [Paso 3]\n\n[Cierre]" },
+  { subject: "Formato - Preguntas y respuestas", body: "# [Saludo]\n\n**[Pregunta 1]**\n[Respuesta 1]\n\n**[Pregunta 2]**\n[Respuesta 2]\n\n[Cierre]" },
+  { subject: "Formato - Resumen con acciones", body: "# [Asunto]\n\n**Resumen:** [síntesis en 1-2 frases]\n\n## Puntos clave\n- [Punto 1]\n- [Punto 2]\n\n## Acciones pendientes\n- [ ] [Acción 1] — [responsable / plazo]\n- [ ] [Acción 2] — [responsable / plazo]" },
+  { subject: "Formato - Confirmación de cita", body: "# [Saludo]\n\nConfirmo nuestra [reunión o cita]:\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar / Enlace:** [lugar o enlace]\n- **Asunto:** [tema]\n\n[Cierre]" },
+  { subject: "Formato - Propuesta comercial", body: "# [Saludo]\n\n[Presentación breve]\n\n## Propuesta\n| Concepto | Detalle | Importe |\n|---|---|---|\n| [elemento] | [detalle] | [importe] |\n| [elemento] | [detalle] | [importe] |\n\n**Total:** [total]\n\n**Condiciones:** [condiciones] · **Validez:** [validez]\n\n[Cierre y llamada a la acción]" }
 ];
 
 // Codifica el asunto en RFC 2047 (UTF-8/Base64) para permitir acentos en la cabecera.
