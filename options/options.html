@@ -1,9 +1,58 @@
 <!DOCTYPE html>
-<html lang="es"><head><meta charset="utf-8"></head><body style="font:13px system-ui;max-width:560px;padding:10px">
-  <label>URL del chat de Copilot<br><input id="copilotUrl" type="url" style="width:100%"></label>
-  <p><label>Plantilla del prompt<br><textarea id="promptTemplate" rows="8" style="width:100%"></textarea></label></p>
-  <label><input id="newChatByDefault" type="checkbox"> Empezar chat nuevo por defecto</label>
-  <p><button id="save">Guardar</button> <span id="saved"></span></p>
+<html lang="es"><head><meta charset="utf-8">
+<style>
+  body { font: 13px/1.5 system-ui, sans-serif; max-width: 640px; padding: 14px; color-scheme: light dark; }
+  h2 { font-size: 15px; margin: 18px 0 6px; }
+  input, textarea { width: 100%; box-sizing: border-box; }
+  .help { border: 1px solid color-mix(in srgb, currentColor 22%, transparent); border-radius: 8px; padding: 10px 12px; }
+  .help ul { margin: 4px 0 10px; padding-left: 18px; }
+  .help li { margin: 2px 0; }
+  .muted { opacity: .8; }
+  code { background: color-mix(in srgb, currentColor 10%, transparent); padding: 0 3px; border-radius: 3px; }
+</style>
+</head><body>
+
+  <h2>Configuración</h2>
+  <p><label>URL del chat de Copilot<br><input id="copilotUrl" type="url"></label></p>
+  <p><label>Plantilla base del prompt<br><textarea id="promptTemplate" rows="6"></textarea></label></p>
+  <p><label><input id="newChatByDefault" type="checkbox"> Empezar chat nuevo por defecto</label></p>
+  <p><button id="save">Guardar</button> <span id="saved" class="muted"></span></p>
+
+  <h2>Ayuda</h2>
+  <div class="help">
+    <p><strong>Cómo se usa</strong></p>
+    <ul>
+      <li>Abre un correo y pulsa el botón de <strong>Copilot</strong> en el visor.</li>
+      <li>Ajusta las opciones de la ventana, revisa el prompt y pulsa <strong>Enviar a Copilot</strong>.</li>
+      <li>Copilot escribe la respuesta y se abre una ventana de composición con ella (respuesta al remitente).</li>
+    </ul>
+
+    <p><strong>Opciones de la ventana</strong></p>
+    <ul>
+      <li><strong>🤖 Agente</strong>: el agente de Copilot que responde (los que tengas fijados en su barra lateral). El botón <code>↻</code> actualiza la lista; recuerda el último elegido.</li>
+      <li><strong>⭐ Prompt</strong>: instrucción <em>prioritaria</em> del usuario (qué hacer). Se toma de tus plantillas con asunto <code>Prompt - …</code></li>
+      <li><strong>📄 Formato</strong>: estructura y formato de referencia de la respuesta. De tus plantillas <code>Formato - …</code> (o sin prefijo).</li>
+      <li><strong>🎭 Tono</strong> y <strong>📏 Longitud</strong>: ajustan el estilo y la extensión de la respuesta.</li>
+      <li><strong>✍️ Prompt a enviar</strong>: editable; la barra de botones inserta Markdown (negrita, cursiva, encabezado, listas, cita, código, enlace).</li>
+      <li><strong>Empezar chat nuevo</strong>: parte de una conversación limpia en Copilot.</li>
+      <li><strong>Incluir mi firma</strong> / <strong>Incluir el correo citado</strong>: qué añadir a la respuesta.</li>
+      <li><strong>Enviar</strong> / <strong>Regenerar</strong>: envía; «Regenerar» pide otra versión (chat nuevo). La ventana recuerda su tamaño y posición.</li>
+    </ul>
+
+    <p><strong>Prompts y Formatos</strong></p>
+    <ul>
+      <li>Son <strong>plantillas de Thunderbird</strong>. Créalas con <em>Guardar como plantilla</em> y nómbralas por el asunto:
+        <ul>
+          <li><code>Prompt - Título</code> → instrucción (aparece en el desplegable Prompt).</li>
+          <li><code>Formato - Título</code> → estructura/formato; usa marcadores <code>[elemento]</code> (aparece en Formato).</li>
+        </ul>
+      </li>
+      <li>Al instalar el complemento se crea una <strong>biblioteca de ejemplo</strong> de prompts y formatos.</li>
+    </ul>
+
+    <p class="muted">Requisitos: sesión iniciada en Microsoft 365 Copilot (la primera vez, entra en la ventana que se abre). Para ver el Markdown renderizado en la respuesta, instala el complemento <em>Markdown Here Revival</em>. Sin API ni claves: el correo solo viaja a Copilot.</p>
+  </div>
+
   <script src="../common.js"></script>
   <script src="options.js"></script>
 </body></html>

@@ -46,6 +46,9 @@
     if (selectedId && agents.some((a) => a.id === selectedId)) sel.value = selectedId;
   };
 
+  // Botón de ayuda: abre la página de opciones (que incluye la guía de uso).
+  $("help").addEventListener("click", () => { try { messenger.runtime.openOptionsPage(); } catch (_) {} });
+
   // Mini editor Markdown para el textarea del prompt (envuelve la selección o prefija las líneas).
   (() => {
     const ta = $("prompt");
