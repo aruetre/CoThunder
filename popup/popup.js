@@ -167,7 +167,7 @@
       populateAgents(res.agents || [], prev);
       setStatus("", "Agentes actualizados");
     } else {
-      setStatus("err", "Abre la ventana de Copilot para actualizar los agentes");
+      setStatus("err", "Abre Copilot para actualizar agentes");
     }
     $("refreshAgents").disabled = false;
   });
@@ -196,11 +196,11 @@
       res = { ok: false, reason: e && e.message ? e.message : String(e) };
     }
     if (res && res.ok) {
-      setStatus("ok", "Enviado. La respuesta se abrirá en composición cuando Copilot termine. Puedes Regenerar para otra versión.");
+      setStatus("ok", "Enviado; se abrirá la respuesta");
       $("regen").hidden = false;
     } else {
       try { await navigator.clipboard.writeText($("prompt").value); } catch (_) {}
-      setStatus("err", "No se pudo enviar a Copilot; prompt copiado al portapapeles, pégalo a mano");
+      setStatus("err", "No se pudo enviar; prompt copiado al portapapeles");
     }
     $("send").disabled = false;
     $("regen").disabled = false;
