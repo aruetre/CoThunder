@@ -31,7 +31,7 @@ messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
     if (messages[0]) messageId = messages[0].id;
   } catch (_) {}
   const url = messenger.runtime.getURL("popup/popup.html") + (messageId != null ? "?messageId=" + messageId : "");
-  await messenger.windows.create({ url, type: "popup", width: 800, height: 800, allowScriptsToClose: true });
+  await messenger.windows.create({ url, type: "popup", width: 600, height: 560, allowScriptsToClose: true });
 });
 
 // Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
