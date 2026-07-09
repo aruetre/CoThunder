@@ -284,9 +284,12 @@
       const now = new Date();
       const p2 = (n) => String(n).padStart(2, "0");
       const stamp = `${now.getFullYear()}_${p2(now.getMonth() + 1)}_${p2(now.getDate())}_${p2(now.getHours())}_${p2(now.getMinutes())}`;
-      const asunto = (mode === "create" ? $("create-brief").value : ((message && message.subject) || ""))
-        .trim().replace(/\s+/g, " ").slice(0, 50);
-      const chatTitle = `CoThunder ${stamp}${asunto ? " " + asunto : ""}`;
+      const kind = mode === "create" ? "Creacion" : "Preguntar";
+      // Título: el que escriba el usuario o, si lo deja vacío, el asunto (respuesta) o el brief (creación).
+      const userTitle = ($("chat-title").value || "").trim();
+      const asunto = (userTitle || (mode === "create" ? $("create-brief").value : ((message && message.subject) || "")))
+        .trim().replace(/\s+/g, " ").slice(0, 60);
+      const chatTitle = `${stamp} ${kind}${asunto ? ": " + asunto : ""}`;
       const base = {
         type: "sendToCopilot", prompt: chatTitle + "\n\n" + $("prompt").value,
         newChat: forceNewChat || $("newChat").checked,

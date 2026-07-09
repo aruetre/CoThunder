@@ -122,7 +122,9 @@ function extractReplyText(el) {
   // que innerText incluye porque son parte visible de la cabecera del bloque de código.
   for (let i = 0; i < 4; i++) {
     const before = text;
-    text = text.replace(/^\s*(markdown|md|plaintext|text|copiar código|copiar|copy code|copy)\s*\n/i, "");
+    text = text.replace(/^\s*markdown\b[^\n]*\n/i, "");                          // cabecera del bloque ```markdown (aunque lleve "Copiar" al lado)
+    text = text.replace(/^\s*(md|plaintext|text)\s*\n/i, "");                    // otras etiquetas de lenguaje, si van solas
+    text = text.replace(/^\s*(copiar código|copiar|copy code|copy)\s*\n/i, ""); // botón de copiar en su propia línea
     if (text === before) break;
   }
   // Comillas del bloque de código, por si aparecieran como texto, y el botón de copiar al final.

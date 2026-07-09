@@ -9,7 +9,7 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 - **Captura de la respuesta**: se colaba la palabra «Markdown» de la cabecera del bloque de código al principio del correo y se **duplicaban los saltos de línea** (una línea en blanco entre cada fila de tabla y cada elemento de lista, rompiendo el formato). Ahora se extrae con `innerText` (el texto tal como se ve, con un salto por línea) y se quitan la etiqueta del bloque («Markdown») y el botón de copiar.
 
 ### Añadido
-- **Título distintivo del chat de Copilot**: cada envío antepone una primera línea con fecha y hora (y el asunto o el brief), para que Copilot no titule todos los chats resumiendo la guía anti-inyección («Seguridad»).
+- **Título distintivo del chat de Copilot**: cada envío antepone una primera línea `AAAA_MM_DD_HH_MM Preguntar/Creacion: asunto`, para que Copilot no titule todos los chats resumiendo la guía anti-inyección («Seguridad»). Con un campo **🏷️ Título del chat** opcional; si se deja vacío, se usa el asunto (respuesta) o el brief (creación), siempre con la fecha por delante.
 
 ## [2.3.0] — 2026-07-09
 
