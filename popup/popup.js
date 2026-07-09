@@ -83,29 +83,40 @@
 
   let message, body, cfg, promptBody = null, formatBody = null, threadBody = null;
 
-  // Compone el prompt: prompt prioritario + hilo + base/correo + formato + tono/longitud + Markdown.
-  const composePrompt = () => buildComposedPrompt(message, body, {
-    template: cfg.promptTemplate,
-    promptBody,
-    formatBody,
-    thread: $("includeThread").checked ? threadBody : null,
-    tone: $("tone").value,
-    length: $("length").value
-  });
+  // Modo de la ventana: "create" (correo nuevo desde cero) o "reply" (respuesta al correo abierto).
+  const params = new URLSearchParams(location.search);
+  const mode = params.get("mode") === "create" ? "create" : "reply";
+  if (mode === "create") document.body.classList.add("mode-create");
+
+  // Compone el prompt según el modo: creación (brief/contexto/idioma) o respuesta (correo + hilo).
+  const composePrompt = () => mode === "create"
+    ? buildCreatePrompt({
+        promptBody, formatBody,
+        tone: $("tone").value, length: $("length").value,
+        brief: $("create-brief").value, context: $("create-context").value, language: $("language").value
+      })
+    : buildComposedPrompt(message, body, {
+        template: cfg.promptTemplate, promptBody, formatBody,
+        thread: $("includeThread").checked ? threadBody : null,
+        tone: $("tone").value, length: $("length").value
+      });
   const rebuildPrompt = () => { $("prompt").value = composePrompt(); };
 
   try {
-    const params = new URLSearchParams(location.search);
-    const messageId = params.get("messageId") != null ? Number(params.get("messageId")) : null;
-    if (messageId == null || Number.isNaN(messageId)) { setStatus("err", "No hay ningún correo asociado"); return; }
-    message = await messenger.messages.get(messageId);
-    if (!message) { setStatus("err", "No se pudo cargar el correo"); return; }
-
     cfg = await getConfig();
-    body = await extractBody(message.id);
+    if (mode === "reply") {
+      const messageId = params.get("messageId") != null ? Number(params.get("messageId")) : null;
+      if (messageId == null || Number.isNaN(messageId)) { setStatus("err", "No hay ningún correo asociado"); return; }
+      message = await messenger.messages.get(messageId);
+      if (!message) { setStatus("err", "No se pudo cargar el correo"); return; }
+      body = await extractBody(message.id);
+    } else {
+      message = null;
+      body = "";
+    }
 
     const prefs = await messenger.storage.local.get({
-      lastAgentId: "", agents: [], prefTone: "", prefLength: "", prefSignature: true, prefQuote: false, prefThread: false
+      lastAgentId: "", agents: [], prefTone: "", prefLength: "", prefSignature: true, prefQuote: false, prefThread: false, prefLanguage: ""
     });
     $("tone").value = prefs.prefTone;
     $("length").value = prefs.prefLength;
@@ -113,6 +124,7 @@
     $("includeSignature").checked = prefs.prefSignature;
     $("includeQuote").checked = prefs.prefQuote;
     $("includeThread").checked = prefs.prefThread;
+    if (mode === "create") $("language").value = prefs.prefLanguage;
 
     rebuildPrompt();
     populateAgents(prefs.agents, prefs.lastAgentId);
@@ -155,37 +167,51 @@
     $("includeSignature").addEventListener("change", () => messenger.storage.local.set({ prefSignature: $("includeSignature").checked }).catch(() => {}));
     $("includeQuote").addEventListener("change", () => messenger.storage.local.set({ prefQuote: $("includeQuote").checked }).catch(() => {}));
 
-    // Carga (con caché) el hilo anterior; devuelve true si hay hilo, false si no lo hay o falla.
-    const loadThread = async () => {
-      if (threadBody != null) return threadBody.length > 0;
-      threadBody = await buildThreadContext(message.id).catch(() => "");
-      return threadBody.length > 0;
-    };
-    $("includeThread").addEventListener("change", async () => {
-      const on = $("includeThread").checked;
-      messenger.storage.local.set({ prefThread: on }).catch(() => {});
-      if (on) {
-        $("send").disabled = true; $("regen").disabled = true;
-        setStatus("busy", "Cargando el hilo…");
-        const has = await loadThread();
-        if (!has) { $("includeThread").checked = false; setStatus("err", "El correo no tiene hilo anterior"); }
-        else setStatus("", "Hilo cargado");
-        $("send").disabled = false; $("regen").disabled = false;
-      }
-      rebuildPrompt();
+    // Reconstruye el prompt al editar los campos de creación (solo existen en modo creación).
+    ["create-brief", "create-context"].forEach((id) => {
+      const el = $(id);
+      if (el) el.addEventListener("input", rebuildPrompt);
+    });
+    if ($("language")) $("language").addEventListener("change", () => {
+      rebuildPrompt(); messenger.storage.local.set({ prefLanguage: $("language").value }).catch(() => {});
     });
 
-    // Carga inicial del hilo si la preferencia estaba activa (antes de avisar de inyección).
-    if ($("includeThread").checked) {
-      if (await loadThread()) rebuildPrompt(); else $("includeThread").checked = false;
-    }
+    // El hilo anterior y el aviso de inyección son solo del modo respuesta (el correo entrante son DATOS).
+    if (mode === "reply") {
+      // Carga (con caché) el hilo anterior; devuelve true si hay hilo, false si no lo hay o falla.
+      const loadThread = async () => {
+        if (threadBody != null) return threadBody.length > 0;
+        threadBody = await buildThreadContext(message.id).catch(() => "");
+        return threadBody.length > 0;
+      };
+      $("includeThread").addEventListener("change", async () => {
+        const on = $("includeThread").checked;
+        messenger.storage.local.set({ prefThread: on }).catch(() => {});
+        if (on) {
+          $("send").disabled = true; $("regen").disabled = true;
+          setStatus("busy", "Cargando el hilo…");
+          const has = await loadThread();
+          if (!has) { $("includeThread").checked = false; setStatus("err", "El correo no tiene hilo anterior"); }
+          else setStatus("", "Hilo cargado");
+          $("send").disabled = false; $("regen").disabled = false;
+        }
+        rebuildPrompt();
+      });
 
-    // Aviso de posible inyección en el correo o el hilo (la píldora del prompt ya blinda a Copilot).
-    const inj = detectInjection(body + "\n" + (threadBody || ""));
-    if (inj.detected) {
-      setStatus("err", inj.severity === "crit"
-        ? "⚠️ Posible manipulación en el correo (protegido)"
-        : "⚠️ Patrón sospechoso en el correo (protegido)");
+      // Carga inicial del hilo si la preferencia estaba activa (antes de avisar de inyección).
+      if ($("includeThread").checked) {
+        if (await loadThread()) rebuildPrompt(); else $("includeThread").checked = false;
+      }
+
+      // Aviso de posible inyección en el correo o el hilo (la píldora del prompt ya blinda a Copilot).
+      const inj = detectInjection(body + "\n" + (threadBody || ""));
+      if (inj.detected) {
+        setStatus("err", inj.severity === "crit"
+          ? "⚠️ Posible manipulación en el correo (protegido)"
+          : "⚠️ Patrón sospechoso en el correo (protegido)");
+      } else {
+        setStatus("", "Listo");
+      }
     } else {
       setStatus("", "Listo");
     }
@@ -220,16 +246,17 @@
       const agentId = $("agent").value;
       const agentLabel = agentId && $("agent").selectedOptions[0] ? $("agent").selectedOptions[0].dataset.label || "" : "";
       await messenger.storage.local.set({ lastAgentId: agentId });
-      res = await messenger.runtime.sendMessage({
-        type: "sendToCopilot",
-        prompt: $("prompt").value,
+      const base = {
+        type: "sendToCopilot", prompt: $("prompt").value,
         newChat: forceNewChat || $("newChat").checked,
-        messageId: message.id,
-        agentId,
-        agentLabel,
-        includeSignature: $("includeSignature").checked,
-        includeQuote: $("includeQuote").checked
-      });
+        agentId, agentLabel, includeSignature: $("includeSignature").checked
+      };
+      if (mode === "create") {
+        const requestId = "c" + Date.now() + Math.floor(Math.random() * 1e6);
+        res = await messenger.runtime.sendMessage({ ...base, mode: "create", requestId, recipient: ($("recipient").value || "").trim() });
+      } else {
+        res = await messenger.runtime.sendMessage({ ...base, mode: "reply", messageId: message.id, includeQuote: $("includeQuote").checked });
+      }
     } catch (e) {
       res = { ok: false, reason: e && e.message ? e.message : String(e) };
     }
