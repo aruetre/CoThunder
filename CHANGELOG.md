@@ -12,17 +12,23 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 ## [2.3.1] — 2026-07-09
 
 ### Corregido
-- **Captura de la respuesta**: se colaba la palabra «Markdown» de la cabecera del bloque de código al principio del correo y se **duplicaban los saltos de línea** (una línea en blanco entre cada fila de tabla y cada elemento de lista, rompiendo el formato). Ahora se recorre el DOM con `textContent` (funciona aunque la ventana de Copilot esté en segundo plano, a diferencia de `innerText`), tratando cada línea del bloque como una sola línea (sin duplicar) y conservando las líneas en blanco; se limpian la cabecera del bloque («Markdown», aunque lleve «Copiar» al lado), su pie («Mostrar más líneas», «Copiar») y, en creación, la cabecera que quedaba tras el «Asunto:».
+- **Formato de la respuesta (tablas y listas)**: salían con una línea en blanco de más entre cada fila de tabla y cada elemento de lista, lo que rompía su formato, y se colaba la palabra «Markdown» al principio del correo. Ahora la respuesta se captura respetando los saltos de línea reales (una línea por línea, conservando los blancos entre párrafos) y se limpian los adornos del bloque de código de Copilot: la cabecera («Markdown», aunque lleve «Copiar» al lado), el pie («Mostrar más líneas», «Copiar») y, al crear, la cabecera que quedaba tras el «Asunto:». Afecta a los dos modos, responder y crear.
+- **La respuesta no se recogía bien con la ventana de Copilot en segundo plano**: la captura se hacía de una forma que dependía de que la ventana estuviera visible. Ahora funciona aunque esté detrás.
+- **Solapamiento de campos en ventanas pequeñas**: los elementos del popup podían montarse unos sobre otros al reducir la ventana. Ahora los campos no se comprimen y, si no cabe todo, la ventana hace scroll (en los dos modos).
 
 ### Añadido
-- **Título distintivo del chat de Copilot**: cada envío antepone una primera línea `AAAA_MM_DD_HH_MM Preguntar/Creacion: asunto`, para que Copilot no titule todos los chats resumiendo la guía anti-inyección («Seguridad»). Con un campo **🏷️ Título del chat** opcional; si se deja vacío, se usa el asunto (respuesta) o el brief (creación), siempre con la fecha por delante.
+- **Título distintivo del chat de Copilot**: cada envío antepone una primera línea `AAAA_MM_DD_HH_MM Preguntar/Creacion: asunto`, para que Copilot no titule todos los chats resumiendo la guía anti-inyección («Seguridad»). Incluye un campo **🏷️ Título del chat** opcional; si se deja vacío, se usa el asunto (al responder) o el brief (al crear), siempre con la fecha por delante.
+
+### Cambiado
+- **Interfaz más compacta**: los desplegables **Prompt, Formato, Tono y Longitud** pasan a una sola fila, y las casillas de opciones se muestran en una línea. La ventana abre un poco más alta para que quepan todos los campos y el botón.
+- **Botones «Enviar» y «Regenerar»** en la misma línea, al 50 % de ancho cada uno.
 
 ## [2.3.0] — 2026-07-09
 
 ### Añadido
 - **Botón «Crear desde Copilot»** en la barra principal de Thunderbird: redacta un **correo nuevo desde cero** (no una respuesta), sin necesidad de tener un correo abierto. Convive con **«Preguntar a Copilot»** (del visor); cada botón mantiene su función. Reutiliza toda la tubería de Copilot y el mismo popup, parametrizado por modo (la ventana se rotula «Crear desde Copilot»).
 - Campos propios del modo creación: **📝 ¿Qué quieres crear?** (instrucción base, que **crece con la ventana** y tiene su **propia mini barra Markdown**), **👤 Para / contexto** y **🌐 Idioma** de salida. Se ocultan «Incluir el correo citado» e «Incluir el hilo», que no aplican sin correo de origen.
-- **Destinatarios múltiples** en tres cajas de texto apiladas — **✉️ Para**, **📋 CC** y **🕶️ CCO** —; cada una admite varias direcciones (una por línea o separadas por comas) y solo usa las válidas. Se fijan al abrir el correo (`beginNew`) para que se rellenen de forma fiable. El campo **👤 Contexto / notas** deja claro que sirve para enriquecer el prompt, no como destinatario.
+- **Destinatarios múltiples** en tres cajas de texto apiladas (**✉️ Para**, **📋 CC** y **🕶️ CCO**); cada una admite varias direcciones (una por línea o separadas por comas) y solo usa las válidas. Se fijan al abrir el correo (`beginNew`) para que se rellenen de forma fiable. El campo **👤 Contexto / notas** deja claro que sirve para enriquecer el prompt, no como destinatario.
 - **Plantillas específicas de creación**: prompts con asunto **«Prompt crear - …»** (convocatoria, invitación, comunicado, solicitud, presentación, agradecimiento, felicitación, recordatorio, propuesta comercial, boletín) que aparecen solo en modo creación; los **«Formato - …»** se comparten entre modos. La biblioteca se siembra al instalar **y al actualizar** (idempotente por asunto).
 - Copilot genera **asunto y cuerpo**; el correo nuevo se abre con ambos, la firma (si se marcó) y los destinatarios, en composición HTML. Tras enviar, **«Regenerar»** pide otra versión en la misma ventana.
 - La ventana de creación **abre más alta** (≈620×760) para que quepan sus campos con holgura y **recuerda su tamaño por separado** de la de «Preguntar a Copilot».
