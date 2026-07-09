@@ -3,6 +3,11 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.3.1] — 2026-07-09
+
+### Corregido
+- **Captura de la respuesta cuando viene en un bloque de código**: se colaba la palabra «Markdown» de la cabecera del bloque al principio del correo, y se **duplicaban los saltos de línea** (metía una línea en blanco entre cada fila de tabla y cada elemento de lista, rompiendo el formato). Ahora, si la respuesta está en un bloque de código, se toma el texto del `<pre>` tal cual, con sus saltos reales, sin capturar la cabecera ni duplicar líneas.
+
 ## [2.3.0] — 2026-07-09
 
 ### Añadido
@@ -93,7 +98,8 @@ Reescritura completa: de llamar a una API compatible OpenAI/Azure a **automatiza
 - Se usa `messageDisplay.getDisplayedMessages` (plural), ya que el singular no existe en Thunderbird 140.
 - No se incrusta Copilot en un iframe (Microsoft lo bloquea): se abre en ventana/pestaña propia con content script.
 
-[2.3.0]: https://github.com/aruetre/CoThunder/compare/v2.2.0...HEAD
+[2.3.1]: https://github.com/aruetre/CoThunder/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.3.0
 [2.2.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.2.0
 [2.1.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.1.0
 [2.0.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.0.0

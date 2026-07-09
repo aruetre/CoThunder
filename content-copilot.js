@@ -102,6 +102,21 @@ function selectAgent(id, label) {
 function extractReplyText(el) {
   const clone = el.cloneNode(true);
   clone.querySelectorAll("button, [role='toolbar']").forEach((n) => n.remove());
+  // Pedimos el cuerpo dentro de un bloque ```markdown. Si Copilot lo pinta como bloque de código,
+  // su <pre> ya trae el fuente con los saltos reales: úsalo tal cual. Así NO capturamos la cabecera
+  // "Markdown" del bloque y NO duplicamos saltos (lo que metía líneas en blanco y rompía tablas/listas).
+  const pre = clone.querySelector("pre");
+  if (pre && /\n/.test(pre.textContent)) {
+    let code = pre.textContent
+      .replace(/ /g, " ")
+      .replace(/\r/g, "")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    code = code.replace(/^`{3,}\s*\w*\n?/, "").replace(/\n?`{3,}\s*$/, "");
+    code = code.replace(/^\s*(markdown|md|plaintext|text)\s*\n/i, "");
+    return code.trim();
+  }
   clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
   clone.querySelectorAll("p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote, pre").forEach((n) => n.append("\n"));
   let text = clone.textContent
