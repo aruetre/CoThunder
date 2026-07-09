@@ -97,17 +97,22 @@ messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
   if (msg.type === "sendToCopilot") {
     try {
-      // Guarda las opciones de composición (firma/cita) asociadas a este correo, para usarlas al llegar la respuesta.
-      if (msg.messageId != null) {
-        await messenger.storage.session.set({
-          ["opts_" + msg.messageId]: { includeSignature: msg.includeSignature !== false, includeQuote: !!msg.includeQuote }
-        });
-      }
+      // Token de correlación genérico: el messageId (respuesta) o el requestId (creación).
+      const token = msg.messageId != null ? String(msg.messageId) : msg.requestId;
+      // Guarda las opciones de composición asociadas a este token, para usarlas al llegar la respuesta.
+      await messenger.storage.session.set({
+        ["opts_" + token]: {
+          mode: msg.mode || "reply",
+          includeSignature: msg.includeSignature !== false,
+          includeQuote: !!msg.includeQuote,
+          recipient: (msg.recipient || "").trim()
+        }
+      });
       const tabId = await ensureCopilotTab();
-      // El messageId viaja con el prompt y vuelve con la respuesta, así cada respuesta va a su correo.
+      // El token viaja con el prompt y vuelve con la respuesta, así cada respuesta va a su destino.
       return await deliverWithRetry(tabId, {
         type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat,
-        agentId: msg.agentId, agentLabel: msg.agentLabel, messageId: msg.messageId
+        agentId: msg.agentId, agentLabel: msg.agentLabel, messageId: token
       });
     } catch (e) {
       console.error("[CoThunder] sendToCopilot:", e);
@@ -137,8 +142,41 @@ messenger.runtime.onMessage.addListener(async (msg) => {
     const store = await messenger.storage.session.get({ [optsKey]: { includeSignature: true, includeQuote: false } });
     const opts = store[optsKey] || { includeSignature: true, includeQuote: false };
     messenger.storage.session.remove(optsKey).catch(() => {});
+    // Modo creación: abre un correo nuevo (beginNew) separando Asunto + cuerpo.
+    if (opts.mode === "create") {
+      try {
+        const { subject, body } = parseCreateReply(msg.text);
+        const bodyHtml = body
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        const tab = await messenger.compose.beginNew();
+        const details = await messenger.compose.getComposeDetails(tab.id);
+        let signature = "";
+        if (opts.includeSignature) {
+          try {
+            const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
+            if (identity && identity.signature) {
+              signature = "<br><br>" + (identity.signatureIsPlainText
+                ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+                : identity.signature);
+            }
+          } catch (_) {}
+        }
+        const upd = { body: bodyHtml + signature };
+        if (subject) upd.subject = subject;
+        if (opts.recipient && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.recipient)) upd.to = [opts.recipient];
+        await messenger.compose.setComposeDetails(tab.id, upd);
+      } catch (e) {
+        console.error("[CoThunder] beginNew falló:", e);
+        messenger.notifications.create({
+          type: "basic", iconUrl: messenger.runtime.getURL("icon.svg"), title: "CoThunder",
+          message: "No se pudo abrir el correo nuevo con el texto de Copilot."
+        }).catch(() => {});
+      }
+      return { ok: true };
+    }
+    // Modo respuesta: abre una respuesta al correo original (beginReply necesita el id numérico).
     try {
-      const tab = await messenger.compose.beginReply(msg.messageId, "replyToSender");
+      const tab = await messenger.compose.beginReply(Number(msg.messageId), "replyToSender");
       const details = await messenger.compose.getComposeDetails(tab.id);
       // Firma configurada del usuario (leída de la identidad de la respuesta), si se pidió incluirla.
       let signature = "";
