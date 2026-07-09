@@ -90,6 +90,10 @@
       quote: () => prefixLines(() => "> ")
     };
     bar.querySelectorAll("button").forEach((b) => {
+      // Evita que el botón robe el foco al textarea: sin esto, al pulsar se enfoca el botón,
+      // el textarea se desenfoca y el foco "salta" (a veces al otro editor). Con preventDefault
+      // en mousedown el foco y la selección se mantienen en el textarea correcto.
+      b.addEventListener("mousedown", (e) => e.preventDefault());
       b.addEventListener("click", () => {
         const a = actions[b.dataset.md];
         if (a) { a(); ta.dispatchEvent(new Event("input", { bubbles: true })); }
