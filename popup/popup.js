@@ -26,7 +26,7 @@
   const boundsKey = mode === "create" ? "winBoundsCreate" : "winBounds";
   try {
     const availW = screen.availWidth, availH = screen.availHeight;
-    const def = mode === "create" ? { width: 620, height: 760 } : { width: 600, height: 560 };
+    const def = mode === "create" ? { width: 620, height: 820 } : { width: 600, height: 620 };
     const store = await messenger.storage.local.get({ [boundsKey]: null });
     const winBounds = store[boundsKey];
     let w, h, left, top;
