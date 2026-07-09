@@ -34,6 +34,13 @@ messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
   await messenger.windows.create({ url, type: "popup", width: 600, height: 560, allowScriptsToClose: true });
 });
 
+// El botón de la barra principal abre la UI en modo creación (correo nuevo, sin messageId).
+// Abre más alto que el modo respuesta porque tiene más campos (el popup afina el tamaño por modo).
+messenger.action.onClicked.addListener(async () => {
+  const url = messenger.runtime.getURL("popup/popup.html") + "?mode=create";
+  await messenger.windows.create({ url, type: "popup", width: 620, height: 760, allowScriptsToClose: true });
+});
+
 // Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
 async function ensureCopilotTab() {
   const { copilotUrl } = await getConfig();
@@ -86,22 +93,43 @@ async function findCopilotTabIds() {
   return [...ids];
 }
 
+// Registro local de actividad (trazabilidad, opcional). Guarda SOLO metadatos (fecha, modo, número de
+// destinatarios, resultado), nunca el asunto, las direcciones ni el cuerpo. Se activa en Opciones.
+const AUDIT_MAX = 500;
+async function logActivity(entry) {
+  try {
+    const { auditEnabled, auditLog } = await messenger.storage.local.get({ auditEnabled: false, auditLog: [] });
+    if (!auditEnabled) return;
+    const log = Array.isArray(auditLog) ? auditLog : [];
+    log.push(entry);
+    if (log.length > AUDIT_MAX) log.splice(0, log.length - AUDIT_MAX);
+    await messenger.storage.local.set({ auditLog: log });
+  } catch (_) {}
+}
+
 // Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
   if (msg.type === "sendToCopilot") {
     try {
-      // Guarda las opciones de composición (firma/cita) asociadas a este correo, para usarlas al llegar la respuesta.
-      if (msg.messageId != null) {
-        await messenger.storage.session.set({
-          ["opts_" + msg.messageId]: { includeSignature: msg.includeSignature !== false, includeQuote: !!msg.includeQuote }
-        });
-      }
+      // Token de correlación genérico: el messageId (respuesta) o el requestId (creación).
+      const token = msg.messageId != null ? String(msg.messageId) : msg.requestId;
+      // Guarda las opciones de composición asociadas a este token, para usarlas al llegar la respuesta.
+      await messenger.storage.session.set({
+        ["opts_" + token]: {
+          mode: msg.mode || "reply",
+          includeSignature: msg.includeSignature !== false,
+          includeQuote: !!msg.includeQuote,
+          to: (msg.to || "").trim(),
+          cc: (msg.cc || "").trim(),
+          bcc: (msg.bcc || "").trim()
+        }
+      });
       const tabId = await ensureCopilotTab();
-      // El messageId viaja con el prompt y vuelve con la respuesta, así cada respuesta va a su correo.
+      // El token viaja con el prompt y vuelve con la respuesta, así cada respuesta va a su destino.
       return await deliverWithRetry(tabId, {
         type: "sendPrompt", prompt: msg.prompt, newChat: msg.newChat,
-        agentId: msg.agentId, agentLabel: msg.agentLabel, messageId: msg.messageId
+        agentId: msg.agentId, agentLabel: msg.agentLabel, messageId: token
       });
     } catch (e) {
       console.error("[CoThunder] sendToCopilot:", e);
@@ -121,18 +149,53 @@ messenger.runtime.onMessage.addListener(async (msg) => {
       return;
     }
     // Composición HTML (mantiene barra de formato y complementos); texto tal cual, con saltos preservados.
-    const html = msg.text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\n/g, "<br>");
+    const html = escapeHtmlWithBreaks(msg.text);
     // Recupera las opciones de composición (firma/cita) guardadas al enviar.
     const optsKey = "opts_" + msg.messageId;
     const store = await messenger.storage.session.get({ [optsKey]: { includeSignature: true, includeQuote: false } });
     const opts = store[optsKey] || { includeSignature: true, includeQuote: false };
     messenger.storage.session.remove(optsKey).catch(() => {});
+    // Modo creación: abre un correo nuevo (beginNew) separando Asunto + cuerpo.
+    if (opts.mode === "create") {
+      try {
+        const { subject, body } = parseCreateReply(msg.text);
+        const bodyHtml = escapeHtmlWithBreaks(body);
+        // Destinatarios Para/CC/CCO: cada campo admite varias direcciones (por líneas o comas); se filtran las válidas.
+        const to = parseRecipients(opts.to), cc = parseRecipients(opts.cc), bcc = parseRecipients(opts.bcc);
+        // Los destinatarios y el asunto se fijan en beginNew: setComposeDetails no los aplica de forma fiable.
+        const initial = { isPlainText: false };
+        if (subject) initial.subject = subject;
+        if (to.length) initial.to = to;
+        if (cc.length) initial.cc = cc;
+        if (bcc.length) initial.bcc = bcc;
+        const tab = await messenger.compose.beginNew(initial);
+        const details = await messenger.compose.getComposeDetails(tab.id);
+        let signature = "";
+        if (opts.includeSignature) {
+          try {
+            const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
+            if (identity && identity.signature) {
+              signature = "<br><br>" + (identity.signatureIsPlainText
+                ? escapeHtmlWithBreaks(identity.signature)
+                : identity.signature);
+            }
+          } catch (_) {}
+        }
+        await messenger.compose.setComposeDetails(tab.id, { body: bodyHtml + signature });
+        logActivity({ ts: new Date().toISOString(), mode: "create", to: to.length, cc: cc.length, bcc: bcc.length, result: "ok" });
+      } catch (e) {
+        console.error("[CoThunder] beginNew falló:", e);
+        logActivity({ ts: new Date().toISOString(), mode: "create", result: "error" });
+        messenger.notifications.create({
+          type: "basic", iconUrl: messenger.runtime.getURL("icon.svg"), title: "CoThunder",
+          message: "No se pudo abrir el correo nuevo con el texto de Copilot."
+        }).catch(() => {});
+      }
+      return { ok: true };
+    }
+    // Modo respuesta: abre una respuesta al correo original (beginReply necesita el id numérico).
     try {
-      const tab = await messenger.compose.beginReply(msg.messageId, "replyToSender");
+      const tab = await messenger.compose.beginReply(Number(msg.messageId), "replyToSender");
       const details = await messenger.compose.getComposeDetails(tab.id);
       // Firma configurada del usuario (leída de la identidad de la respuesta), si se pidió incluirla.
       let signature = "";
@@ -141,7 +204,7 @@ messenger.runtime.onMessage.addListener(async (msg) => {
           const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
           if (identity && identity.signature) {
             signature = "<br><br>" + (identity.signatureIsPlainText
-              ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+              ? escapeHtmlWithBreaks(identity.signature)
               : identity.signature);
           }
         } catch (_) {}
@@ -158,8 +221,10 @@ messenger.runtime.onMessage.addListener(async (msg) => {
         }
       }
       await messenger.compose.setComposeDetails(tab.id, { body: html + signature + quote });
+      logActivity({ ts: new Date().toISOString(), mode: "reply", result: "ok" });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
+      logActivity({ ts: new Date().toISOString(), mode: "reply", result: "error" });
       messenger.notifications.create({
         type: "basic",
         iconUrl: messenger.runtime.getURL("icon.svg"),
@@ -186,6 +251,9 @@ messenger.runtime.onMessage.addListener(async (msg) => {
 });
 
 // --- Biblioteca inicial de Prompts y Formatos, sembrada en la carpeta Plantillas al instalar ---
+// Versión de la biblioteca: se siembra una sola vez por versión. Subir SOLO al añadir plantillas nuevas
+// (así, si el usuario borra alguna, no reaparece en cada actualización).
+const SEED_VERSION = 1;
 const SEED_ITEMS = [
   { subject: "Prompt - Afirmación / Aceptación", body: "Redacta una respuesta afirmativa y cordial: confirma o acepta lo solicitado, deja claros los siguientes pasos y muestra disposición a colaborar." },
   { subject: "Prompt - Negación cordial", body: "Redacta una respuesta que declina lo solicitado de forma cordial y respetuosa: agradece el mensaje, explica el motivo con tacto y, si es posible, ofrece una alternativa." },
@@ -218,7 +286,20 @@ const SEED_ITEMS = [
   { subject: "Formato - Resumen con acciones", body: "# [Asunto]\n\n**Resumen:** [síntesis en 1-2 frases]\n\n## Puntos clave\n- [Punto 1]\n- [Punto 2]\n\n## Acciones pendientes\n- [ ] [Acción 1] — [responsable / plazo]\n- [ ] [Acción 2] — [responsable / plazo]" },
   { subject: "Formato - Confirmación de cita", body: "# [Saludo]\n\nConfirmo nuestra [reunión o cita]:\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar / Enlace:** [lugar o enlace]\n- **Asunto:** [tema]\n\n[Cierre]" },
   { subject: "Formato - Propuesta comercial", body: "# [Saludo]\n\n[Presentación breve]\n\n## Propuesta\n| Concepto | Detalle | Importe |\n|---|---|---|\n| [elemento] | [detalle] | [importe] |\n| [elemento] | [detalle] | [importe] |\n\n**Total:** [total]\n\n**Condiciones:** [condiciones] · **Validez:** [validez]\n\n[Cierre y llamada a la acción]" },
-  { subject: "Formato - Identidad UPO", body: "# [Saludo institucional]\n\n[Introducción breve y clara]\n\n[Cuerpo: desarrollo del asunto, con tono institucional]\n\n**[Idea o dato clave]**\n\n> [Nota o aviso destacado]\n\n[Despedida institucional]\n[Nombre]\n[Cargo] · Universidad Pablo de Olavide\n\n---\nIdentidad UPO (referencia de estilo): tono institucional, claro y cordial, con estructura de encabezado, cuerpo y despedida. Colores de marca (oficiales del MIC): azul corporativo #003772 (Pantone 281C) para títulos y acentos; amarillo #FCC100 (Pantone 123C) solo como acento puntual, nunca como fondo de texto de lectura; texto #1A1A1A sobre blanco. Tipografía Franklin Gothic (o Arial como alternativa). No inventes otros colores ni tipografías. Jerarquía: el azul manda, el amarillo resalta, el blanco respira." }
+  { subject: "Formato - Identidad UPO", body: "# [Saludo institucional]\n\n[Introducción breve y clara]\n\n[Cuerpo: desarrollo del asunto, con tono institucional]\n\n**[Idea o dato clave]**\n\n> [Nota o aviso destacado]\n\n[Despedida institucional]\n[Nombre]\n[Cargo] · Universidad Pablo de Olavide\n\n---\nIdentidad UPO (referencia de estilo): tono institucional, claro y cordial, con estructura de encabezado, cuerpo y despedida. Colores de marca (oficiales del MIC): azul corporativo #003772 (Pantone 281C) para títulos y acentos; amarillo #FCC100 (Pantone 123C) solo como acento puntual, nunca como fondo de texto de lectura; texto #1A1A1A sobre blanco. Tipografía Franklin Gothic (o Arial como alternativa). No inventes otros colores ni tipografías. Jerarquía: el azul manda, el amarillo resalta, el blanco respira." },
+  // --- Plantillas específicas del modo "Crear desde Copilot" (correos nuevos desde cero) ---
+  { subject: "Prompt crear - Convocatoria de reunión", body: "Redacta una convocatoria de reunión clara: indica el motivo y el objetivo, propón fecha, hora y lugar o enlace, incluye un orden del día breve y pide confirmación de asistencia." },
+  { subject: "Prompt crear - Invitación a evento", body: "Redacta una invitación a un evento: presenta el evento y su propósito, indica fecha, hora y lugar, explica por qué merece la pena asistir y cómo confirmar o inscribirse." },
+  { subject: "Prompt crear - Comunicado / Anuncio", body: "Redacta un comunicado claro y directo: anuncia la novedad o el cambio, explica en qué consiste, a quién afecta y desde cuándo, e indica a quién dirigirse para dudas." },
+  { subject: "Prompt crear - Solicitud / Petición", body: "Redacta una solicitud educada y concreta: explica el contexto, formula con claridad lo que pides, justifica el motivo e indica, si procede, el plazo deseado." },
+  { subject: "Prompt crear - Presentación / Primer contacto", body: "Redacta un correo de presentación: preséntate (a ti o a tu organización), explica el motivo del contacto y el valor que aportas, y propón un siguiente paso claro." },
+  { subject: "Prompt crear - Agradecimiento", body: "Redacta un correo de agradecimiento sincero: expresa por qué agradeces, sé concreto sobre lo que valoras y cierra de forma cordial." },
+  { subject: "Prompt crear - Felicitación", body: "Redacta una felicitación cálida y personal por el motivo indicado (logro, aniversario, ascenso…), breve y genuina." },
+  { subject: "Prompt crear - Recordatorio", body: "Redacta un recordatorio cordial de un asunto o plazo pendiente: indica de qué se trata, la fecha límite y la acción concreta que se espera." },
+  { subject: "Prompt crear - Propuesta comercial", body: "Redacta una propuesta comercial persuasiva: identifica la necesidad del destinatario, presenta la solución y sus beneficios, detalla condiciones y precio, y termina con una llamada a la acción." },
+  { subject: "Prompt crear - Boletín / Novedades", body: "Redacta un boletín breve de novedades: un titular atractivo, 3-4 puntos destacados con su detalle o enlace, y un cierre con la próxima acción sugerida." },
+  { subject: "Formato - Convocatoria de reunión", body: "# [Asunto de la convocatoria]\n\n[Motivo y objetivo de la reunión]\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar / Enlace:** [lugar o enlace]\n\n## Orden del día\n1. [Punto 1]\n2. [Punto 2]\n3. [Punto 3]\n\n> Se ruega confirmar asistencia.\n\n[Despedida]" },
+  { subject: "Formato - Invitación a evento", body: "# [Nombre del evento]\n\n[Frase de gancho: por qué asistir]\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar:** [lugar]\n\n[Descripción breve del programa]\n\n**[Cómo confirmar o inscribirse]**\n\n[Despedida]" }
 ];
 
 // Codifica el asunto en RFC 2047 (UTF-8/Base64) para permitir acentos en la cabecera.
@@ -232,6 +313,8 @@ function encodeSubject(s) {
 // Siembra los Prompts y Formatos de ejemplo en la carpeta Plantillas (solo los que aún no existan).
 async function seedTemplates() {
   try {
+    const { seededVersion } = await messenger.storage.local.get({ seededVersion: 0 });
+    if (seededVersion >= SEED_VERSION) return; // ya sembrado en esta versión: respeta lo que el usuario haya borrado
     const folders = await messenger.folders.query({ specialUse: ["templates"] });
     if (!folders || !folders.length) return;
     const folder = folders[0];
@@ -255,11 +338,14 @@ async function seedTemplates() {
       await messenger.messages.import(file, folder.id, { read: true })
         .catch((e) => console.error("[CoThunder] seed import:", it.subject, e));
     }
+    await messenger.storage.local.set({ seededVersion: SEED_VERSION });
   } catch (e) {
     console.error("[CoThunder] seedTemplates:", e);
   }
 }
 
+// Siembra al instalar y también al actualizar (idempotente por asunto: solo añade lo que falta,
+// para que las plantillas nuevas de una versión lleguen a quien ya tenía el complemento).
 messenger.runtime.onInstalled.addListener((details) => {
-  if (details.reason === "install") seedTemplates();
+  if (details.reason === "install" || details.reason === "update") seedTemplates();
 });

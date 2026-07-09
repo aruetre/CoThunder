@@ -15,6 +15,15 @@ body {
   gap: 10px;
 }
 
+.notice { display: flex; align-items: center; gap: 8px; font-size: 12px;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.notice button { flex: none; padding: 4px 10px; font: inherit; color: inherit;
+  background: transparent; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; }
+.notice button:hover { background: color-mix(in srgb, currentColor 12%, transparent); }
+/* El display:flex de .notice anularía el atributo hidden; esta regla lo restaura. */
+.notice[hidden] { display: none; }
+
 .header { display: flex; align-items: center; gap: 8px; }
 .header .logo { width: 22px; height: 22px; flex: none; }
 .header .title { font-size: 15px; font-weight: 700; }
@@ -34,6 +43,7 @@ body {
 .field { display: flex; flex-direction: column; gap: 3px; }
 .field > label { font-size: 12px; font-weight: 700; opacity: .85; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .inline { display: flex; gap: 6px; }
 
 .mdbar { display: flex; gap: 3px; flex-wrap: wrap; }
@@ -70,10 +80,12 @@ select, textarea {
   cursor: pointer;
 }
 
-.grow { flex: 1 1 auto; min-height: 0; }
+/* Los campos que crecen NO se encogen por debajo de su contenido (flex-shrink: 0): así el
+   textarea nunca se desborda sobre el elemento de abajo; si falta sitio, la ventana hace scroll. */
+.grow { flex: 1 0 auto; min-height: 0; }
 .grow textarea { flex: 1 1 auto; min-height: 100px; resize: none; overflow: auto; }
 
-.opts { display: flex; flex-direction: column; gap: 5px; }
+.opts { display: flex; flex-direction: row; flex-wrap: wrap; gap: 5px 14px; }
 .opts label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 
 #send, #regen {
@@ -91,3 +103,25 @@ select, textarea {
 #regen { background: var(--accent-2); }
 #regen:hover { background: color-mix(in srgb, var(--accent-2) 88%, #000); }
 #send:disabled, #regen:disabled { opacity: .5; cursor: default; }
+
+/* Conmutación de campos por modo (creación / respuesta). */
+.create-only { display: none; }
+body.mode-create .reply-only { display: none; }
+body.mode-create .create-only { display: flex; }
+body.mode-create .grid2.create-only { display: grid; }
+input[type="text"], input[type="email"] {
+  width: 100%; padding: 5px 6px; font: inherit; color: inherit;
+  background: transparent; border: 1px solid var(--border); border-radius: 6px;
+}
+/* En modo creación, "¿Qué quieres crear?" crece con la ventana y domina sobre el prompt compuesto. */
+body.mode-create .create-only.grow { flex: 2 0 auto; }
+body.mode-create .create-only.grow textarea { min-height: 60px; }
+/* Cajas de destinatarios (Para/CC/CCO): bajas y redimensionables solo en vertical. */
+textarea.emails { min-height: 2.4em; resize: vertical; }
+
+/* Evita solapamientos con ventanas pequeñas: los bloques de tamaño fijo no se comprimen
+   y, si no cabe todo, la ventana hace scroll vertical en vez de superponer elementos.
+   Los campos que crecen (.grow) se excluyen para que sigan flexando. */
+body { overflow-y: auto; }
+.header, .notice, .field:not(.grow), .grid2, .grid4, .opts, #send, #regen { flex: none; }
+.field > label, .mdbar { flex: none; }

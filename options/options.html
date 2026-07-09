@@ -18,6 +18,14 @@
   <p><label><input id="newChatByDefault" type="checkbox"> Empezar chat nuevo por defecto</label></p>
   <p><button id="save">Guardar</button> <span id="saved" class="muted"></span></p>
 
+  <h2>Registro de actividad (auditoría)</h2>
+  <p><label><input id="auditEnabled" type="checkbox"> Activar registro local de actividad. Guarda solo <strong>metadatos</strong> (fecha, modo y número de destinatarios), nunca el asunto, las direcciones ni el cuerpo del correo.</label></p>
+  <p>
+    <span id="auditCount" class="muted">0 entradas</span>
+    <button id="auditExport" type="button">Exportar</button>
+    <button id="auditClear" type="button">Vaciar</button>
+  </p>
+
   <h2>Ayuda</h2>
   <div class="help">
     <p><strong>Cómo se usa</strong></p>
@@ -25,6 +33,15 @@
       <li>Abre un correo y pulsa el botón de <strong>Copilot</strong> en el visor.</li>
       <li>Ajusta las opciones de la ventana, revisa el prompt y pulsa <strong>Enviar a Copilot</strong>.</li>
       <li>Copilot escribe la respuesta y se abre una ventana de composición con ella (respuesta al remitente).</li>
+    </ul>
+
+    <p><strong>Crear desde Copilot</strong> (barra principal)</p>
+    <ul>
+      <li>El botón <strong>Crear desde Copilot</strong> de la barra principal redacta un <strong>correo nuevo desde cero</strong> (no una respuesta), sin necesidad de tener un correo abierto. Convive con <strong>Preguntar a Copilot</strong> (del visor de mensajes); cada uno mantiene su función.</li>
+      <li>Rellena <strong>📝 ¿Qué quieres crear?</strong> (la instrucción base, que crece con la ventana), y opcionalmente <strong>👤 Para / contexto</strong> y <strong>🌐 Idioma</strong>. Se reutilizan Agente, Prompt, Formato, Tono y Longitud.</li>
+      <li>Destinatarios en cajas separadas: <strong>✉️ Para</strong>, <strong>📋 CC</strong> y <strong>🕶️ CCO</strong>. Cada una admite <strong>varias direcciones</strong> separadas por comas; solo se usan las válidas.</li>
+      <li>Los prompts propios de creación están en tus plantillas con asunto <code>Prompt crear - …</code> (aparecen solo en este modo); los <code>Formato - …</code> se comparten con el modo respuesta.</li>
+      <li>Copilot genera el <strong>asunto</strong> y el <strong>cuerpo</strong>, y se abre un correo nuevo con ambos (y los destinatarios, si los indicaste). Tras enviar, el botón <strong>Regenerar</strong> pide otra versión en la misma ventana.</li>
     </ul>
 
     <p><strong>Opciones de la ventana</strong></p>

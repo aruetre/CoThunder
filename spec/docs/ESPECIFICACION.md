@@ -2,7 +2,7 @@
 
 Extensión MailExtension para Thunderbird 140 o superior. Lee el correo abierto, monta un prompt editable con su contenido y lo envía a la web de **Microsoft 365 Copilot** automatizando el chat con la sesión que el usuario ya tiene iniciada. No usa ninguna API ni clave: pilota la interfaz web de Copilot mediante un content script.
 
-Versión de esta especificación: 2.2.0. Corresponde a la versión 2.2.0 de la extensión. La 1.x se basaba en llamadas directas a una API compatible OpenAI/Azure; se sustituyó por completo por automatización de Copilot web al no disponer de acceso a API. La 2.1 añadió selección de agente, plantillas de Thunderbird, respuesta maquetada en Markdown y una ventana de UI redimensionable (ver §17). La 2.2 separa Prompts y Formatos, añade tono/longitud, firma/cita/hilo, blindaje anti-inyección, una biblioteca de plantillas sembrada al instalar y un rediseño de la ventana (ver §18, novedades v2.2).
+Versión de esta especificación: 2.3.0. Corresponde a la versión 2.3.0 de la extensión. La 1.x se basaba en llamadas directas a una API compatible OpenAI/Azure; se sustituyó por completo por automatización de Copilot web al no disponer de acceso a API. La 2.1 añadió selección de agente, plantillas de Thunderbird, respuesta maquetada en Markdown y una ventana de UI redimensionable (ver §17). La 2.2 separa Prompts y Formatos, añade tono/longitud, firma/cita/hilo, blindaje anti-inyección, una biblioteca de plantillas sembrada al instalar y un rediseño de la ventana (ver §18, novedades v2.2). La 2.3 añade el botón "Crear desde Copilot" para redactar correos nuevos desde cero (ver §19).
 
 Plataforma objetivo: Thunderbird ESR 140 (probado en 140.11.1), **Manifest V3**. Decisión explícita del proyecto; ver §2 y el riesgo asociado en §15.
 
@@ -272,3 +272,52 @@ Al instalar (`runtime.onInstalled`, `reason === "install"`), `seedTemplates` cre
 ### 18.6 Rediseño de la ventana
 
 Cabecera con **logo de Copilot + "Preguntar a Copilot"** y el estado (punto + texto) alineado a la derecha, y un botón **"?"** que abre la guía de uso en Opciones. Los campos llevan **título en negrita con icono** (🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, ✍️ Prompt a enviar), con Prompt/Formato y Tono/Longitud en rejilla de dos columnas. Sobre el `textarea`, una **mini barra Markdown** inserta formato (negrita, cursiva, encabezado, listas, cita, código, enlace). El botón **Regenerar** reenvía el prompt en un chat nuevo para otra versión; "Enviar" (azul) y "Regenerar" (verde teal) van en color sólido con el texto en negrita.
+
+## 19. Crear desde Copilot — Fase 1 (v2.3)
+
+Añade un segundo botón para **redactar correos desde cero** (no una respuesta), reutilizando el popup. Es la Fase 1 de una suite de creación mayor (Fase 2: botón en la ventana de redacción con "Crear" y "Mejorar"; Fase 3: pulido), aquí solo se especifica la Fase 1.
+
+### 19.1 Botón y modo
+
+Un botón `action` en la **barra principal** de Thunderbird (icono de Copilot, título "Crear desde Copilot"), independiente de que haya un correo abierto. Al pulsar abre `popup/popup.html?mode=create` en la misma ventana propia (`windows.create`, redimensionable y con memoria de tamaño, como §18.1); no lleva `messageId`. Al tener más campos que el modo respuesta, **abre más alto por defecto** (≈620×760 frente a 600×560) y recuerda su tamaño **por separado** (`winBoundsCreate`, distinto de `winBounds` del modo respuesta). El popup lee `mode` de la URL (`reply` por defecto, `create` en este botón) y ajusta la UI y el flujo. **No requiere permisos nuevos**: `action` no lleva permiso propio y `compose` (para `beginNew`) ya está declarado.
+
+### 19.2 UI en modo creación
+
+Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, editor Markdown, "Empezar chat nuevo", "Incluir mi firma" y "Regenerar". **Oculta** las opciones propias de respuesta ("Incluir el correo citado" e "Incluir el hilo"), que no aplican sin correo de origen. **Añade**:
+
+- 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
+- 👤 **Contexto / notas** (texto libre): propósito, puntos a incluir o a quién va dirigido; enriquece el prompt (no es el destinatario del correo, que se fija abajo).
+- ✉️ **Para**, 📋 **CC** y 🕶️ **CCO** (opcionales): tres `textarea` independientes apilados; cada uno admite **varias direcciones**, una por línea o separadas por comas/punto y coma. `parseRecipients` filtra las válidas y se fijan en `to`/`cc`/`bcc` del correo nuevo.
+- 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación; **crece con la ventana** (campo dominante en modo creación) y tiene su **propia mini barra Markdown** (independiente de la del prompt: cada barra edita su `textarea` y no le roba el foco al otro). Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
+
+Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta. La ventana rotula su cabecera y `document.title` como **"Crear desde Copilot"** (frente a "Preguntar a Copilot" del modo respuesta), para que se distinga claramente de la del visor.
+
+**Plantillas específicas de creación.** El desplegable ⭐ Prompt es sensible al modo: en creación muestra solo las plantillas con asunto `Prompt crear - …`; en respuesta, las `Prompt - …`. El desplegable 📄 Formato se **comparte** entre modos (los formatos son estructurales). La biblioteca sembrada al instalar incluye un juego de `Prompt crear - …` (convocatoria, invitación, comunicado, solicitud, presentación, agradecimiento, felicitación, recordatorio, propuesta comercial, boletín) y formatos de creación (convocatoria, invitación). La siembra se ejecuta al **instalar y al actualizar** (idempotente por asunto).
+
+### 19.3 Prompt de creación
+
+`buildCreatePrompt` compone, en orden: la píldora anti-inyección (relajada, ya que el contenido es del propio usuario), el Prompt prioritario, la **instrucción de creación** con el contexto/idioma, el Formato de referencia, tono/longitud, y una directiva Markdown específica `MARKDOWN_INSTRUCTION_CREATE` que pide **asunto y cuerpo**: primero una línea `Asunto: …` con un asunto breve y, a continuación, el cuerpo como código fuente Markdown sin renderizar dentro de un único bloque ```` ```markdown ````. Se mantiene la separación en bloques con `SECTION_SEP` (§18.2) para editarlo con facilidad.
+
+### 19.4 Captura y composición
+
+El content script captura la respuesta igual que en modo respuesta (`waitForReply`, misma tubería y selectores centralizados). En modo creación, el background **separa la línea `Asunto:` del cuerpo Markdown** y abre `messenger.compose.beginNew({ subject, to, cc, bcc, isPlainText: false })` en composición **HTML**. Los destinatarios y el asunto se pasan **al abrir** (`beginNew`), porque `setComposeDetails` no los aplica de forma fiable; cada campo pasa por `parseRecipients` (varias direcciones, descarta las inválidas). El **cuerpo** y la **firma** de la identidad por defecto (si "Incluir mi firma" está marcado) se ponen después con `setComposeDetails`. La correlación de ida y vuelta usa un `requestId` generado (no hay `messageId`). Degradación idéntica a §17.5: si `waitForReply` no captura texto, se copia el prompt al portapapeles y se notifica.
+
+### 19.5 Reutilización
+
+Sin cambios en `content-copilot.js` ni nuevas dependencias del DOM de Copilot: la única diferencia respecto a la respuesta es la construcción del prompt (`buildCreatePrompt`) y el destino final (`beginNew` en vez de `beginReply`). El popup es el mismo, parametrizado por `mode`.
+
+## 20. Privacidad y trazabilidad (v2.3)
+
+Refuerzos orientados a RGPD y al Esquema Nacional de Seguridad (ENS), aplicables a los dos modos.
+
+### 20.1 Aviso de tratamiento
+
+La primera vez que se abre la ventana, un aviso informa de que el contenido del correo se envía a Microsoft 365 Copilot para generar la respuesta y de que no se usa ninguna otra red ni se guarda nada fuera del equipo. Al aceptarlo (`Entendido`) se marca `privacyAck` en `storage.local` y no vuelve a mostrarse. Es informativo (no bloquea), para dejar constancia del tratamiento sin añadir fricción.
+
+### 20.2 Registro de actividad local (opcional)
+
+Desactivado por defecto. Si se activa en Opciones (`auditEnabled`), el background registra en `storage.local` (`auditLog`, máximo 500 entradas, FIFO) solo **metadatos** por cada envío: fecha ISO, modo (`create`/`reply`), número de destinatarios en creación y resultado (`ok`/`error`). **Nunca** guarda el asunto, las direcciones ni el cuerpo. Desde Opciones se puede **exportar** a JSON y **vaciar**. Cubre la dimensión de Trazabilidad del ENS sin introducir contenido sensible en el almacenamiento.
+
+### 20.3 Utilidades comunes y calidad
+
+`escapeHtml`/`escapeHtmlWithBreaks` centralizan el escapado HTML (antes duplicado). `parseRecipients` admite el formato «Nombre <correo>» y deduplica. La biblioteca de plantillas se siembra una sola vez por versión (`seededVersion` / `SEED_VERSION`) para respetar las plantillas borradas por el usuario. La lógica pura se prueba con `node --test` (carpeta `test/`, fuera del paquete).

@@ -3,9 +3,14 @@
 <body>
   <div class="header">
     <img class="logo" src="../icon.svg" alt="">
-    <span class="title">Preguntar a Copilot</span>
+    <span class="title" id="title">Preguntar a Copilot</span>
     <button type="button" id="help" title="Ayuda y uso">?</button>
     <div id="status"><span id="dot"></span><span id="statusText">Preparando…</span></div>
+  </div>
+
+  <div id="privacy" class="notice" hidden>
+    <span>El contenido del correo se envía a Microsoft 365 Copilot para generar la respuesta. No se usa ninguna otra red ni se guarda nada fuera de tu equipo.</span>
+    <button type="button" id="privacyOk">Entendido</button>
   </div>
 
   <div class="field">
@@ -16,7 +21,7 @@
     </div>
   </div>
 
-  <div class="grid2">
+  <div class="grid4">
     <div class="field">
       <label for="prompt-sel">⭐ Prompt</label>
       <select id="prompt-sel"><option value="">Ninguno</option></select>
@@ -25,9 +30,6 @@
       <label for="format-sel">📄 Formato</label>
       <select id="format-sel"><option value="">Ninguno</option></select>
     </div>
-  </div>
-
-  <div class="grid2">
     <div class="field">
       <label for="tone">🎭 Tono</label>
       <select id="tone">
@@ -49,9 +51,52 @@
     </div>
   </div>
 
+  <div class="field create-only grow">
+    <label for="create-brief">📝 ¿Qué quieres crear?</label>
+    <div class="mdbar" id="brief-mdbar">
+      <button type="button" data-md="bold" title="Negrita"><b>B</b></button>
+      <button type="button" data-md="italic" title="Cursiva"><i>I</i></button>
+      <button type="button" data-md="h" title="Encabezado">H</button>
+      <button type="button" data-md="ul" title="Lista con viñetas">•</button>
+      <button type="button" data-md="ol" title="Lista numerada">1.</button>
+      <button type="button" data-md="quote" title="Cita">❝</button>
+      <button type="button" data-md="code" title="Código">&lt;/&gt;</button>
+      <button type="button" data-md="link" title="Enlace">🔗</button>
+    </div>
+    <textarea id="create-brief" placeholder="Describe el correo que quieres redactar…"></textarea>
+  </div>
+  <div class="grid2 create-only">
+    <div class="field">
+      <label for="create-context">👤 Contexto / notas</label>
+      <input type="text" id="create-context" placeholder="Propósito, puntos a incluir, a quién va dirigido…">
+    </div>
+    <div class="field">
+      <label for="language">🌐 Idioma</label>
+      <select id="language">
+        <option value="">Automático</option>
+        <option value="es">Español</option>
+        <option value="en">Inglés</option>
+        <option value="fr">Francés</option>
+        <option value="de">Alemán</option>
+      </select>
+    </div>
+  </div>
+  <div class="field create-only">
+    <label for="recipient-to">✉️ Para (un email por línea o separados por comas)</label>
+    <textarea id="recipient-to" class="emails" rows="2" placeholder="nombre@dominio.com&#10;otro@dominio.com"></textarea>
+  </div>
+  <div class="field create-only">
+    <label for="recipient-cc">📋 CC (con copia; uno por línea o por comas)</label>
+    <textarea id="recipient-cc" class="emails" rows="2" placeholder="copia@dominio.com&#10;otra.copia@dominio.com"></textarea>
+  </div>
+  <div class="field create-only">
+    <label for="recipient-bcc">🕶️ CCO (copia oculta; uno por línea o por comas)</label>
+    <textarea id="recipient-bcc" class="emails" rows="2" placeholder="oculta@dominio.com&#10;otra.oculta@dominio.com"></textarea>
+  </div>
+
   <div class="field grow">
     <label for="prompt">✍️ Prompt a enviar</label>
-    <div class="mdbar">
+    <div class="mdbar" id="prompt-mdbar">
       <button type="button" data-md="bold" title="Negrita"><b>B</b></button>
       <button type="button" data-md="italic" title="Cursiva"><i>I</i></button>
       <button type="button" data-md="h" title="Encabezado">H</button>
@@ -67,8 +112,8 @@
   <div class="opts">
     <label><input type="checkbox" id="newChat"> Empezar chat nuevo</label>
     <label><input type="checkbox" id="includeSignature" checked> Incluir mi firma</label>
-    <label><input type="checkbox" id="includeQuote"> Incluir el correo citado</label>
-    <label><input type="checkbox" id="includeThread"> Incluir el hilo (mensajes anteriores)</label>
+    <label class="reply-only"><input type="checkbox" id="includeQuote"> Incluir el correo citado</label>
+    <label class="reply-only"><input type="checkbox" id="includeThread"> Incluir el hilo (mensajes anteriores)</label>
   </div>
 
   <button id="send" disabled>Enviar a Copilot</button>
