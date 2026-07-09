@@ -2,7 +2,7 @@
 
 Extensión MailExtension para Thunderbird 140 o superior. Lee el correo abierto, monta un prompt editable con su contenido y lo envía a la web de **Microsoft 365 Copilot** automatizando el chat con la sesión que el usuario ya tiene iniciada. No usa ninguna API ni clave: pilota la interfaz web de Copilot mediante un content script.
 
-Versión de esta especificación: 2.2.0. Corresponde a la versión 2.2.0 de la extensión. La 1.x se basaba en llamadas directas a una API compatible OpenAI/Azure; se sustituyó por completo por automatización de Copilot web al no disponer de acceso a API. La 2.1 añadió selección de agente, plantillas de Thunderbird, respuesta maquetada en Markdown y una ventana de UI redimensionable (ver §17). La 2.2 separa Prompts y Formatos, añade tono/longitud, firma/cita/hilo, blindaje anti-inyección, una biblioteca de plantillas sembrada al instalar y un rediseño de la ventana (ver §18, novedades v2.2).
+Versión de esta especificación: 2.3.0. Corresponde a la versión 2.3.0 de la extensión. La 1.x se basaba en llamadas directas a una API compatible OpenAI/Azure; se sustituyó por completo por automatización de Copilot web al no disponer de acceso a API. La 2.1 añadió selección de agente, plantillas de Thunderbird, respuesta maquetada en Markdown y una ventana de UI redimensionable (ver §17). La 2.2 separa Prompts y Formatos, añade tono/longitud, firma/cita/hilo, blindaje anti-inyección, una biblioteca de plantillas sembrada al instalar y un rediseño de la ventana (ver §18, novedades v2.2). La 2.3 añade el botón "Crear desde Copilot" para redactar correos nuevos desde cero (ver §19).
 
 Plataforma objetivo: Thunderbird ESR 140 (probado en 140.11.1), **Manifest V3**. Decisión explícita del proyecto; ver §2 y el riesgo asociado en §15.
 
@@ -273,9 +273,9 @@ Al instalar (`runtime.onInstalled`, `reason === "install"`), `seedTemplates` cre
 
 Cabecera con **logo de Copilot + "Preguntar a Copilot"** y el estado (punto + texto) alineado a la derecha, y un botón **"?"** que abre la guía de uso en Opciones. Los campos llevan **título en negrita con icono** (🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, ✍️ Prompt a enviar), con Prompt/Formato y Tono/Longitud en rejilla de dos columnas. Sobre el `textarea`, una **mini barra Markdown** inserta formato (negrita, cursiva, encabezado, listas, cita, código, enlace). El botón **Regenerar** reenvía el prompt en un chat nuevo para otra versión; "Enviar" (azul) y "Regenerar" (verde teal) van en color sólido con el texto en negrita.
 
-## 19. Crear desde Copilot — Fase 1 (planificado, v2.3)
+## 19. Crear desde Copilot — Fase 1 (v2.3)
 
-Diseño aprobado, aún sin implementar (el código actual corresponde a v2.2). Añade un segundo botón para **redactar correos desde cero** (no una respuesta), reutilizando el popup. Es la Fase 1 de una suite de creación mayor (Fase 2: botón en la ventana de redacción con "Crear" y "Mejorar"; Fase 3: pulido), aquí solo se especifica la Fase 1.
+Añade un segundo botón para **redactar correos desde cero** (no una respuesta), reutilizando el popup. Es la Fase 1 de una suite de creación mayor (Fase 2: botón en la ventana de redacción con "Crear" y "Mejorar"; Fase 3: pulido), aquí solo se especifica la Fase 1.
 
 ### 19.1 Botón y modo
 
@@ -288,7 +288,7 @@ Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longi
 - 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
 - 👤 **Para / contexto** (texto libre): destinatario, propósito y puntos a incluir; enriquece el prompt.
 - ✉️ **Destinatario (correo)** (opcional): si es una dirección válida, prefija el campo *Para* del correo nuevo.
-- El `textarea` principal pasa a titularse **"¿Qué quieres crear?"** (la instrucción base de la creación).
+- 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación. Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
 
 Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta.
 

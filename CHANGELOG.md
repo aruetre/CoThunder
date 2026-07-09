@@ -3,6 +3,13 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.3.0] — 2026-07-09
+
+### Añadido
+- **Botón «Crear desde Copilot»** en la barra principal de Thunderbird: redacta un **correo nuevo desde cero** (no una respuesta), sin necesidad de tener un correo abierto. Reutiliza toda la tubería de Copilot y el mismo popup, parametrizado por modo.
+- Campos propios del modo creación: **📝 ¿Qué quieres crear?** (instrucción base), **👤 Para / contexto**, **🌐 Idioma** de salida y **✉️ Destinatario** (opcional; si es válido, prefija el campo *Para*). Se ocultan «Incluir el correo citado» e «Incluir el hilo», que no aplican sin correo de origen.
+- Copilot genera **asunto y cuerpo**; el correo nuevo se abre con ambos, la firma (si se marcó) y el destinatario, en composición HTML.
+
 ## [2.2.0] — 2026-07-09
 
 ### Añadido
@@ -70,6 +77,7 @@ Reescritura completa: de llamar a una API compatible OpenAI/Azure a **automatiza
 - Se usa `messageDisplay.getDisplayedMessages` (plural), ya que el singular no existe en Thunderbird 140.
 - No se incrusta Copilot en un iframe (Microsoft lo bloquea): se abre en ventana/pestaña propia con content script.
 
-[2.2.0]: https://github.com/aruetre/CoThunder/compare/v2.1.0...HEAD
+[2.3.0]: https://github.com/aruetre/CoThunder/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.2.0
 [2.1.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.1.0
 [2.0.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.0.0
