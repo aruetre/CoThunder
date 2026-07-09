@@ -65,8 +65,8 @@
   </div>
   <div class="grid2 create-only">
     <div class="field">
-      <label for="create-context">👤 Para / contexto</label>
-      <input type="text" id="create-context" placeholder="Destinatario, propósito, puntos…">
+      <label for="create-context">👤 Contexto / notas</label>
+      <input type="text" id="create-context" placeholder="Propósito, puntos a incluir, a quién va dirigido…">
     </div>
     <div class="field">
       <label for="language">🌐 Idioma</label>
@@ -80,18 +80,16 @@
     </div>
   </div>
   <div class="field create-only">
-    <label for="recipient-to">✉️ Para (uno o varios, separados por comas)</label>
-    <input type="text" id="recipient-to" placeholder="nombre@dominio.com, otro@dominio.com">
+    <label for="recipient-to">✉️ Para (un email por línea o separados por comas)</label>
+    <textarea id="recipient-to" class="emails" rows="2" placeholder="nombre@dominio.com&#10;otro@dominio.com"></textarea>
   </div>
-  <div class="grid2 create-only">
-    <div class="field">
-      <label for="recipient-cc">📋 CC (con copia)</label>
-      <input type="text" id="recipient-cc" placeholder="copia@dominio.com, …">
-    </div>
-    <div class="field">
-      <label for="recipient-bcc">🕶️ CCO (copia oculta)</label>
-      <input type="text" id="recipient-bcc" placeholder="oculta@dominio.com, …">
-    </div>
+  <div class="field create-only">
+    <label for="recipient-cc">📋 CC — con copia (uno por línea o por comas)</label>
+    <textarea id="recipient-cc" class="emails" rows="2" placeholder="copia@dominio.com&#10;otra.copia@dominio.com"></textarea>
+  </div>
+  <div class="field create-only">
+    <label for="recipient-bcc">🕶️ CCO — copia oculta (uno por línea o por comas)</label>
+    <textarea id="recipient-bcc" class="emails" rows="2" placeholder="oculta@dominio.com&#10;otra.oculta@dominio.com"></textarea>
   </div>
 
   <div class="field grow">

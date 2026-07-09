@@ -151,7 +151,15 @@ messenger.runtime.onMessage.addListener(async (msg) => {
         const { subject, body } = parseCreateReply(msg.text);
         const bodyHtml = body
           .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-        const tab = await messenger.compose.beginNew();
+        // Destinatarios Para/CC/CCO: cada campo admite varias direcciones (por líneas o comas); se filtran las válidas.
+        const to = parseRecipients(opts.to), cc = parseRecipients(opts.cc), bcc = parseRecipients(opts.bcc);
+        // Los destinatarios y el asunto se fijan en beginNew: setComposeDetails no los aplica de forma fiable.
+        const initial = { isPlainText: false };
+        if (subject) initial.subject = subject;
+        if (to.length) initial.to = to;
+        if (cc.length) initial.cc = cc;
+        if (bcc.length) initial.bcc = bcc;
+        const tab = await messenger.compose.beginNew(initial);
         const details = await messenger.compose.getComposeDetails(tab.id);
         let signature = "";
         if (opts.includeSignature) {
@@ -164,14 +172,7 @@ messenger.runtime.onMessage.addListener(async (msg) => {
             }
           } catch (_) {}
         }
-        const upd = { body: bodyHtml + signature };
-        if (subject) upd.subject = subject;
-        // Destinatarios Para/CC/CCO: cada campo admite varias direcciones, se filtran las válidas.
-        const to = parseRecipients(opts.to), cc = parseRecipients(opts.cc), bcc = parseRecipients(opts.bcc);
-        if (to.length) upd.to = to;
-        if (cc.length) upd.cc = cc;
-        if (bcc.length) upd.bcc = bcc;
-        await messenger.compose.setComposeDetails(tab.id, upd);
+        await messenger.compose.setComposeDetails(tab.id, { body: bodyHtml + signature });
       } catch (e) {
         console.error("[CoThunder] beginNew falló:", e);
         messenger.notifications.create({

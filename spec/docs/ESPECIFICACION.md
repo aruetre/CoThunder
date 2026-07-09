@@ -286,8 +286,8 @@ Un botón `action` en la **barra principal** de Thunderbird (icono de Copilot, t
 Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longitud, editor Markdown, "Empezar chat nuevo", "Incluir mi firma" y "Regenerar". **Oculta** las opciones propias de respuesta ("Incluir el correo citado" e "Incluir el hilo"), que no aplican sin correo de origen. **Añade**:
 
 - 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
-- 👤 **Para / contexto** (texto libre): destinatario, propósito y puntos a incluir; enriquece el prompt.
-- ✉️ **Para**, 📋 **CC** y 🕶️ **CCO** (opcionales): tres cajas independientes; cada una admite **varias direcciones** separadas por comas/punto y coma. `parseRecipients` filtra las direcciones válidas y prefijan los campos correspondientes del correo nuevo (`to`/`cc`/`bcc`).
+- 👤 **Contexto / notas** (texto libre): propósito, puntos a incluir o a quién va dirigido; enriquece el prompt (no es el destinatario del correo, que se fija abajo).
+- ✉️ **Para**, 📋 **CC** y 🕶️ **CCO** (opcionales): tres `textarea` independientes apilados; cada uno admite **varias direcciones**, una por línea o separadas por comas/punto y coma. `parseRecipients` filtra las válidas y se fijan en `to`/`cc`/`bcc` del correo nuevo.
 - 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación; **crece con la ventana** (campo dominante en modo creación) y tiene su **propia mini barra Markdown** (independiente de la del prompt: cada barra edita su `textarea` y no le roba el foco al otro). Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
 
 Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta. La ventana rotula su cabecera y `document.title` como **"Crear desde Copilot"** (frente a "Preguntar a Copilot" del modo respuesta), para que se distinga claramente de la del visor.
@@ -300,7 +300,7 @@ Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan
 
 ### 19.4 Captura y composición
 
-El content script captura la respuesta igual que en modo respuesta (`waitForReply`, misma tubería y selectores centralizados). En modo creación, el background **separa la línea `Asunto:` del cuerpo Markdown** y abre `messenger.compose.beginNew()` en composición **HTML**, fijando `subject`, `body` y los destinatarios `to`/`cc`/`bcc` (cada campo pasa por `parseRecipients`, que admite varias direcciones y descarta las inválidas), y añadiendo la firma de la identidad por defecto si "Incluir mi firma" está marcado. La correlación de ida y vuelta usa un `requestId` generado (no hay `messageId`). Degradación idéntica a §17.5: si `waitForReply` no captura texto, se copia el prompt al portapapeles y se notifica.
+El content script captura la respuesta igual que en modo respuesta (`waitForReply`, misma tubería y selectores centralizados). En modo creación, el background **separa la línea `Asunto:` del cuerpo Markdown** y abre `messenger.compose.beginNew({ subject, to, cc, bcc, isPlainText: false })` en composición **HTML**. Los destinatarios y el asunto se pasan **al abrir** (`beginNew`), porque `setComposeDetails` no los aplica de forma fiable; cada campo pasa por `parseRecipients` (varias direcciones, descarta las inválidas). El **cuerpo** y la **firma** de la identidad por defecto (si "Incluir mi firma" está marcado) se ponen después con `setComposeDetails`. La correlación de ida y vuelta usa un `requestId` generado (no hay `messageId`). Degradación idéntica a §17.5: si `waitForReply` no captura texto, se copia el prompt al portapapeles y se notifica.
 
 ### 19.5 Reutilización
 

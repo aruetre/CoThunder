@@ -104,3 +104,5 @@ input[type="text"], input[type="email"] {
 /* En modo creación, "¿Qué quieres crear?" crece con la ventana y domina sobre el prompt compuesto. */
 body.mode-create .create-only.grow { flex: 2 1 0; }
 body.mode-create .create-only.grow textarea { min-height: 60px; }
+/* Cajas de destinatarios (Para/CC/CCO): bajas y redimensionables solo en vertical. */
+textarea.emails { min-height: 2.4em; resize: vertical; }
