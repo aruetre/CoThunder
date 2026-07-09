@@ -12,6 +12,16 @@
     $("title").textContent = "Crear desde Copilot";
   }
 
+  // Aviso de tratamiento la primera vez (RGPD/ENS): el contenido del correo viaja a Copilot.
+  messenger.storage.local.get({ privacyAck: false }).then(({ privacyAck }) => {
+    if (privacyAck || !$("privacy")) return;
+    $("privacy").hidden = false;
+    $("privacyOk").addEventListener("click", () => {
+      $("privacy").hidden = true;
+      messenger.storage.local.set({ privacyAck: true }).catch(() => {});
+    });
+  }).catch(() => {});
+
   // --- Ventana: recuerda tamaño/posición por modo; creación abre más alto (tiene más campos) ---
   const boundsKey = mode === "create" ? "winBoundsCreate" : "winBounds";
   try {
@@ -90,6 +100,7 @@
       quote: () => prefixLines(() => "> ")
     };
     bar.querySelectorAll("button").forEach((b) => {
+      if (b.title) b.setAttribute("aria-label", b.title); // etiqueta para lectores de pantalla
       // Evita que el botón robe el foco al textarea: sin esto, al pulsar se enfoca el botón,
       // el textarea se desenfoca y el foco "salta" (a veces al otro editor). Con preventDefault
       // en mousedown el foco y la selección se mantienen en el textarea correcto.
@@ -160,7 +171,7 @@
         const opt = document.createElement("option");
         opt.value = String(t.id);
         const label = t.subject.replace(re, "").trim() || t.subject;
-        opt.textContent = multiSource ? `${label} — ${t.source}` : label;
+        opt.textContent = multiSource ? `${label} (${t.source})` : label;
         sel.appendChild(opt);
       }
     };

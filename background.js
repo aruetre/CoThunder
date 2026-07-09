@@ -93,6 +93,20 @@ async function findCopilotTabIds() {
   return [...ids];
 }
 
+// Registro local de actividad (trazabilidad, opcional). Guarda SOLO metadatos (fecha, modo, número de
+// destinatarios, resultado), nunca el asunto, las direcciones ni el cuerpo. Se activa en Opciones.
+const AUDIT_MAX = 500;
+async function logActivity(entry) {
+  try {
+    const { auditEnabled, auditLog } = await messenger.storage.local.get({ auditEnabled: false, auditLog: [] });
+    if (!auditEnabled) return;
+    const log = Array.isArray(auditLog) ? auditLog : [];
+    log.push(entry);
+    if (log.length > AUDIT_MAX) log.splice(0, log.length - AUDIT_MAX);
+    await messenger.storage.local.set({ auditLog: log });
+  } catch (_) {}
+}
+
 // Un único listener con ramas para no competir por la respuesta al popup.
 messenger.runtime.onMessage.addListener(async (msg) => {
   if (!msg) return;
@@ -135,11 +149,7 @@ messenger.runtime.onMessage.addListener(async (msg) => {
       return;
     }
     // Composición HTML (mantiene barra de formato y complementos); texto tal cual, con saltos preservados.
-    const html = msg.text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\n/g, "<br>");
+    const html = escapeHtmlWithBreaks(msg.text);
     // Recupera las opciones de composición (firma/cita) guardadas al enviar.
     const optsKey = "opts_" + msg.messageId;
     const store = await messenger.storage.session.get({ [optsKey]: { includeSignature: true, includeQuote: false } });
@@ -149,8 +159,7 @@ messenger.runtime.onMessage.addListener(async (msg) => {
     if (opts.mode === "create") {
       try {
         const { subject, body } = parseCreateReply(msg.text);
-        const bodyHtml = body
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        const bodyHtml = escapeHtmlWithBreaks(body);
         // Destinatarios Para/CC/CCO: cada campo admite varias direcciones (por líneas o comas); se filtran las válidas.
         const to = parseRecipients(opts.to), cc = parseRecipients(opts.cc), bcc = parseRecipients(opts.bcc);
         // Los destinatarios y el asunto se fijan en beginNew: setComposeDetails no los aplica de forma fiable.
@@ -167,14 +176,16 @@ messenger.runtime.onMessage.addListener(async (msg) => {
             const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
             if (identity && identity.signature) {
               signature = "<br><br>" + (identity.signatureIsPlainText
-                ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+                ? escapeHtmlWithBreaks(identity.signature)
                 : identity.signature);
             }
           } catch (_) {}
         }
         await messenger.compose.setComposeDetails(tab.id, { body: bodyHtml + signature });
+        logActivity({ ts: new Date().toISOString(), mode: "create", to: to.length, cc: cc.length, bcc: bcc.length, result: "ok" });
       } catch (e) {
         console.error("[CoThunder] beginNew falló:", e);
+        logActivity({ ts: new Date().toISOString(), mode: "create", result: "error" });
         messenger.notifications.create({
           type: "basic", iconUrl: messenger.runtime.getURL("icon.svg"), title: "CoThunder",
           message: "No se pudo abrir el correo nuevo con el texto de Copilot."
@@ -193,7 +204,7 @@ messenger.runtime.onMessage.addListener(async (msg) => {
           const identity = details.identityId ? await messenger.identities.get(details.identityId) : null;
           if (identity && identity.signature) {
             signature = "<br><br>" + (identity.signatureIsPlainText
-              ? identity.signature.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")
+              ? escapeHtmlWithBreaks(identity.signature)
               : identity.signature);
           }
         } catch (_) {}
@@ -210,8 +221,10 @@ messenger.runtime.onMessage.addListener(async (msg) => {
         }
       }
       await messenger.compose.setComposeDetails(tab.id, { body: html + signature + quote });
+      logActivity({ ts: new Date().toISOString(), mode: "reply", result: "ok" });
     } catch (e) {
       console.error("[CoThunder] beginReply falló:", e);
+      logActivity({ ts: new Date().toISOString(), mode: "reply", result: "error" });
       messenger.notifications.create({
         type: "basic",
         iconUrl: messenger.runtime.getURL("icon.svg"),
@@ -238,6 +251,9 @@ messenger.runtime.onMessage.addListener(async (msg) => {
 });
 
 // --- Biblioteca inicial de Prompts y Formatos, sembrada en la carpeta Plantillas al instalar ---
+// Versión de la biblioteca: se siembra una sola vez por versión. Subir SOLO al añadir plantillas nuevas
+// (así, si el usuario borra alguna, no reaparece en cada actualización).
+const SEED_VERSION = 1;
 const SEED_ITEMS = [
   { subject: "Prompt - Afirmación / Aceptación", body: "Redacta una respuesta afirmativa y cordial: confirma o acepta lo solicitado, deja claros los siguientes pasos y muestra disposición a colaborar." },
   { subject: "Prompt - Negación cordial", body: "Redacta una respuesta que declina lo solicitado de forma cordial y respetuosa: agradece el mensaje, explica el motivo con tacto y, si es posible, ofrece una alternativa." },
@@ -297,6 +313,8 @@ function encodeSubject(s) {
 // Siembra los Prompts y Formatos de ejemplo en la carpeta Plantillas (solo los que aún no existan).
 async function seedTemplates() {
   try {
+    const { seededVersion } = await messenger.storage.local.get({ seededVersion: 0 });
+    if (seededVersion >= SEED_VERSION) return; // ya sembrado en esta versión: respeta lo que el usuario haya borrado
     const folders = await messenger.folders.query({ specialUse: ["templates"] });
     if (!folders || !folders.length) return;
     const folder = folders[0];
@@ -320,6 +338,7 @@ async function seedTemplates() {
       await messenger.messages.import(file, folder.id, { read: true })
         .catch((e) => console.error("[CoThunder] seed import:", it.subject, e));
     }
+    await messenger.storage.local.set({ seededVersion: SEED_VERSION });
   } catch (e) {
     console.error("[CoThunder] seedTemplates:", e);
   }

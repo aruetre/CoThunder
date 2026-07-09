@@ -13,6 +13,19 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 - Copilot genera **asunto y cuerpo**; el correo nuevo se abre con ambos, la firma (si se marcó) y los destinatarios, en composición HTML. Tras enviar, **«Regenerar»** pide otra versión en la misma ventana.
 - La ventana de creación **abre más alta** (≈620×760) para que quepan sus campos con holgura y **recuerda su tamaño por separado** de la de «Preguntar a Copilot».
 
+### Seguridad
+- **Aviso de tratamiento la primera vez**: la ventana informa de que el contenido del correo se envía a Microsoft 365 Copilot (RGPD/ENS) y recuerda la aceptación.
+- **Registro de actividad local opcional** (auditoría): en Opciones se puede activar un registro de metadatos (fecha, modo, número de destinatarios), nunca el asunto, las direcciones ni el cuerpo; se puede exportar a JSON y vaciar.
+
+### Cambiado
+- Escapado HTML unificado en `escapeHtml`/`escapeHtmlWithBreaks` (deja de duplicarse la lógica en background y content script).
+- `parseRecipients` admite el formato «Nombre <correo>» y elimina duplicados.
+- La biblioteca de plantillas de ejemplo se siembra una sola vez por versión: una plantilla borrada ya no reaparece en cada actualización.
+- Botones de la barra Markdown con `aria-label` para lectores de pantalla.
+
+### Pruebas
+- Suite de pruebas de la lógica pura con `node --test` (escapado, destinatarios, separación asunto/cuerpo, prompts y detección de inyección).
+
 ## [2.2.0] — 2026-07-09
 
 ### Añadido

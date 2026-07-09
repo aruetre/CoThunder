@@ -305,3 +305,19 @@ El content script captura la respuesta igual que en modo respuesta (`waitForRepl
 ### 19.5 Reutilización
 
 Sin cambios en `content-copilot.js` ni nuevas dependencias del DOM de Copilot: la única diferencia respecto a la respuesta es la construcción del prompt (`buildCreatePrompt`) y el destino final (`beginNew` en vez de `beginReply`). El popup es el mismo, parametrizado por `mode`.
+
+## 20. Privacidad y trazabilidad (v2.3)
+
+Refuerzos orientados a RGPD y al Esquema Nacional de Seguridad (ENS), aplicables a los dos modos.
+
+### 20.1 Aviso de tratamiento
+
+La primera vez que se abre la ventana, un aviso informa de que el contenido del correo se envía a Microsoft 365 Copilot para generar la respuesta y de que no se usa ninguna otra red ni se guarda nada fuera del equipo. Al aceptarlo (`Entendido`) se marca `privacyAck` en `storage.local` y no vuelve a mostrarse. Es informativo (no bloquea), para dejar constancia del tratamiento sin añadir fricción.
+
+### 20.2 Registro de actividad local (opcional)
+
+Desactivado por defecto. Si se activa en Opciones (`auditEnabled`), el background registra en `storage.local` (`auditLog`, máximo 500 entradas, FIFO) solo **metadatos** por cada envío: fecha ISO, modo (`create`/`reply`), número de destinatarios en creación y resultado (`ok`/`error`). **Nunca** guarda el asunto, las direcciones ni el cuerpo. Desde Opciones se puede **exportar** a JSON y **vaciar**. Cubre la dimensión de Trazabilidad del ENS sin introducir contenido sensible en el almacenamiento.
+
+### 20.3 Utilidades comunes y calidad
+
+`escapeHtml`/`escapeHtmlWithBreaks` centralizan el escapado HTML (antes duplicado). `parseRecipients` admite el formato «Nombre <correo>» y deduplica. La biblioteca de plantillas se siembra una sola vez por versión (`seededVersion` / `SEED_VERSION`) para respetar las plantillas borradas por el usuario. La lógica pura se prueba con `node --test` (carpeta `test/`, fuera del paquete).

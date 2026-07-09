@@ -285,13 +285,36 @@ function buildCreatePrompt(opts) {
   return parts.join(SECTION_SEP);
 }
 
-// Divide una cadena de destinatarios (separados por coma, punto y coma o saltos) y
-// conserva solo las direcciones con forma de correo válido. Devuelve un array (posiblemente vacío).
+// Escapa los caracteres especiales de HTML (para insertar texto en cuerpos de composición HTML).
+function escapeHtml(text) {
+  return String(text == null ? "" : text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Como escapeHtml, pero además convierte los saltos de línea en <br>.
+function escapeHtmlWithBreaks(text) {
+  return escapeHtml(text).replace(/\n/g, "<br>");
+}
+
+// Divide una cadena de destinatarios (coma, punto y coma o saltos de línea), admite el formato
+// "Nombre <correo>", conserva solo las direcciones válidas y elimina duplicados (sin distinguir mayúsculas).
 function parseRecipients(str) {
-  return String(str || "")
-    .split(/[,;\n]+/)
-    .map((s) => s.trim())
-    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+  const out = [];
+  const seen = new Set();
+  for (let part of String(str || "").split(/[,;\n]+/)) {
+    part = part.trim();
+    if (!part) continue;
+    const m = part.match(/<([^<>]+)>/);
+    const addr = (m ? m[1] : part).trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addr)) continue;
+    const key = addr.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(addr);
+  }
+  return out;
 }
 
 // Separa el "Asunto:" del cuerpo Markdown de la respuesta de creación (tolerante a bloques ```markdown```).
@@ -321,4 +344,13 @@ async function extractTemplateBody(messageId) {
     .trim();
   if (text.length > MAX_BODY) text = text.slice(0, MAX_BODY) + "\n[plantilla truncada]";
   return text;
+}
+
+// Exporta las funciones puras para pruebas en Node. Inerte en Thunderbird, donde no existe `module`.
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    escapeHtml, escapeHtmlWithBreaks, parseRecipients, parseCreateReply,
+    buildPrompt, buildComposedPrompt, buildCreatePrompt, toneLengthInstruction,
+    detectInjection, normalizeText
+  };
 }

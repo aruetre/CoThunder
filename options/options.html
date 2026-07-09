@@ -18,6 +18,14 @@
   <p><label><input id="newChatByDefault" type="checkbox"> Empezar chat nuevo por defecto</label></p>
   <p><button id="save">Guardar</button> <span id="saved" class="muted"></span></p>
 
+  <h2>Registro de actividad (auditoría)</h2>
+  <p><label><input id="auditEnabled" type="checkbox"> Activar registro local de actividad. Guarda solo <strong>metadatos</strong> (fecha, modo y número de destinatarios), nunca el asunto, las direcciones ni el cuerpo del correo.</label></p>
+  <p>
+    <span id="auditCount" class="muted">0 entradas</span>
+    <button id="auditExport" type="button">Exportar</button>
+    <button id="auditClear" type="button">Vaciar</button>
+  </p>
+
   <h2>Ayuda</h2>
   <div class="help">
     <p><strong>Cómo se usa</strong></p>
