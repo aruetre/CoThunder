@@ -115,3 +115,10 @@ body.mode-create .create-only.grow { flex: 2 1 0; }
 body.mode-create .create-only.grow textarea { min-height: 60px; }
 /* Cajas de destinatarios (Para/CC/CCO): bajas y redimensionables solo en vertical. */
 textarea.emails { min-height: 2.4em; resize: vertical; }
+
+/* Evita solapamientos con ventanas pequeñas: los bloques de tamaño fijo no se comprimen
+   y, si no cabe todo, la ventana hace scroll vertical en vez de superponer elementos.
+   Los campos que crecen (.grow) se excluyen para que sigan flexando. */
+body { overflow-y: auto; }
+.header, .notice, .field:not(.grow), .grid2, .opts, #send, #regen { flex: none; }
+.field > label, .mdbar { flex: none; }
