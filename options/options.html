@@ -19,10 +19,12 @@
 
   <h2>Sobre ti (contexto para Copilot)</h2>
   <p class="muted">Se añade al prompt para que Copilot sepa quién eres al redactar (tu usuario de Thunderbird es el mismo que el de Copilot). Cuanto más completo, más adaptadas serán las respuestas. Se guarda solo en tu equipo.</p>
+  <p><button id="fillFromIdentity" type="button">Tomar de mi identidad de Thunderbird</button> <span id="filled" class="muted"></span></p>
   <p><label>Nombre<br><input id="userName" type="text" placeholder="Nombre y apellidos"></label></p>
   <p><label>Puesto o cargo<br><input id="userRole" type="text" placeholder="Ej.: Técnico de coordinación académica"></label></p>
   <p><label>Organización<br><input id="userOrg" type="text" placeholder="Ej.: Universidad Pablo de Olavide"></label></p>
-  <p><label>Sobre mí / qué hago<br><textarea id="userAbout" rows="3" placeholder="Ej.: Gestiono horarios y la comunicación con el profesorado; tono institucional y cordial."></textarea></label></p>
+  <p><label>Sobre mí / qué hago<br><textarea id="userAbout" rows="3" placeholder="Ej.: Gestiono horarios y la comunicación con el profesorado."></textarea></label></p>
+  <p><label>Cómo escribo (estilo)<br><textarea id="userStyle" rows="3" placeholder="Ej.: Trato de usted. Tono institucional y cordial. Firmo con 'Un cordial saludo, [Nombre]'. Evito emojis y tecnicismos."></textarea></label></p>
 
   <p><button id="save">Guardar</button> <span id="saved" class="muted"></span></p>
 

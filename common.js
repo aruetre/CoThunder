@@ -81,7 +81,7 @@ const DEFAULTS = {
   promptTemplate: DEFAULT_PROMPT_TEMPLATE,
   newChatByDefault: true,
   // Perfil del usuario (el mismo en Thunderbird y en Copilot): contexto para enriquecer las respuestas.
-  userProfile: { name: "", role: "", org: "", about: "" }
+  userProfile: { name: "", role: "", org: "", about: "", style: "" }
 };
 
 // Monta el bloque "CONTEXTO DEL AUTOR" a partir del perfil del usuario. Devuelve "" si no hay datos.
@@ -92,6 +92,7 @@ function buildUserContext(profile) {
   if (o.role && o.role.trim()) lines.push("Puesto o cargo: " + o.role.trim());
   if (o.org && o.org.trim()) lines.push("Organización: " + o.org.trim());
   if (o.about && o.about.trim()) lines.push("Sobre mí: " + o.about.trim());
+  if (o.style && o.style.trim()) lines.push("Cómo escribo (estilo, tratamiento y firma): " + o.style.trim());
   if (!lines.length) return "";
   return "CONTEXTO DEL AUTOR (quien escribe este correo; su usuario de Thunderbird es el mismo que el " +
     "de Copilot). Úsalo para adaptar el tono, el rol y la firma; no lo copies literalmente:\n" + lines.join("\n");

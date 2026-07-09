@@ -77,12 +77,13 @@ test("toneLengthInstruction combina tono y longitud", () => {
 });
 
 test("buildUserContext arma el bloque con los datos y vacío si no hay", () => {
-  const c = buildUserContext({ name: "Ana", role: "Técnica", org: "UPO", about: "coordino horarios" });
+  const c = buildUserContext({ name: "Ana", role: "Técnica", org: "UPO", about: "coordino horarios", style: "trato de usted" });
   assert.match(c, /CONTEXTO DEL AUTOR/);
   assert.match(c, /Nombre: Ana/);
   assert.match(c, /Puesto o cargo: Técnica/);
   assert.match(c, /Organización: UPO/);
   assert.match(c, /Sobre mí: coordino horarios/);
+  assert.match(c, /Cómo escribo.*trato de usted/);
   assert.equal(buildUserContext({}), "");
   assert.equal(buildUserContext(null), "");
 });

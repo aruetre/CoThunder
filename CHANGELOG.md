@@ -6,7 +6,8 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 ## [2.4.0] — 2026-07-09
 
 ### Añadido
-- **Sección «Sobre ti» en Opciones** (nombre, puesto o cargo, organización y una descripción libre de qué haces). Se añade al prompt en **respuesta y en creación** como «contexto del autor», para que Copilot sepa quién eres y adapte el tono, el rol y la firma. Se guarda solo en tu equipo y persiste entre sesiones.
+- **Sección «Sobre ti» en Opciones**: nombre, puesto o cargo, organización, una descripción de qué haces y **cómo escribes** (tratamiento, tono y firma). Se añade al prompt en **respuesta y en creación** como «contexto del autor», para que Copilot sepa quién eres y adapte el tono, el rol y la firma. Se guarda solo en tu equipo y persiste entre sesiones.
+- **Botón «Tomar de mi identidad de Thunderbird»**: rellena el nombre, la organización y la firma (como referencia de estilo) desde tu identidad por defecto, con un clic.
 
 ## [2.3.1] — 2026-07-09
 
