@@ -5,7 +5,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const {
   escapeHtml, escapeHtmlWithBreaks, parseRecipients, parseCreateReply,
-  buildPrompt, buildCreatePrompt, toneLengthInstruction, detectInjection
+  buildPrompt, buildCreatePrompt, toneLengthInstruction, detectInjection, buildUserContext
 } = require("../common.js");
 
 test("escapeHtml escapa &, < y >", () => {
@@ -74,6 +74,22 @@ test("buildPrompt sustituye los marcadores de la plantilla", () => {
 test("toneLengthInstruction combina tono y longitud", () => {
   assert.match(toneLengthInstruction("formal", "breve"), /formal/i);
   assert.equal(toneLengthInstruction("", ""), "");
+});
+
+test("buildUserContext arma el bloque con los datos y vacío si no hay", () => {
+  const c = buildUserContext({ name: "Ana", role: "Técnica", org: "UPO", about: "coordino horarios" });
+  assert.match(c, /CONTEXTO DEL AUTOR/);
+  assert.match(c, /Nombre: Ana/);
+  assert.match(c, /Puesto o cargo: Técnica/);
+  assert.match(c, /Organización: UPO/);
+  assert.match(c, /Sobre mí: coordino horarios/);
+  assert.equal(buildUserContext({}), "");
+  assert.equal(buildUserContext(null), "");
+});
+
+test("buildCreatePrompt incluye el contexto del autor cuando se pasa", () => {
+  const p = buildCreatePrompt({ brief: "invitar", userContext: buildUserContext({ name: "Ana", role: "Técnica" }) });
+  assert.match(p, /Nombre: Ana/);
 });
 
 test("detectInjection detecta intentos críticos y no falsea texto normal", () => {

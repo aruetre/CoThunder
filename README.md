@@ -21,6 +21,7 @@ Manual de uso paso a paso: [docs/MANUAL.md](docs/MANUAL.md). Historial de cambio
 - **Degradación segura**: si falla la escritura en Copilot, el prompt se copia al portapapeles; si no se captura la respuesta, salta una notificación.
 - **Ventana redimensionable** que recuerda su tamaño por modo.
 - **Aviso de tratamiento** la primera vez y **registro de actividad local opcional** (auditoría de metadatos, sin contenido).
+- **Contexto «Sobre ti»** (en Opciones): nombre, puesto o cargo, organización y qué haces; se añade al prompt para que Copilot sepa quién eres y adapte el tono, el rol y la firma.
 
 ### Preguntar a Copilot (respuesta)
 

@@ -117,17 +117,21 @@
   let message, body, cfg, promptBody = null, formatBody = null, threadBody = null;
 
   // Compone el prompt según el modo: creación (brief/contexto/idioma) o respuesta (correo + hilo).
-  const composePrompt = () => mode === "create"
-    ? buildCreatePrompt({
-        promptBody, formatBody,
-        tone: $("tone").value, length: $("length").value,
-        brief: $("create-brief").value, context: $("create-context").value, language: $("language").value
-      })
-    : buildComposedPrompt(message, body, {
-        template: cfg.promptTemplate, promptBody, formatBody,
-        thread: $("includeThread").checked ? threadBody : null,
-        tone: $("tone").value, length: $("length").value
-      });
+  // El contexto del autor (perfil del usuario) se añade en ambos modos si está configurado.
+  const composePrompt = () => {
+    const userContext = buildUserContext(cfg && cfg.userProfile);
+    return mode === "create"
+      ? buildCreatePrompt({
+          userContext, promptBody, formatBody,
+          tone: $("tone").value, length: $("length").value,
+          brief: $("create-brief").value, context: $("create-context").value, language: $("language").value
+        })
+      : buildComposedPrompt(message, body, {
+          userContext, template: cfg.promptTemplate, promptBody, formatBody,
+          thread: $("includeThread").checked ? threadBody : null,
+          tone: $("tone").value, length: $("length").value
+        });
+  };
   const rebuildPrompt = () => { $("prompt").value = composePrompt(); };
 
   try {

@@ -79,8 +79,23 @@ const DEFAULT_PROMPT_TEMPLATE =
 const DEFAULTS = {
   copilotUrl: "https://m365.cloud.microsoft/chat",
   promptTemplate: DEFAULT_PROMPT_TEMPLATE,
-  newChatByDefault: true
+  newChatByDefault: true,
+  // Perfil del usuario (el mismo en Thunderbird y en Copilot): contexto para enriquecer las respuestas.
+  userProfile: { name: "", role: "", org: "", about: "" }
 };
+
+// Monta el bloque "CONTEXTO DEL AUTOR" a partir del perfil del usuario. Devuelve "" si no hay datos.
+function buildUserContext(profile) {
+  const o = profile || {};
+  const lines = [];
+  if (o.name && o.name.trim()) lines.push("Nombre: " + o.name.trim());
+  if (o.role && o.role.trim()) lines.push("Puesto o cargo: " + o.role.trim());
+  if (o.org && o.org.trim()) lines.push("Organización: " + o.org.trim());
+  if (o.about && o.about.trim()) lines.push("Sobre mí: " + o.about.trim());
+  if (!lines.length) return "";
+  return "CONTEXTO DEL AUTOR (quien escribe este correo; su usuario de Thunderbird es el mismo que el " +
+    "de Copilot). Úsalo para adaptar el tono, el rol y la firma; no lo copies literalmente:\n" + lines.join("\n");
+}
 
 function getConfig() {
   return messenger.storage.local.get(DEFAULTS);
@@ -231,6 +246,7 @@ async function buildThreadContext(messageId) {
 function buildComposedPrompt(message, body, opts) {
   const o = opts || {};
   const parts = [INJECTION_GUARD];
+  if (o.userContext && o.userContext.trim()) parts.push(o.userContext.trim());
   if (o.promptBody && o.promptBody.trim()) {
     parts.push("INSTRUCCIÓN PRIORITARIA DEL USUARIO (tiene prioridad sobre el resto de indicaciones):\n" +
       o.promptBody.trim());
@@ -267,6 +283,7 @@ function buildCreateBase(o) {
 function buildCreatePrompt(opts) {
   const o = opts || {};
   const parts = [INJECTION_GUARD];
+  if (o.userContext && o.userContext.trim()) parts.push(o.userContext.trim());
   if (o.promptBody && o.promptBody.trim()) {
     parts.push("INSTRUCCIÓN PRIORITARIA DEL USUARIO (tiene prioridad sobre el resto de indicaciones):\n" +
       o.promptBody.trim());
@@ -357,6 +374,6 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     escapeHtml, escapeHtmlWithBreaks, parseRecipients, parseCreateReply,
     buildPrompt, buildComposedPrompt, buildCreatePrompt, toneLengthInstruction,
-    detectInjection, normalizeText
+    detectInjection, normalizeText, buildUserContext
   };
 }

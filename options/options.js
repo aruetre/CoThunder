@@ -5,6 +5,11 @@
   $("copilotUrl").value = cfg.copilotUrl;
   $("promptTemplate").value = cfg.promptTemplate;
   $("newChatByDefault").checked = cfg.newChatByDefault;
+  const prof = cfg.userProfile || {};
+  $("userName").value = prof.name || "";
+  $("userRole").value = prof.role || "";
+  $("userOrg").value = prof.org || "";
+  $("userAbout").value = prof.about || "";
   $("save").addEventListener("click", async () => {
     const url = $("copilotUrl").value.trim();
     let host;
@@ -12,7 +17,13 @@
     await messenger.storage.local.set({
       copilotUrl: url,
       promptTemplate: $("promptTemplate").value,
-      newChatByDefault: $("newChatByDefault").checked
+      newChatByDefault: $("newChatByDefault").checked,
+      userProfile: {
+        name: $("userName").value.trim(),
+        role: $("userRole").value.trim(),
+        org: $("userOrg").value.trim(),
+        about: $("userAbout").value.trim()
+      }
     });
     $("saved").textContent = host === "m365.cloud.microsoft"
       ? "Guardado"

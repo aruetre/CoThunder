@@ -3,6 +3,11 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.4.0] — 2026-07-09
+
+### Añadido
+- **Sección «Sobre ti» en Opciones** (nombre, puesto o cargo, organización y una descripción libre de qué haces). Se añade al prompt en **respuesta y en creación** como «contexto del autor», para que Copilot sepa quién eres y adapte el tono, el rol y la firma. Se guarda solo en tu equipo y persiste entre sesiones.
+
 ## [2.3.1] — 2026-07-09
 
 ### Corregido
@@ -101,7 +106,8 @@ Reescritura completa: de llamar a una API compatible OpenAI/Azure a **automatiza
 - Se usa `messageDisplay.getDisplayedMessages` (plural), ya que el singular no existe en Thunderbird 140.
 - No se incrusta Copilot en un iframe (Microsoft lo bloquea): se abre en ventana/pestaña propia con content script.
 
-[2.3.1]: https://github.com/aruetre/CoThunder/compare/v2.3.0...HEAD
+[2.4.0]: https://github.com/aruetre/CoThunder/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/aruetre/CoThunder/releases/tag/v2.3.1
 [2.3.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.3.0
 [2.2.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.2.0
 [2.1.0]: https://github.com/aruetre/CoThunder/releases/tag/v2.1.0
