@@ -279,8 +279,16 @@
       const agentId = $("agent").value;
       const agentLabel = agentId && $("agent").selectedOptions[0] ? $("agent").selectedOptions[0].dataset.label || "" : "";
       await messenger.storage.local.set({ lastAgentId: agentId });
+      // Primera línea distintiva para que Copilot titule el chat con fecha/hora y asunto, en vez de
+      // resumir la guía anti-inyección (que hacía que todos los chats se titularan "Seguridad").
+      const now = new Date();
+      const p2 = (n) => String(n).padStart(2, "0");
+      const stamp = `${now.getFullYear()}_${p2(now.getMonth() + 1)}_${p2(now.getDate())}_${p2(now.getHours())}_${p2(now.getMinutes())}`;
+      const asunto = (mode === "create" ? $("create-brief").value : ((message && message.subject) || ""))
+        .trim().replace(/\s+/g, " ").slice(0, 50);
+      const chatTitle = `CoThunder ${stamp}${asunto ? " " + asunto : ""}`;
       const base = {
-        type: "sendToCopilot", prompt: $("prompt").value,
+        type: "sendToCopilot", prompt: chatTitle + "\n\n" + $("prompt").value,
         newChat: forceNewChat || $("newChat").checked,
         agentId, agentLabel, includeSignature: $("includeSignature").checked
       };

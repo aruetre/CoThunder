@@ -98,35 +98,37 @@ function selectAgent(id, label) {
   return false;
 }
 
-// Extrae el texto de la respuesta conservando saltos de línea y quitando adornos del bloque de código.
+// Extrae el texto de la respuesta. Usa innerText, que refleja el texto TAL COMO SE VE, con UN salto
+// por línea. Antes se usaba textContent + inserción manual de saltos por cada elemento de bloque, que
+// DUPLICABA los saltos cuando el contenido ya tenía saltos (bloques de código): metía una línea en
+// blanco entre cada fila de tabla y cada elemento de lista, rompiendo el formato. innerText no duplica.
 function extractReplyText(el) {
-  const clone = el.cloneNode(true);
-  clone.querySelectorAll("button, [role='toolbar']").forEach((n) => n.remove());
-  // Pedimos el cuerpo dentro de un bloque ```markdown. Si Copilot lo pinta como bloque de código,
-  // su <pre> ya trae el fuente con los saltos reales: úsalo tal cual. Así NO capturamos la cabecera
-  // "Markdown" del bloque y NO duplicamos saltos (lo que metía líneas en blanco y rompía tablas/listas).
-  const pre = clone.querySelector("pre");
-  if (pre && /\n/.test(pre.textContent)) {
-    let code = pre.textContent
-      .replace(/ /g, " ")
-      .replace(/\r/g, "")
-      .replace(/[ \t]+\n/g, "\n")
-      .replace(/\n{3,}/g, "\n\n")
-      .trim();
-    code = code.replace(/^`{3,}\s*\w*\n?/, "").replace(/\n?`{3,}\s*$/, "");
-    code = code.replace(/^\s*(markdown|md|plaintext|text)\s*\n/i, "");
-    return code.trim();
+  let raw = el.innerText;
+  if (!raw) {
+    // Respaldo si el elemento no tiene layout (innerText vacío): reconstruir por elementos de bloque.
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll("button, [role='toolbar']").forEach((n) => n.remove());
+    clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
+    clone.querySelectorAll("p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote, pre").forEach((n) => n.append("\n"));
+    raw = clone.textContent;
   }
-  clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
-  clone.querySelectorAll("p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote, pre").forEach((n) => n.append("\n"));
-  let text = clone.textContent
+  let text = raw
     .replace(/ /g, " ")
     .replace(/\r/g, "")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  text = text.replace(/^`{3,}\s*\w*\n?/, "").replace(/\n?`{3,}\s*$/, "");      // comillas del bloque de código
-  text = text.replace(/^\s*(markdown|md|plaintext|text)\s*\n/i, "");           // etiqueta de idioma
+  // Quita, al principio, la etiqueta del lenguaje del bloque ("Markdown"/"md") y el botón "Copiar",
+  // que innerText incluye porque son parte visible de la cabecera del bloque de código.
+  for (let i = 0; i < 4; i++) {
+    const before = text;
+    text = text.replace(/^\s*(markdown|md|plaintext|text|copiar código|copiar|copy code|copy)\s*\n/i, "");
+    if (text === before) break;
+  }
+  // Comillas del bloque de código, por si aparecieran como texto, y el botón de copiar al final.
+  text = text.replace(/^`{2,}[^\n]*\n/, "");
+  text = text.replace(/\n\s*(copiar código|copiar|copy code|copy)\s*$/i, "");
+  text = text.replace(/\n\s*`{1,}\s*$/, "");
   return text.trim();
 }
 
