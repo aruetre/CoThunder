@@ -98,20 +98,41 @@ function selectAgent(id, label) {
   return false;
 }
 
-// Extrae el texto de la respuesta. Usa innerText, que refleja el texto TAL COMO SE VE, con UN salto
-// por línea. Antes se usaba textContent + inserción manual de saltos por cada elemento de bloque, que
-// DUPLICABA los saltos cuando el contenido ya tenía saltos (bloques de código): metía una línea en
-// blanco entre cada fila de tabla y cada elemento de lista, rompiendo el formato. innerText no duplica.
+// Recorre el DOM de la respuesta usando textContent (funciona aunque la ventana de Copilot esté en
+// segundo plano, a diferencia de innerText, que necesita layout). Cada línea del bloque de código
+// se trata como UNA línea (un salto por línea, sin duplicar) y se conservan las líneas en blanco.
+// Ignora botones y los espacios de formato entre bloques (que causaban saltos de más).
+const REPLY_BLOCK = /^(P|DIV|LI|TR|H[1-6]|BLOCKQUOTE|PRE|UL|OL|TABLE|THEAD|TBODY|SECTION|ARTICLE)$/;
+function domToText(root) {
+  const isBlock = (el) => el.nodeType === 1 && REPLY_BLOCK.test(el.tagName);
+  const hasBlockChild = (el) => Array.prototype.some.call(el.children || [], isBlock);
+  let out = "";
+  const nl = () => { if (out && !out.endsWith("\n")) out += "\n"; };
+  (function walk(node) {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) {                                            // nodo de texto
+        if (hasBlockChild(node) && /^\s*$/.test(child.nodeValue)) continue;  // espacios entre bloques
+        out += child.nodeValue;
+      } else if (child.nodeType === 1) {                                     // elemento
+        const tag = child.tagName;
+        if (tag === "BUTTON" || child.getAttribute("role") === "toolbar") continue;
+        if (tag === "BR") { out += "\n"; continue; }
+        if (isBlock(child)) {
+          nl();                 // abre línea/bloque
+          walk(child);          // recurre siempre (así se saltan botones anidados)
+          out += "\n";          // cierra línea/bloque
+        } else {
+          walk(child);          // inline: sigue dentro
+        }
+      }
+    }
+  })(root);
+  return out;
+}
+
+// Extrae el texto de la respuesta conservando los saltos de línea reales (un salto por línea).
 function extractReplyText(el) {
-  let raw = el.innerText;
-  if (!raw) {
-    // Respaldo si el elemento no tiene layout (innerText vacío): reconstruir por elementos de bloque.
-    const clone = el.cloneNode(true);
-    clone.querySelectorAll("button, [role='toolbar']").forEach((n) => n.remove());
-    clone.querySelectorAll("br").forEach((br) => br.replaceWith("\n"));
-    clone.querySelectorAll("p, div, li, tr, h1, h2, h3, h4, h5, h6, blockquote, pre").forEach((n) => n.append("\n"));
-    raw = clone.textContent;
-  }
+  let raw = domToText(el);
   let text = raw
     .replace(/ /g, " ")
     .replace(/\r/g, "")

@@ -325,6 +325,12 @@ function parseCreateReply(text) {
   const m = t.match(/^\s*asunto:\s*(.+?)\s*$/im);
   if (m) { subject = m[1].trim(); t = t.replace(m[0], "").trim(); }
   t = t.replace(/^```(?:markdown)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+  // Tras quitar el "Asunto:", el cuerpo puede empezar con la cabecera del bloque de código
+  // ("Markdown"/"Copiar"), que la captura no pudo quitar porque iba después del asunto. Se limpia aquí.
+  t = t.replace(/^\s*markdown\b[^\n]*\n/i, "")
+       .replace(/^\s*(md|plaintext|text)\s*\n/i, "")
+       .replace(/^\s*(copiar código|copiar|copy code|copy)\s*\n/i, "")
+       .trim();
   return { subject, body: t };
 }
 

@@ -51,6 +51,13 @@ test("parseCreateReply: sin asunto ni fence", () => {
   assert.equal(r.body, "Hola, sin asunto ni fence");
 });
 
+test("parseCreateReply: cabecera 'Markdown' del bloque tras el asunto no se cuela en el cuerpo", () => {
+  const r = parseCreateReply("Asunto: Convocatoria\n\nMarkdown\n# Estimado\n\nTexto del correo");
+  assert.equal(r.subject, "Convocatoria");
+  assert.ok(r.body.startsWith("# Estimado"), "cuerpo: " + JSON.stringify(r.body));
+  assert.ok(!/^markdown/i.test(r.body), "no debe empezar por Markdown");
+});
+
 test("buildCreatePrompt incluye creación, idioma, brief y Asunto", () => {
   const p = buildCreatePrompt({ brief: "Invitar al claustro", language: "es", tone: "formal", length: "normal", formatBody: "# Saludo" });
   assert.match(p, /Redacta un correo nuevo/);
