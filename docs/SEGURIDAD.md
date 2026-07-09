@@ -52,6 +52,7 @@ Valoración: apto para uso interno controlado. Para despliegue amplio en la UPO 
 - Minimización parcial: el cuerpo se trunca a 12.000 caracteres y el hilo a 10 mensajes de 2.000.
 - Aviso de tratamiento la primera vez (cubre el mínimo informativo); conviene enlazar la política de uso de IA de la organización.
 - Registro de actividad opcional para acreditar el tratamiento sin guardar contenido.
+- El **perfil del usuario** («Sobre ti», v2.4) se guarda solo en `storage.local` y viaja a Copilot como parte del prompt. Al ser información del propio usuario (el mismo en Thunderbird y en Copilot), no introduce una categoría nueva de dato de terceros.
 
 ### 4.2 Inyección de prompts
 
