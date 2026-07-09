@@ -51,6 +51,16 @@
 
   <div class="field create-only grow">
     <label for="create-brief">📝 ¿Qué quieres crear?</label>
+    <div class="mdbar" id="brief-mdbar">
+      <button type="button" data-md="bold" title="Negrita"><b>B</b></button>
+      <button type="button" data-md="italic" title="Cursiva"><i>I</i></button>
+      <button type="button" data-md="h" title="Encabezado">H</button>
+      <button type="button" data-md="ul" title="Lista con viñetas">•</button>
+      <button type="button" data-md="ol" title="Lista numerada">1.</button>
+      <button type="button" data-md="quote" title="Cita">❝</button>
+      <button type="button" data-md="code" title="Código">&lt;/&gt;</button>
+      <button type="button" data-md="link" title="Enlace">🔗</button>
+    </div>
     <textarea id="create-brief" placeholder="Describe el correo que quieres redactar…"></textarea>
   </div>
   <div class="grid2 create-only">
@@ -86,7 +96,7 @@
 
   <div class="field grow">
     <label for="prompt">✍️ Prompt a enviar</label>
-    <div class="mdbar">
+    <div class="mdbar" id="prompt-mdbar">
       <button type="button" data-md="bold" title="Negrita"><b>B</b></button>
       <button type="button" data-md="italic" title="Cursiva"><i>I</i></button>
       <button type="button" data-md="h" title="Encabezado">H</button>

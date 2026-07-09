@@ -61,9 +61,10 @@
   // Botón de ayuda: abre la página de opciones (que incluye la guía de uso).
   $("help").addEventListener("click", () => { try { messenger.runtime.openOptionsPage(); } catch (_) {} });
 
-  // Mini editor Markdown para el textarea del prompt (envuelve la selección o prefija las líneas).
-  (() => {
-    const ta = $("prompt");
+  // Mini editor Markdown reutilizable: cablea los botones de una barra a su textarea
+  // (envuelve la selección o prefija las líneas). Se usa en "Prompt a enviar" y "¿Qué quieres crear?".
+  const setupMdBar = (bar, ta) => {
+    if (!bar || !ta) return;
     const surround = (before, after) => {
       const s = ta.selectionStart, e = ta.selectionEnd;
       ta.setRangeText(before + ta.value.slice(s, e) + after, s, e, "select");
@@ -88,10 +89,15 @@
       ol: () => prefixLines((n) => n + ". "),
       quote: () => prefixLines(() => "> ")
     };
-    document.querySelectorAll(".mdbar button").forEach((b) => {
-      b.addEventListener("click", () => { const a = actions[b.dataset.md]; if (a) a(); });
+    bar.querySelectorAll("button").forEach((b) => {
+      b.addEventListener("click", () => {
+        const a = actions[b.dataset.md];
+        if (a) { a(); ta.dispatchEvent(new Event("input", { bubbles: true })); }
+      });
     });
-  })();
+  };
+  setupMdBar($("prompt-mdbar"), $("prompt"));
+  setupMdBar($("brief-mdbar"), $("create-brief"));
 
   let message, body, cfg, promptBody = null, formatBody = null, threadBody = null;
 

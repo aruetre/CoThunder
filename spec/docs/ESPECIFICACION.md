@@ -288,7 +288,7 @@ Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longi
 - 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
 - 👤 **Para / contexto** (texto libre): destinatario, propósito y puntos a incluir; enriquece el prompt.
 - ✉️ **Para**, 📋 **CC** y 🕶️ **CCO** (opcionales): tres cajas independientes; cada una admite **varias direcciones** separadas por comas/punto y coma. `parseRecipients` filtra las direcciones válidas y prefijan los campos correspondientes del correo nuevo (`to`/`cc`/`bcc`).
-- 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación; **crece con la ventana** (campo dominante en modo creación). Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
+- 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación; **crece con la ventana** (campo dominante en modo creación) y tiene su **propia mini barra Markdown** (independiente de la del prompt: cada barra edita su `textarea` y no le roba el foco al otro). Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
 
 Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta. La ventana rotula su cabecera y `document.title` como **"Crear desde Copilot"** (frente a "Preguntar a Copilot" del modo respuesta), para que se distinga claramente de la del visor.
 
