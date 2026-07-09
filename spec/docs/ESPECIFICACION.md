@@ -288,7 +288,7 @@ Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longi
 - 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
 - 👤 **Para / contexto** (texto libre): destinatario, propósito y puntos a incluir; enriquece el prompt.
 - ✉️ **Destinatario (correo)** (opcional): si es una dirección válida, prefija el campo *Para* del correo nuevo.
-- 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación. Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
+- 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación; **crece con la ventana** (campo dominante en modo creación). Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
 
 Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta.
 

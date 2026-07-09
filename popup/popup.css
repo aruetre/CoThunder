@@ -101,3 +101,6 @@ input[type="text"], input[type="email"] {
   width: 100%; padding: 5px 6px; font: inherit; color: inherit;
   background: transparent; border: 1px solid var(--border); border-radius: 6px;
 }
+/* En modo creación, "¿Qué quieres crear?" crece con la ventana y domina sobre el prompt compuesto. */
+body.mode-create .create-only.grow { flex: 2 1 0; }
+body.mode-create .create-only.grow textarea { min-height: 60px; }
