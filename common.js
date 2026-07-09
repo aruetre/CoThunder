@@ -285,6 +285,15 @@ function buildCreatePrompt(opts) {
   return parts.join(SECTION_SEP);
 }
 
+// Divide una cadena de destinatarios (separados por coma, punto y coma o saltos) y
+// conserva solo las direcciones con forma de correo válido. Devuelve un array (posiblemente vacío).
+function parseRecipients(str) {
+  return String(str || "")
+    .split(/[,;\n]+/)
+    .map((s) => s.trim())
+    .filter((s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s));
+}
+
 // Separa el "Asunto:" del cuerpo Markdown de la respuesta de creación (tolerante a bloques ```markdown```).
 function parseCreateReply(text) {
   let t = (text || "").trim();

@@ -287,10 +287,12 @@ Reutiliza tal cual: 🤖 Agente, ⭐ Prompt, 📄 Formato, 🎭 Tono, 📏 Longi
 
 - 🌐 **Idioma** de salida (Automático / Español / Inglés / …): fuerza el idioma del correo generado.
 - 👤 **Para / contexto** (texto libre): destinatario, propósito y puntos a incluir; enriquece el prompt.
-- ✉️ **Destinatario (correo)** (opcional): si es una dirección válida, prefija el campo *Para* del correo nuevo.
+- ✉️ **Para**, 📋 **CC** y 🕶️ **CCO** (opcionales): tres cajas independientes; cada una admite **varias direcciones** separadas por comas/punto y coma. `parseRecipients` filtra las direcciones válidas y prefijan los campos correspondientes del correo nuevo (`to`/`cc`/`bcc`).
 - 📝 **¿Qué quieres crear?** (`textarea` propio): la instrucción base de la creación; **crece con la ventana** (campo dominante en modo creación). Se mantiene el `textarea` **"Prompt a enviar"** como prompt compuesto y editable (con la separación en bloques de §18.2), en vez de reetiquetar el principal, para conservar el modelo de respuesta y la edición por bloques.
 
-Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta.
+Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan por separado de las del modo respuesta. La ventana rotula su cabecera y `document.title` como **"Crear desde Copilot"** (frente a "Preguntar a Copilot" del modo respuesta), para que se distinga claramente de la del visor.
+
+**Plantillas específicas de creación.** El desplegable ⭐ Prompt es sensible al modo: en creación muestra solo las plantillas con asunto `Prompt crear - …`; en respuesta, las `Prompt - …`. El desplegable 📄 Formato se **comparte** entre modos (los formatos son estructurales). La biblioteca sembrada al instalar incluye un juego de `Prompt crear - …` (convocatoria, invitación, comunicado, solicitud, presentación, agradecimiento, felicitación, recordatorio, propuesta comercial, boletín) y formatos de creación (convocatoria, invitación). La siembra se ejecuta al **instalar y al actualizar** (idempotente por asunto).
 
 ### 19.3 Prompt de creación
 
@@ -298,7 +300,7 @@ Las preferencias del modo creación (tono, longitud, idioma, firma) se recuerdan
 
 ### 19.4 Captura y composición
 
-El content script captura la respuesta igual que en modo respuesta (`waitForReply`, misma tubería y selectores centralizados). En modo creación, el background **separa la línea `Asunto:` del cuerpo Markdown** y abre `messenger.compose.beginNew({ subject, body, to })` en composición **HTML**, prefijando `to` si se indicó un destinatario válido y añadiendo la firma de la identidad por defecto si "Incluir mi firma" está marcado. La correlación de ida y vuelta usa un `requestId` generado (no hay `messageId`). Degradación idéntica a §17.5: si `waitForReply` no captura texto, se copia el prompt al portapapeles y se notifica.
+El content script captura la respuesta igual que en modo respuesta (`waitForReply`, misma tubería y selectores centralizados). En modo creación, el background **separa la línea `Asunto:` del cuerpo Markdown** y abre `messenger.compose.beginNew()` en composición **HTML**, fijando `subject`, `body` y los destinatarios `to`/`cc`/`bcc` (cada campo pasa por `parseRecipients`, que admite varias direcciones y descarta las inválidas), y añadiendo la firma de la identidad por defecto si "Incluir mi firma" está marcado. La correlación de ida y vuelta usa un `requestId` generado (no hay `messageId`). Degradación idéntica a §17.5: si `waitForReply` no captura texto, se copia el prompt al portapapeles y se notifica.
 
 ### 19.5 Reutilización
 

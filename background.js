@@ -105,7 +105,9 @@ messenger.runtime.onMessage.addListener(async (msg) => {
           mode: msg.mode || "reply",
           includeSignature: msg.includeSignature !== false,
           includeQuote: !!msg.includeQuote,
-          recipient: (msg.recipient || "").trim()
+          to: (msg.to || "").trim(),
+          cc: (msg.cc || "").trim(),
+          bcc: (msg.bcc || "").trim()
         }
       });
       const tabId = await ensureCopilotTab();
@@ -163,7 +165,11 @@ messenger.runtime.onMessage.addListener(async (msg) => {
         }
         const upd = { body: bodyHtml + signature };
         if (subject) upd.subject = subject;
-        if (opts.recipient && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(opts.recipient)) upd.to = [opts.recipient];
+        // Destinatarios Para/CC/CCO: cada campo admite varias direcciones, se filtran las válidas.
+        const to = parseRecipients(opts.to), cc = parseRecipients(opts.cc), bcc = parseRecipients(opts.bcc);
+        if (to.length) upd.to = to;
+        if (cc.length) upd.cc = cc;
+        if (bcc.length) upd.bcc = bcc;
         await messenger.compose.setComposeDetails(tab.id, upd);
       } catch (e) {
         console.error("[CoThunder] beginNew falló:", e);
@@ -262,7 +268,20 @@ const SEED_ITEMS = [
   { subject: "Formato - Resumen con acciones", body: "# [Asunto]\n\n**Resumen:** [síntesis en 1-2 frases]\n\n## Puntos clave\n- [Punto 1]\n- [Punto 2]\n\n## Acciones pendientes\n- [ ] [Acción 1] — [responsable / plazo]\n- [ ] [Acción 2] — [responsable / plazo]" },
   { subject: "Formato - Confirmación de cita", body: "# [Saludo]\n\nConfirmo nuestra [reunión o cita]:\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar / Enlace:** [lugar o enlace]\n- **Asunto:** [tema]\n\n[Cierre]" },
   { subject: "Formato - Propuesta comercial", body: "# [Saludo]\n\n[Presentación breve]\n\n## Propuesta\n| Concepto | Detalle | Importe |\n|---|---|---|\n| [elemento] | [detalle] | [importe] |\n| [elemento] | [detalle] | [importe] |\n\n**Total:** [total]\n\n**Condiciones:** [condiciones] · **Validez:** [validez]\n\n[Cierre y llamada a la acción]" },
-  { subject: "Formato - Identidad UPO", body: "# [Saludo institucional]\n\n[Introducción breve y clara]\n\n[Cuerpo: desarrollo del asunto, con tono institucional]\n\n**[Idea o dato clave]**\n\n> [Nota o aviso destacado]\n\n[Despedida institucional]\n[Nombre]\n[Cargo] · Universidad Pablo de Olavide\n\n---\nIdentidad UPO (referencia de estilo): tono institucional, claro y cordial, con estructura de encabezado, cuerpo y despedida. Colores de marca (oficiales del MIC): azul corporativo #003772 (Pantone 281C) para títulos y acentos; amarillo #FCC100 (Pantone 123C) solo como acento puntual, nunca como fondo de texto de lectura; texto #1A1A1A sobre blanco. Tipografía Franklin Gothic (o Arial como alternativa). No inventes otros colores ni tipografías. Jerarquía: el azul manda, el amarillo resalta, el blanco respira." }
+  { subject: "Formato - Identidad UPO", body: "# [Saludo institucional]\n\n[Introducción breve y clara]\n\n[Cuerpo: desarrollo del asunto, con tono institucional]\n\n**[Idea o dato clave]**\n\n> [Nota o aviso destacado]\n\n[Despedida institucional]\n[Nombre]\n[Cargo] · Universidad Pablo de Olavide\n\n---\nIdentidad UPO (referencia de estilo): tono institucional, claro y cordial, con estructura de encabezado, cuerpo y despedida. Colores de marca (oficiales del MIC): azul corporativo #003772 (Pantone 281C) para títulos y acentos; amarillo #FCC100 (Pantone 123C) solo como acento puntual, nunca como fondo de texto de lectura; texto #1A1A1A sobre blanco. Tipografía Franklin Gothic (o Arial como alternativa). No inventes otros colores ni tipografías. Jerarquía: el azul manda, el amarillo resalta, el blanco respira." },
+  // --- Plantillas específicas del modo "Crear desde Copilot" (correos nuevos desde cero) ---
+  { subject: "Prompt crear - Convocatoria de reunión", body: "Redacta una convocatoria de reunión clara: indica el motivo y el objetivo, propón fecha, hora y lugar o enlace, incluye un orden del día breve y pide confirmación de asistencia." },
+  { subject: "Prompt crear - Invitación a evento", body: "Redacta una invitación a un evento: presenta el evento y su propósito, indica fecha, hora y lugar, explica por qué merece la pena asistir y cómo confirmar o inscribirse." },
+  { subject: "Prompt crear - Comunicado / Anuncio", body: "Redacta un comunicado claro y directo: anuncia la novedad o el cambio, explica en qué consiste, a quién afecta y desde cuándo, e indica a quién dirigirse para dudas." },
+  { subject: "Prompt crear - Solicitud / Petición", body: "Redacta una solicitud educada y concreta: explica el contexto, formula con claridad lo que pides, justifica el motivo e indica, si procede, el plazo deseado." },
+  { subject: "Prompt crear - Presentación / Primer contacto", body: "Redacta un correo de presentación: preséntate (a ti o a tu organización), explica el motivo del contacto y el valor que aportas, y propón un siguiente paso claro." },
+  { subject: "Prompt crear - Agradecimiento", body: "Redacta un correo de agradecimiento sincero: expresa por qué agradeces, sé concreto sobre lo que valoras y cierra de forma cordial." },
+  { subject: "Prompt crear - Felicitación", body: "Redacta una felicitación cálida y personal por el motivo indicado (logro, aniversario, ascenso…), breve y genuina." },
+  { subject: "Prompt crear - Recordatorio", body: "Redacta un recordatorio cordial de un asunto o plazo pendiente: indica de qué se trata, la fecha límite y la acción concreta que se espera." },
+  { subject: "Prompt crear - Propuesta comercial", body: "Redacta una propuesta comercial persuasiva: identifica la necesidad del destinatario, presenta la solución y sus beneficios, detalla condiciones y precio, y termina con una llamada a la acción." },
+  { subject: "Prompt crear - Boletín / Novedades", body: "Redacta un boletín breve de novedades: un titular atractivo, 3-4 puntos destacados con su detalle o enlace, y un cierre con la próxima acción sugerida." },
+  { subject: "Formato - Convocatoria de reunión", body: "# [Asunto de la convocatoria]\n\n[Motivo y objetivo de la reunión]\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar / Enlace:** [lugar o enlace]\n\n## Orden del día\n1. [Punto 1]\n2. [Punto 2]\n3. [Punto 3]\n\n> Se ruega confirmar asistencia.\n\n[Despedida]" },
+  { subject: "Formato - Invitación a evento", body: "# [Nombre del evento]\n\n[Frase de gancho: por qué asistir]\n\n- **Fecha:** [fecha]\n- **Hora:** [hora]\n- **Lugar:** [lugar]\n\n[Descripción breve del programa]\n\n**[Cómo confirmar o inscribirse]**\n\n[Despedida]" }
 ];
 
 // Codifica el asunto en RFC 2047 (UTF-8/Base64) para permitir acentos en la cabecera.
@@ -304,6 +323,8 @@ async function seedTemplates() {
   }
 }
 
+// Siembra al instalar y también al actualizar (idempotente por asunto: solo añade lo que falta,
+// para que las plantillas nuevas de una versión lleguen a quien ya tenía el complemento).
 messenger.runtime.onInstalled.addListener((details) => {
-  if (details.reason === "install") seedTemplates();
+  if (details.reason === "install" || details.reason === "update") seedTemplates();
 });

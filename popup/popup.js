@@ -86,7 +86,11 @@
   // Modo de la ventana: "create" (correo nuevo desde cero) o "reply" (respuesta al correo abierto).
   const params = new URLSearchParams(location.search);
   const mode = params.get("mode") === "create" ? "create" : "reply";
-  if (mode === "create") document.body.classList.add("mode-create");
+  if (mode === "create") {
+    document.body.classList.add("mode-create");
+    document.title = "Crear desde Copilot";
+    $("title").textContent = "Crear desde Copilot";
+  }
 
   // Compone el prompt según el modo: creación (brief/contexto/idioma) o respuesta (correo + hilo).
   const composePrompt = () => mode === "create"
@@ -133,8 +137,11 @@
     // ("Prompt - ..." = instrucción prioritaria; "Formato - ..." o sin prefijo = referencia de formato).
     const templates = await listTemplates().catch(() => []);
     const multiSource = new Set(templates.map((t) => t.source)).size > 1;
-    const promptRe = /^\s*prompt\s*-\s*/i;
+    // "Prompt - …" son prompts de respuesta; "Prompt crear - …" son de creación (solo en modo create).
+    const promptReplyRe = /^\s*prompt\s*-\s*/i;
+    const promptCreateRe = /^\s*prompt\s+crear\s*-\s*/i;
     const formatRe = /^\s*formato\s*-\s*/i;
+    const promptRe = mode === "create" ? promptCreateRe : promptReplyRe;
     const fill = (sel, items, re) => {
       for (const t of items) {
         const opt = document.createElement("option");
@@ -145,7 +152,9 @@
       }
     };
     fill($("prompt-sel"), templates.filter((t) => promptRe.test(t.subject)), promptRe);
-    fill($("format-sel"), templates.filter((t) => formatRe.test(t.subject) || !promptRe.test(t.subject)), formatRe);
+    // Los formatos se comparten entre modos; se excluyen ambos tipos de Prompt.
+    fill($("format-sel"), templates.filter((t) => formatRe.test(t.subject) ||
+      (!promptReplyRe.test(t.subject) && !promptCreateRe.test(t.subject))), formatRe);
 
     const onSelChange = async (sel, assign, busyMsg) => {
       $("send").disabled = true;
@@ -253,7 +262,12 @@
       };
       if (mode === "create") {
         const requestId = "c" + Date.now() + Math.floor(Math.random() * 1e6);
-        res = await messenger.runtime.sendMessage({ ...base, mode: "create", requestId, recipient: ($("recipient").value || "").trim() });
+        res = await messenger.runtime.sendMessage({
+          ...base, mode: "create", requestId,
+          to: ($("recipient-to").value || "").trim(),
+          cc: ($("recipient-cc").value || "").trim(),
+          bcc: ($("recipient-bcc").value || "").trim()
+        });
       } else {
         res = await messenger.runtime.sendMessage({ ...base, mode: "reply", messageId: message.id, includeQuote: $("includeQuote").checked });
       }

@@ -6,9 +6,11 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 ## [2.3.0] — 2026-07-09
 
 ### Añadido
-- **Botón «Crear desde Copilot»** en la barra principal de Thunderbird: redacta un **correo nuevo desde cero** (no una respuesta), sin necesidad de tener un correo abierto. Reutiliza toda la tubería de Copilot y el mismo popup, parametrizado por modo.
-- Campos propios del modo creación: **📝 ¿Qué quieres crear?** (instrucción base), **👤 Para / contexto**, **🌐 Idioma** de salida y **✉️ Destinatario** (opcional; si es válido, prefija el campo *Para*). Se ocultan «Incluir el correo citado» e «Incluir el hilo», que no aplican sin correo de origen.
-- Copilot genera **asunto y cuerpo**; el correo nuevo se abre con ambos, la firma (si se marcó) y el destinatario, en composición HTML.
+- **Botón «Crear desde Copilot»** en la barra principal de Thunderbird: redacta un **correo nuevo desde cero** (no una respuesta), sin necesidad de tener un correo abierto. Convive con **«Preguntar a Copilot»** (del visor); cada botón mantiene su función. Reutiliza toda la tubería de Copilot y el mismo popup, parametrizado por modo (la ventana se rotula «Crear desde Copilot»).
+- Campos propios del modo creación: **📝 ¿Qué quieres crear?** (instrucción base, que **crece con la ventana**), **👤 Para / contexto** y **🌐 Idioma** de salida. Se ocultan «Incluir el correo citado» e «Incluir el hilo», que no aplican sin correo de origen.
+- **Destinatarios múltiples** en tres cajas independientes — **✉️ Para**, **📋 CC** y **🕶️ CCO** —; cada una admite varias direcciones separadas por comas y solo usa las válidas.
+- **Plantillas específicas de creación**: prompts con asunto **«Prompt crear - …»** (convocatoria, invitación, comunicado, solicitud, presentación, agradecimiento, felicitación, recordatorio, propuesta comercial, boletín) que aparecen solo en modo creación; los **«Formato - …»** se comparten entre modos. La biblioteca se siembra al instalar **y al actualizar** (idempotente por asunto).
+- Copilot genera **asunto y cuerpo**; el correo nuevo se abre con ambos, la firma (si se marcó) y los destinatarios, en composición HTML. Tras enviar, **«Regenerar»** pide otra versión en la misma ventana.
 
 ## [2.2.0] — 2026-07-09
 

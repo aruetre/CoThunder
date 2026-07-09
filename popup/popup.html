@@ -3,7 +3,7 @@
 <body>
   <div class="header">
     <img class="logo" src="../icon.svg" alt="">
-    <span class="title">Preguntar a Copilot</span>
+    <span class="title" id="title">Preguntar a Copilot</span>
     <button type="button" id="help" title="Ayuda y uso">?</button>
     <div id="status"><span id="dot"></span><span id="statusText">Preparando…</span></div>
   </div>
@@ -70,8 +70,18 @@
     </div>
   </div>
   <div class="field create-only">
-    <label for="recipient">✉️ Destinatario (correo, opcional)</label>
-    <input type="email" id="recipient" placeholder="nombre@dominio.com">
+    <label for="recipient-to">✉️ Para (uno o varios, separados por comas)</label>
+    <input type="text" id="recipient-to" placeholder="nombre@dominio.com, otro@dominio.com">
+  </div>
+  <div class="grid2 create-only">
+    <div class="field">
+      <label for="recipient-cc">📋 CC (con copia)</label>
+      <input type="text" id="recipient-cc" placeholder="copia@dominio.com, …">
+    </div>
+    <div class="field">
+      <label for="recipient-bcc">🕶️ CCO (copia oculta)</label>
+      <input type="text" id="recipient-bcc" placeholder="oculta@dominio.com, …">
+    </div>
   </div>
 
   <div class="field grow">
