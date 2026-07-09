@@ -91,3 +91,13 @@ select, textarea {
 #regen { background: var(--accent-2); }
 #regen:hover { background: color-mix(in srgb, var(--accent-2) 88%, #000); }
 #send:disabled, #regen:disabled { opacity: .5; cursor: default; }
+
+/* Conmutación de campos por modo (creación / respuesta). */
+.create-only { display: none; }
+body.mode-create .reply-only { display: none; }
+body.mode-create .create-only { display: flex; }
+body.mode-create .grid2.create-only { display: grid; }
+input[type="text"], input[type="email"] {
+  width: 100%; padding: 5px 6px; font: inherit; color: inherit;
+  background: transparent; border: 1px solid var(--border); border-radius: 6px;
+}

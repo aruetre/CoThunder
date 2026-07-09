@@ -49,6 +49,31 @@
     </div>
   </div>
 
+  <div class="field create-only">
+    <label for="create-brief">📝 ¿Qué quieres crear?</label>
+    <textarea id="create-brief" rows="3" placeholder="Describe el correo que quieres redactar…"></textarea>
+  </div>
+  <div class="grid2 create-only">
+    <div class="field">
+      <label for="create-context">👤 Para / contexto</label>
+      <input type="text" id="create-context" placeholder="Destinatario, propósito, puntos…">
+    </div>
+    <div class="field">
+      <label for="language">🌐 Idioma</label>
+      <select id="language">
+        <option value="">Automático</option>
+        <option value="es">Español</option>
+        <option value="en">Inglés</option>
+        <option value="fr">Francés</option>
+        <option value="de">Alemán</option>
+      </select>
+    </div>
+  </div>
+  <div class="field create-only">
+    <label for="recipient">✉️ Destinatario (correo, opcional)</label>
+    <input type="email" id="recipient" placeholder="nombre@dominio.com">
+  </div>
+
   <div class="field grow">
     <label for="prompt">✍️ Prompt a enviar</label>
     <div class="mdbar">
@@ -67,8 +92,8 @@
   <div class="opts">
     <label><input type="checkbox" id="newChat"> Empezar chat nuevo</label>
     <label><input type="checkbox" id="includeSignature" checked> Incluir mi firma</label>
-    <label><input type="checkbox" id="includeQuote"> Incluir el correo citado</label>
-    <label><input type="checkbox" id="includeThread"> Incluir el hilo (mensajes anteriores)</label>
+    <label class="reply-only"><input type="checkbox" id="includeQuote"> Incluir el correo citado</label>
+    <label class="reply-only"><input type="checkbox" id="includeThread"> Incluir el hilo (mensajes anteriores)</label>
   </div>
 
   <button id="send" disabled>Enviar a Copilot</button>
