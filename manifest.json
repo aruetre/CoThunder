@@ -8,6 +8,7 @@
   "host_permissions": ["*://m365.cloud.microsoft/*"],
   "background": { "scripts": ["common.js", "background.js"] },
   "message_display_action": { "default_title": "Preguntar a Copilot", "default_icon": "icon.svg" },
+  "action": { "default_title": "Crear desde Copilot", "default_icon": "icon.svg" },
   "options_ui": { "page": "options/options.html", "open_in_tab": false },
   "icons": { "32": "icon.svg", "64": "icon.svg" }
 }
