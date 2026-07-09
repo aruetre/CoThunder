@@ -279,7 +279,7 @@ Añade un segundo botón para **redactar correos desde cero** (no una respuesta)
 
 ### 19.1 Botón y modo
 
-Un botón `action` en la **barra principal** de Thunderbird (icono de Copilot, título "Crear desde Copilot"), independiente de que haya un correo abierto. Al pulsar abre `popup/popup.html?mode=create` en la misma ventana propia (`windows.create`, redimensionable y con memoria de tamaño, como §18.1); no lleva `messageId`. El popup lee `mode` de la URL (`reply` por defecto, `create` en este botón) y ajusta la UI y el flujo. **No requiere permisos nuevos**: `action` no lleva permiso propio y `compose` (para `beginNew`) ya está declarado.
+Un botón `action` en la **barra principal** de Thunderbird (icono de Copilot, título "Crear desde Copilot"), independiente de que haya un correo abierto. Al pulsar abre `popup/popup.html?mode=create` en la misma ventana propia (`windows.create`, redimensionable y con memoria de tamaño, como §18.1); no lleva `messageId`. Al tener más campos que el modo respuesta, **abre más alto por defecto** (≈620×760 frente a 600×560) y recuerda su tamaño **por separado** (`winBoundsCreate`, distinto de `winBounds` del modo respuesta). El popup lee `mode` de la URL (`reply` por defecto, `create` en este botón) y ajusta la UI y el flujo. **No requiere permisos nuevos**: `action` no lleva permiso propio y `compose` (para `beginNew`) ya está declarado.
 
 ### 19.2 UI en modo creación
 

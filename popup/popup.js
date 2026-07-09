@@ -3,10 +3,22 @@
   const $ = (id) => document.getElementById(id);
   const setStatus = (cls, text) => { $("dot").className = cls; $("statusText").textContent = text; };
 
-  // --- Ventana: recuerda tamaño/posición; si no hay, compacto 600x560 centrado (cabe en 1080p) ---
+  // Modo de la ventana: "create" (correo nuevo) o "reply" (respuesta). Determina UI y tamaño.
+  const params = new URLSearchParams(location.search);
+  const mode = params.get("mode") === "create" ? "create" : "reply";
+  if (mode === "create") {
+    document.body.classList.add("mode-create");
+    document.title = "Crear desde Copilot";
+    $("title").textContent = "Crear desde Copilot";
+  }
+
+  // --- Ventana: recuerda tamaño/posición por modo; creación abre más alto (tiene más campos) ---
+  const boundsKey = mode === "create" ? "winBoundsCreate" : "winBounds";
   try {
     const availW = screen.availWidth, availH = screen.availHeight;
-    const { winBounds } = await messenger.storage.local.get({ winBounds: null });
+    const def = mode === "create" ? { width: 620, height: 760 } : { width: 600, height: 560 };
+    const store = await messenger.storage.local.get({ [boundsKey]: null });
+    const winBounds = store[boundsKey];
     let w, h, left, top;
     if (winBounds && winBounds.width && winBounds.height) {
       w = Math.min(winBounds.width, availW);
@@ -14,8 +26,8 @@
       left = Math.min(Math.max(0, winBounds.left || 0), Math.max(0, availW - w));
       top = Math.min(Math.max(0, winBounds.top || 0), Math.max(0, availH - h));
     } else {
-      w = Math.min(600, availW);
-      h = Math.min(560, availH);
+      w = Math.min(def.width, availW);
+      h = Math.min(def.height, availH);
       left = Math.max(0, Math.round((availW - w) / 2));
       top = Math.max(0, Math.round((availH - h) / 2));
     }
@@ -23,11 +35,11 @@
     await messenger.windows.update(win.id, { width: w, height: h, left, top });
   } catch (_) {}
 
-  // Guarda tamaño/posición al redimensionar/mover (con rebote) y al cerrar.
+  // Guarda tamaño/posición al redimensionar/mover (con rebote) y al cerrar, por modo.
   let saveTimer = null;
   const saveBounds = () => {
     messenger.storage.local.set({
-      winBounds: { width: window.outerWidth, height: window.outerHeight, left: window.screenX, top: window.screenY }
+      [boundsKey]: { width: window.outerWidth, height: window.outerHeight, left: window.screenX, top: window.screenY }
     }).catch(() => {});
   };
   window.addEventListener("resize", () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveBounds, 400); });
@@ -82,15 +94,6 @@
   })();
 
   let message, body, cfg, promptBody = null, formatBody = null, threadBody = null;
-
-  // Modo de la ventana: "create" (correo nuevo desde cero) o "reply" (respuesta al correo abierto).
-  const params = new URLSearchParams(location.search);
-  const mode = params.get("mode") === "create" ? "create" : "reply";
-  if (mode === "create") {
-    document.body.classList.add("mode-create");
-    document.title = "Crear desde Copilot";
-    $("title").textContent = "Crear desde Copilot";
-  }
 
   // Compone el prompt según el modo: creación (brief/contexto/idioma) o respuesta (correo + hilo).
   const composePrompt = () => mode === "create"

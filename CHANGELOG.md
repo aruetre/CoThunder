@@ -11,6 +11,7 @@ Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 - **Destinatarios múltiples** en tres cajas independientes — **✉️ Para**, **📋 CC** y **🕶️ CCO** —; cada una admite varias direcciones separadas por comas y solo usa las válidas.
 - **Plantillas específicas de creación**: prompts con asunto **«Prompt crear - …»** (convocatoria, invitación, comunicado, solicitud, presentación, agradecimiento, felicitación, recordatorio, propuesta comercial, boletín) que aparecen solo en modo creación; los **«Formato - …»** se comparten entre modos. La biblioteca se siembra al instalar **y al actualizar** (idempotente por asunto).
 - Copilot genera **asunto y cuerpo**; el correo nuevo se abre con ambos, la firma (si se marcó) y los destinatarios, en composición HTML. Tras enviar, **«Regenerar»** pide otra versión en la misma ventana.
+- La ventana de creación **abre más alta** (≈620×760) para que quepan sus campos con holgura y **recuerda su tamaño por separado** de la de «Preguntar a Copilot».
 
 ## [2.2.0] — 2026-07-09
 

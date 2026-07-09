@@ -35,9 +35,10 @@ messenger.messageDisplayAction.onClicked.addListener(async (tab) => {
 });
 
 // El botón de la barra principal abre la UI en modo creación (correo nuevo, sin messageId).
+// Abre más alto que el modo respuesta porque tiene más campos (el popup afina el tamaño por modo).
 messenger.action.onClicked.addListener(async () => {
   const url = messenger.runtime.getURL("popup/popup.html") + "?mode=create";
-  await messenger.windows.create({ url, type: "popup", width: 600, height: 560, allowScriptsToClose: true });
+  await messenger.windows.create({ url, type: "popup", width: 620, height: 760, allowScriptsToClose: true });
 });
 
 // Mantiene una única ventana de Copilot: si existe la enfoca, si no la crea.
