@@ -43,6 +43,7 @@ body {
 .field { display: flex; flex-direction: column; gap: 3px; }
 .field > label { font-size: 12px; font-weight: 700; opacity: .85; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .inline { display: flex; gap: 6px; }
 
 .mdbar { display: flex; gap: 3px; flex-wrap: wrap; }
@@ -84,7 +85,7 @@ select, textarea {
 .grow { flex: 1 0 auto; min-height: 0; }
 .grow textarea { flex: 1 1 auto; min-height: 100px; resize: none; overflow: auto; }
 
-.opts { display: flex; flex-direction: column; gap: 5px; }
+.opts { display: flex; flex-direction: row; flex-wrap: wrap; gap: 5px 14px; }
 .opts label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 
 #send, #regen {
@@ -122,5 +123,5 @@ textarea.emails { min-height: 2.4em; resize: vertical; }
    y, si no cabe todo, la ventana hace scroll vertical en vez de superponer elementos.
    Los campos que crecen (.grow) se excluyen para que sigan flexando. */
 body { overflow-y: auto; }
-.header, .notice, .field:not(.grow), .grid2, .opts, #send, #regen { flex: none; }
+.header, .notice, .field:not(.grow), .grid2, .grid4, .opts, #send, #regen { flex: none; }
 .field > label, .mdbar { flex: none; }
