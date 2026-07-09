@@ -5,7 +5,7 @@ Extensión MailExtension para **Thunderbird 140+** que integra **Microsoft 365 C
 - **Preguntar a Copilot** (botón en el visor de un mensaje): lee el correo abierto, monta un prompt editable con su contenido y trae la respuesta de Copilot a una ventana de composición, maquetada en Markdown.
 - **Crear desde Copilot** (botón en la barra principal): redacta un **correo nuevo desde cero** (asunto y cuerpo) a partir de tus indicaciones, sin necesidad de tener un correo abierto.
 
-Manual de uso paso a paso: [docs/MANUAL.md](docs/MANUAL.md). Historial de cambios: [CHANGELOG.md](CHANGELOG.md). Seguridad: [informe de ciberseguridad](docs/INFORME-CIBERSEGURIDAD-2026-07-09.md).
+Manual de uso paso a paso: [docs/MANUAL.md](docs/MANUAL.md). Historial de cambios: [CHANGELOG.md](CHANGELOG.md). Seguridad: [informe de seguridad](docs/SEGURIDAD.md).
 
 ## Características
 
@@ -69,7 +69,7 @@ CoThunder pide la respuesta en **Markdown** y la vuelca tal cual en la composici
 
 El contenido de los correos solo viaja a **Microsoft 365 Copilot**, el mismo destino al que ya envías datos al usar Copilot. Sin telemetría, sin terceros, sin claves. La ventana te muestra siempre el prompt antes de enviarlo, y la primera vez avisa del tratamiento. Puedes activar un **registro de actividad local** (solo metadatos) desde Opciones.
 
-Análisis detallado: [informe de ciberseguridad](docs/INFORME-CIBERSEGURIDAD-2026-07-09.md) (uso en la UPO y usuario general) y [auditoría técnica](docs/AUDITORIA-2026-07-09.md).
+Análisis detallado (uso en la UPO y usuario general, cumplimiento ENS y riesgos): [informe de seguridad](docs/SEGURIDAD.md).
 
 ## Releases automáticas
 
