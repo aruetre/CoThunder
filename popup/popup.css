@@ -88,6 +88,8 @@ select, textarea {
 .opts { display: flex; flex-direction: row; flex-wrap: wrap; gap: 5px 14px; }
 .opts label { display: flex; align-items: center; gap: 6px; font-size: 12px; }
 
+.actions { display: flex; gap: 8px; }
+.actions button { flex: 1; }
 #send, #regen {
   width: 100%;
   padding: 9px;
@@ -123,5 +125,5 @@ textarea.emails { min-height: 2.4em; resize: vertical; }
    y, si no cabe todo, la ventana hace scroll vertical en vez de superponer elementos.
    Los campos que crecen (.grow) se excluyen para que sigan flexando. */
 body { overflow-y: auto; }
-.header, .notice, .field:not(.grow), .grid2, .grid4, .opts, #send, #regen { flex: none; }
+.header, .notice, .field:not(.grow), .grid2, .grid4, .opts, .actions { flex: none; }
 .field > label, .mdbar { flex: none; }

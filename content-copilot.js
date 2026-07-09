@@ -118,19 +118,27 @@ function extractReplyText(el) {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  // Quita, al principio, la etiqueta del lenguaje del bloque ("Markdown"/"md") y el botón "Copiar",
-  // que innerText incluye porque son parte visible de la cabecera del bloque de código.
-  for (let i = 0; i < 4; i++) {
+  // Quita caracteres invisibles (BOM, zero-width) que romperían el anclado ^ de los filtros.
+  text = text.replace(/[﻿​‌‍⁠]/g, "").trim();
+  // CABECERA del bloque de código: etiqueta del lenguaje ("Markdown"/"md") y botón "Copiar",
+  // que innerText incluye porque son parte visible del bloque. Se barren las primeras líneas.
+  for (let i = 0; i < 5; i++) {
     const before = text;
-    text = text.replace(/^\s*markdown\b[^\n]*\n/i, "");                          // cabecera del bloque ```markdown (aunque lleve "Copiar" al lado)
+    text = text.replace(/^\s*markdown\b[^\n]*\n/i, "");                          // "Markdown" (aunque lleve "Copiar" al lado)
     text = text.replace(/^\s*(md|plaintext|text)\s*\n/i, "");                    // otras etiquetas de lenguaje, si van solas
     text = text.replace(/^\s*(copiar código|copiar|copy code|copy)\s*\n/i, ""); // botón de copiar en su propia línea
+    text = text.replace(/^`{2,}[^\n]*\n/, "");                                   // comillas de apertura si aparecieran
     if (text === before) break;
   }
-  // Comillas del bloque de código, por si aparecieran como texto, y el botón de copiar al final.
-  text = text.replace(/^`{2,}[^\n]*\n/, "");
-  text = text.replace(/\n\s*(copiar código|copiar|copy code|copy)\s*$/i, "");
-  text = text.replace(/\n\s*`{1,}\s*$/, "");
+  // PIE del bloque de código: botón "Mostrar más/menos líneas" y "Copiar". Se barren las últimas líneas.
+  for (let i = 0; i < 5; i++) {
+    const before = text;
+    text = text.replace(/\n[^\n]*mostrar (más|mas|menos) l[íi]neas\s*$/i, "");
+    text = text.replace(/\n[^\n]*show (more|less) lines?\s*$/i, "");
+    text = text.replace(/\n\s*(copiar código|copiar|copy code|copy)\s*$/i, "");
+    text = text.replace(/\n\s*`{1,}\s*$/, "");
+    if (text === before) break;
+  }
   return text.trim();
 }
 
