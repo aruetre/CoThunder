@@ -79,7 +79,9 @@ select, textarea {
   cursor: pointer;
 }
 
-.grow { flex: 1 1 auto; min-height: 0; }
+/* Los campos que crecen NO se encogen por debajo de su contenido (flex-shrink: 0): así el
+   textarea nunca se desborda sobre el elemento de abajo; si falta sitio, la ventana hace scroll. */
+.grow { flex: 1 0 auto; min-height: 0; }
 .grow textarea { flex: 1 1 auto; min-height: 100px; resize: none; overflow: auto; }
 
 .opts { display: flex; flex-direction: column; gap: 5px; }
@@ -111,7 +113,7 @@ input[type="text"], input[type="email"] {
   background: transparent; border: 1px solid var(--border); border-radius: 6px;
 }
 /* En modo creación, "¿Qué quieres crear?" crece con la ventana y domina sobre el prompt compuesto. */
-body.mode-create .create-only.grow { flex: 2 1 0; }
+body.mode-create .create-only.grow { flex: 2 0 auto; }
 body.mode-create .create-only.grow textarea { min-height: 60px; }
 /* Cajas de destinatarios (Para/CC/CCO): bajas y redimensionables solo en vertical. */
 textarea.emails { min-height: 2.4em; resize: vertical; }
