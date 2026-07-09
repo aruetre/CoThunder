@@ -60,13 +60,20 @@ jobs:
         run: |
           TAG="${{ github.ref_name }}"
           XPI="${{ steps.pack.outputs.xpi }}"
-          TITLE="CoThunder ${{ steps.pack.outputs.version }}"
-          NOTES="Extensión CoThunder ${{ steps.pack.outputs.version }} para Thunderbird 140 o superior.
-
-          Instalación: descarga el .xpi de abajo y en Thunderbird ve a Herramientas › Complementos y temas › engranaje › Instalar complemento desde archivo."
+          VERSION="${{ steps.pack.outputs.version }}"
+          TITLE="CoThunder ${VERSION}"
+          # Notas de la release: extrae la sección de esta versión del CHANGELOG y añade la instalación.
+          {
+            awk -v ver="$VERSION" 'substr($0,1,4)=="## [" { if(p) exit; if(index($0,"## [" ver "]")==1){p=1;next} } p{print}' CHANGELOG.md
+            echo ""
+            echo "---"
+            echo ""
+            echo "Requiere **Thunderbird 140 o superior**. Instalación: descarga \`$XPI\` de más abajo y, en Thunderbird, ve a Herramientas › Complementos y temas › engranaje › Instalar complemento desde archivo."
+          } > RELEASE_NOTES.md
+          if [ ! -s RELEASE_NOTES.md ]; then echo "CoThunder ${VERSION} para Thunderbird 140 o superior." > RELEASE_NOTES.md; fi
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES"
+            gh release edit "$TAG" --title "$TITLE" --notes-file RELEASE_NOTES.md
             gh release upload "$TAG" "$XPI" --clobber
           else
-            gh release create "$TAG" "$XPI" --title "$TITLE" --notes "$NOTES"
+            gh release create "$TAG" "$XPI" --title "$TITLE" --notes-file RELEASE_NOTES.md
           fi
