@@ -1,5 +1,24 @@
 "use strict";
 
+// --- Editor Markdown en la ventana de redacción -------------------------------
+messenger.composeScripts.register({
+  js: [{ file: "content-compose.js" }],
+  css: [{ file: "compose.css" }]
+});
+
+// Al enviar con el panel activo: pide el HTML final al compose script, cancela
+// ese envío y deja el HTML en el cuerpo (el usuario revisa y envía).
+messenger.compose.onBeforeSend.addListener(async (tab) => {
+  try {
+    const res = await messenger.tabs.sendMessage(tab.id, { type: "cothunder-finalize" });
+    if (res && res.html != null) {
+      return { cancel: true, details: { body: res.html } };
+    }
+  } catch (e) {
+    console.error("[CoThunder] onBeforeSend Markdown falló:", e);
+  }
+});
+
 // Registra el content script de Copilot en runtime, a partir de la URL configurada.
 async function registerCopilotScript() {
   try {
