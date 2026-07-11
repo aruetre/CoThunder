@@ -337,3 +337,21 @@ Sección "Sobre ti" en Opciones con cinco campos: **Nombre**, **Puesto o cargo**
 ### 21.3 Flujo de datos
 
 El perfil viaja a Copilot como parte del prompt, igual que el resto del contexto. No se envía a ningún otro destino. Al ser información del propio usuario, no añade una nueva categoría de dato de terceros.
+
+## 22. Editor Markdown con preview en la ventana de redacción (sustituye a Markdown Here)
+
+Sustituye a **Markdown Here Revival** (ya no soportado en TB nuevas): un **panel dividido en la zona de escritura** de la ventana de redacción — izquierda Markdown editable, derecha preview HTML en vivo. La conversión a HTML ocurre al apagar el panel o al enviar; el correo sale maquetado. Disponible en **cualquier** ventana de redacción y, además, el flujo de Copilot la abre **ya rellena** con el Markdown de la respuesta.
+
+Diseño completo en `docs/superpowers/specs/2026-07-12-editor-markdown-redaccion-design.md`. Resumen:
+
+### 22.1 Componentes
+
+Superficie inyectable: el documento del cuerpo editable, vía *compose script* (`scripting.compose`/`composeScripts`, permiso `compose` ya declarado). Ficheros nuevos: **`markdown.js`** (renderizador Markdown→HTML vanilla propio + sanitizado, por nodos, sin `innerHTML`), **`content-compose.js`** (compose script con el panel y **selectores del editor de TB centralizados**), **`compose.css`**. Cambian `manifest.json` (`compose_action` + `commands` `Ctrl+Alt+M`, sin permisos nuevos), `background.js` (registro runtime del compose script, `onClicked`, `onBeforeSend`, y entrega de Copilot como **Markdown fuente** en vez de HTML escapado) y `options/` (ajuste "editor Markdown por defecto").
+
+### 22.2 Activación y finalización
+
+Botón `compose_action` y atajo `Ctrl+Alt+M` **alternan** el panel; **encendido por defecto** (configurable). Al enviar con el panel encendido, `compose.onBeforeSend` renderiza a HTML y devuelve `{ cancel: true, details: { body: html } }`: cancela ese envío, deja el HTML en el cuerpo y apaga el panel; el usuario revisa y envía. El andamiaje del panel nunca es el correo: el Markdown fuente es la única verdad mientras se edita.
+
+### 22.3 Motor propio y compatibilidad
+
+Renderizador escrito a mano (sin marked/highlight.js): encabezados, párrafos, listas anidadas, citas, `hr`, bloques de código, tablas; en línea negrita/cursiva/código/enlaces (solo `http`/`https`/`mailto`). Objetivo TB 150+ **retrocompatible con ESR 140** (`strict_min_version` en `"140.0"`). El montaje del panel dentro del editor nativo es un **spike bloqueante** (validar en 140 y 150+ que el envío sale limpio); plan B: cuerpo nativo solo-Markdown con preview como overlay no editable. Sin destinos nuevos, sin permisos nuevos, sin `innerHTML` remoto.
