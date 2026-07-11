@@ -34,7 +34,8 @@
 
   function activate() {
     if (active) return;
-    const seed = document.body.innerText || "";
+    const body = document.querySelector(SELECTORS.body);
+    const seed = body.innerText || "";
     const root = document.createElement("div");
     root.id = IDS.root;
     root.style.cssText = "display:flex;gap:12px;height:100%;box-sizing:border-box;";
@@ -46,7 +47,7 @@
     preview.id = IDS.preview;
     preview.style.cssText = "flex:1;min-width:0;overflow:auto;";
     root.append(src, preview);
-    document.body.replaceChildren(root);
+    body.replaceChildren(root);
     src.addEventListener("input", updatePreview);
     active = true;
     updatePreview();

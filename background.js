@@ -1,10 +1,21 @@
 "use strict";
 
 // --- Editor Markdown en la ventana de redacción -------------------------------
-messenger.composeScripts.register({
-  js: [{ file: "content-compose.js" }],
-  css: [{ file: "compose.css" }]
-});
+// Registro idempotente (igual que registerCopilotScript): desregistra por id antes de
+// volver a registrar, para no acumular registros duplicados en cada despertar del event page.
+async function registerComposeScript() {
+  try {
+    await messenger.scripting.compose.unregisterScripts({ ids: ["cothunder-compose"] }).catch(() => {});
+    await messenger.scripting.compose.registerScripts([{
+      id: "cothunder-compose",
+      js: ["content-compose.js"],
+      css: ["compose.css"]
+    }]);
+  } catch (e) {
+    console.error("[CoThunder] registro compose script:", e);
+  }
+}
+registerComposeScript();
 
 // Al enviar con el panel activo: pide el HTML final al compose script, cancela
 // ese envío y deja el HTML en el cuerpo (el usuario revisa y envía).
