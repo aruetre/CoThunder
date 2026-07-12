@@ -55,8 +55,8 @@ mark { background-color: #FCC100; }
   });
   $("save").addEventListener("click", async () => {
     const url = $("copilotUrl").value.trim();
-    let host;
-    try { host = new URL(url).host; } catch (_) { $("saved").textContent = "URL no válida"; return; }
+    // Guarda SIEMPRE, aunque la URL de Copilot esté vacía o mal formada: así los
+    // demás ajustes (tema del correo, acento, perfil...) no se bloquean por la URL.
     await messenger.storage.local.set({
       copilotUrl: url,
       promptTemplate: $("promptTemplate").value,
@@ -73,7 +73,9 @@ mark { background-color: #FCC100; }
         style: $("userStyle").value.trim()
       }
     });
-    $("saved").textContent = host === "m365.cloud.microsoft"
+    let host = "";
+    try { host = new URL(url).host; } catch (_) {}
+    $("saved").textContent = (!url || host === "m365.cloud.microsoft")
       ? "Guardado"
       : "Guardado. Aviso: solo el dominio m365.cloud.microsoft tiene permiso; otro dominio no se inyectará";
     setTimeout(() => { $("saved").textContent = ""; }, 4000);

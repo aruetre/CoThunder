@@ -3,6 +3,11 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.3] — 2026-07-12
+
+### Corregido
+- **El tema del correo (y el resto de ajustes) no se guardaban** si la URL de Copilot estaba vacía o mal formada: el botón «Guardar» se abortaba y no persistía nada, así que el tema elegido no se aplicaba (solo se veía el color de acento). Ahora se guarda **siempre**; la URL de Copilot solo muestra un aviso si no es del dominio permitido.
+
 ## [2.6.2] — 2026-07-12
 
 ### Corregido
