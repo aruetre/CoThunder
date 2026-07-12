@@ -85,7 +85,11 @@ const DEFAULTS = {
   // Perfil del usuario (el mismo en Thunderbird y en Copilot): contexto para enriquecer las respuestas.
   userProfile: { name: "", role: "", org: "", about: "", style: "" },
   // Color de acento del correo (encabezados, tablas y citas del cuerpo Markdown maquetado).
-  emailAccent: "#0969da"
+  emailAccent: "#0969da",
+  // Tema CSS del correo: "default" (sin CSS extra), "upo" (preset corporativo) o "custom" (emailCustomCss).
+  emailTheme: "default",
+  // CSS del usuario para el tema "custom", inlineado sobre el correo (ver content-compose.js::inlineCss).
+  emailCustomCss: ""
 };
 
 // Monta el bloque "CONTEXTO DEL AUTOR" a partir del perfil del usuario. Devuelve "" si no hay datos.

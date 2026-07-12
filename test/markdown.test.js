@@ -7,6 +7,7 @@ const { renderInline } = require("../markdown.js");
 const { renderMarkdown } = require("../markdown.js");
 const { styleEmail } = require("../markdown.js");
 const { highlightCode } = require("../markdown.js");
+const { parseCss } = require("../markdown.js");
 
 test("renderInline escapa HTML", () => {
   assert.equal(renderInline("a < b & c"), "a &lt; b &amp; c");
@@ -376,4 +377,26 @@ test("renderMarkdown: tabla con líneas en blanco entre filas (estilo Copilot)",
     renderMarkdown("| A | B |\n\n| --- | --- |\n\n| 1 | 2 |\n\n| 3 | 4 |"),
     "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody></table>"
   );
+});
+
+// --- parseCss (motor de temas CSS) -------------------------------------
+
+test("parseCss: regla simple", () => {
+  assert.deepEqual(parseCss("h1 { color: red; }"), [{ selector: "h1", decls: [{ prop: "color", value: "red" }] }]);
+});
+test("parseCss: varias declaraciones y comentarios", () => {
+  assert.deepEqual(
+    parseCss("/* c */ th { background: #003772; color: #fff; }"),
+    [{ selector: "th", decls: [{ prop: "background", value: "#003772" }, { prop: "color", value: "#fff" }] }]
+  );
+});
+test("parseCss: varias reglas y selector con coma se conserva", () => {
+  assert.deepEqual(
+    parseCss("h1,h2 { color: navy; }\na { color: blue; }"),
+    [{ selector: "h1,h2", decls: [{ prop: "color", value: "navy" }] }, { selector: "a", decls: [{ prop: "color", value: "blue" }] }]
+  );
+});
+test("parseCss: ignora at-rules y vacío", () => {
+  assert.deepEqual(parseCss("@media x { h1 { color: red } }"), []);
+  assert.deepEqual(parseCss(""), []);
 });

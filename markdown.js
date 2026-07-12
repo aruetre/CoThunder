@@ -576,6 +576,38 @@ function styleEmail(html, opts) {
   return s;
 }
 
+// --- Motor de temas: parser CSS mínimo ----------------------------------
+// Parser deliberadamente simple (sin anidamiento, sin selectores complejos
+// más allá de lo que entiende querySelectorAll): basta para temas de correo
+// (colores, bordes, fondos) aplicados luego como estilos en línea por
+// content-compose.js::inlineCss. No interpreta @media ni reglas anidadas;
+// las descarta.
+function parseCss(css) {
+  // 1) Quita comentarios /* ... */ antes de trocear (pueden contener "}" o ";").
+  const noComments = String(css == null ? "" : css).replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [];
+  // 2) Trocea en reglas por "}"; cada trozo es "selector { declaraciones".
+  for (const chunk of noComments.split("}")) {
+    const open = chunk.indexOf("{");
+    if (open === -1) continue; // resto tras la última regla, o cierre de @media
+    const selector = chunk.slice(0, open).trim();
+    if (!selector || selector.startsWith("@")) continue; // vacío o at-rule (@media, @import...)
+    const decls = [];
+    for (const part of chunk.slice(open + 1).split(";")) {
+      const p = part.trim();
+      if (!p) continue;
+      const colon = p.indexOf(":"); // split en el PRIMER ":" (los valores pueden llevar más, p. ej. url(...))
+      if (colon === -1) continue;
+      const prop = p.slice(0, colon).trim();
+      const value = p.slice(colon + 1).trim();
+      if (!prop || !value) continue;
+      decls.push({ prop, value });
+    }
+    rules.push({ selector, decls });
+  }
+  return rules;
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { mdEscape, renderInline, renderMarkdown, styleEmail, highlightCode };
+  module.exports = { mdEscape, renderInline, renderMarkdown, styleEmail, highlightCode, parseCss };
 }

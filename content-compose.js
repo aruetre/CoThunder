@@ -55,6 +55,10 @@
   let toolbarEl = null;
   let timer = null;
   let emailAccent = "#0969da";
+  // Tema CSS del correo (§ motor de temas): "default" sin CSS extra, "upo" usa el
+  // preset UPO_CSS de abajo, "custom" usa el CSS del usuario en emailCustomCss.
+  let emailTheme = "default";
+  let emailCustomCss = "";
 
   // --- Inserción de Markdown en el editor nativo (contenteditable) ---
 
@@ -254,15 +258,52 @@
     return text;
   }
 
+  // --- Motor de temas CSS -------------------------------------------------
+  // Los clientes de correo eliminan CSS externo/clases, así que un tema se
+  // aplica como estilos EN LÍNEA sobre el HTML ya maquetado (parseCss viene
+  // de markdown.js, mismo scope). Se ejecuta DESPUÉS de styleEmail: setProperty
+  // fusiona/pisa sus estilos base regla a regla, en el orden del CSS de entrada.
+  function inlineCss(html, css) {
+    if (!css) return html;
+    const rules = parseCss(css);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    for (const rule of rules) {
+      let els;
+      try { els = doc.querySelectorAll(rule.selector); } catch (e) { continue; }
+      els.forEach((el) => { for (const d of rule.decls) el.style.setProperty(d.prop, d.value); });
+    }
+    return doc.body.innerHTML;
+  }
+
+  // Preset corporativo UPO (colores extraídos de docs/screenshots/upo.css):
+  // azul UPO #003772 y amarillo UPO #FCC100. "code" se aplica antes que
+  // "pre code" para que el bloque de código quede con SU propio estilo
+  // (fondo azul) por encima del inline (fondo amarillo claro).
+  const UPO_CSS =
+    "h1, h2, h3, h4, h5, h6 { color: #003772; }\n" +
+    "a { color: #003772; }\n" +
+    "th { background: #003772; color: #ffffff; }\n" +
+    "blockquote { border-left-color: #FCC100; background: #f5f9fc; color: #374151; }\n" +
+    "hr { border-top-color: #003772; }\n" +
+    "code { background-color: #fff4cc; border: 1px solid #FCC100; }\n" +
+    "pre code { background: #003772; color: #ffffff; border: 2px solid #FCC100; }";
+
+  // Devuelve el CSS activo según el tema elegido en Opciones.
+  function activeThemeCss() {
+    if (emailTheme === "upo") return UPO_CSS;
+    if (emailTheme === "custom") return emailCustomCss;
+    return "";
+  }
+
   function finalHtml() {
-    return active ? styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }) : null;
+    return active ? inlineCss(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), activeThemeCss()) : null;
   }
 
   function renderPreview() {
     if (!previewEl) return;
     try {
       // DOMParser: convierte nuestra cadena segura en nodos sin ejecutar scripts.
-      const doc = new DOMParser().parseFromString(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), "text/html");
+      const doc = new DOMParser().parseFromString(inlineCss(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), activeThemeCss()), "text/html");
       previewEl.replaceChildren(...doc.body.childNodes);
     } catch (e) {
       previewEl.textContent = "[CoThunder preview] " + (e && e.message);
@@ -336,9 +377,11 @@
     if (s.mdEditorDefault) activate();
   });
 
-  // Color de acento configurable en Opciones, aplicado a encabezados, tablas y citas del preview/envío.
-  messenger.storage.local.get({ emailAccent: "#0969da" }).then((s) => {
+  // Color de acento y tema CSS configurables en Opciones, aplicados al preview/envío.
+  messenger.storage.local.get({ emailAccent: "#0969da", emailTheme: "default", emailCustomCss: "" }).then((s) => {
     emailAccent = s.emailAccent || "#0969da";
+    emailTheme = s.emailTheme || "default";
+    emailCustomCss = s.emailCustomCss || "";
     if (active) renderPreview();
   });
 })();
