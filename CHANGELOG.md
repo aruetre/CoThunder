@@ -3,6 +3,11 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.4] — 2026-07-12
+
+### Corregido
+- **El resaltado de sintaxis se adapta al tema.** Antes los colores de los tokens eran fijos (pensados para fondo claro) y, sobre los bloques de código oscuros de los temas oscuros, resultaban ilegibles. Ahora cada tema (Dracula, Monokai, Nord, One Dark, Solarized, GitHub, UPO…) define sus propios colores de sintaxis, legibles sobre su fondo de código.
+
 ## [2.6.3] — 2026-07-12
 
 ### Corregido
