@@ -495,7 +495,9 @@ function renderMarkdown(src) {
            !(lines[i].includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1]))) {
       buf.push(lines[i]); i++;
     }
-    out.push("<p>" + renderInline(buf.join(" ")) + "</p>");
+    // Cada salto de línea dentro del párrafo se respeta como <br> (más intuitivo
+    // al escribir correos que el colapso a espacio del Markdown estándar).
+    out.push("<p>" + buf.map((l) => renderInline(l)).join("<br>") + "</p>");
   }
   let result = out.join("\n").replace(MD_FOOTNOTE_MARKER_RE, (m, n) =>
     `<sup><a href="#fn${n}" id="fnref${n}">${n}</a></sup>`);

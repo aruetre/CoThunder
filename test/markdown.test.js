@@ -256,7 +256,18 @@ test("renderMarkdown: admonition WARNING con énfasis en el cuerpo", () => {
   );
 });
 test("renderMarkdown: tipo desconocido es cita normal", () => {
-  assert.equal(renderMarkdown("> [!FOO]\n> hola"), "<blockquote><p>[!FOO] hola</p></blockquote>");
+  assert.equal(renderMarkdown("> [!FOO]\n> hola"), "<blockquote><p>[!FOO]<br>hola</p></blockquote>");
+});
+
+test("renderMarkdown: cada salto de línea dentro de un párrafo se respeta como <br>", () => {
+  assert.equal(renderMarkdown("línea uno\nlínea dos\nlínea tres"), "<p>línea uno<br>línea dos<br>línea tres</p>");
+});
+
+test("renderMarkdown: multilínea dentro de un admonition", () => {
+  assert.equal(
+    renderMarkdown("> [!TIP]\n> Consejo con **énfasis**.\n> Segunda línea."),
+    '<div style="border-left:4px solid #1a7f37;background:#dafbe1;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">💡 Consejo</p><p>Consejo con <strong>énfasis</strong>.<br>Segunda línea.</p></div>'
+  );
 });
 test("renderMarkdown: cita normal sigue igual", () => {
   assert.equal(renderMarkdown("> cita"), "<blockquote><p>cita</p></blockquote>");

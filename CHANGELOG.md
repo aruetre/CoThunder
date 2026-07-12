@@ -3,6 +3,11 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.5.1] — 2026-07-12
+
+### Cambiado
+- En el editor Markdown, **cada salto de línea que escribes se respeta** y se muestra como un salto de línea, en lugar de juntarse en un mismo párrafo (como hace el Markdown estándar). Es más intuitivo al escribir correos y arregla el contenido **multilínea dentro de las admonitions** (`> [!NOTE]`, etc.): antes varias líneas seguidas se fundían en una.
+
 ## [2.5.0] — 2026-07-12
 
 ### Añadido
