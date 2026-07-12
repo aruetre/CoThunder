@@ -553,7 +553,10 @@ const MD_DEFAULT_ACCENT = "#0969da";
 
 function styleEmail(html, opts) {
   const o = opts || {};
-  const accent = (o && o.accent) || MD_DEFAULT_ACCENT;
+  let accent = (o && o.accent) || MD_DEFAULT_ACCENT;
+  // Valida el acento (viene de storage): debe ser #rrggbb; si no, al por defecto,
+  // para que un valor corrupto no rompa el atributo style del correo enviado.
+  if (!/^#[0-9a-fA-F]{6}$/.test(accent)) accent = MD_DEFAULT_ACCENT;
   let s = String(html == null ? "" : html);
   // Protege los bloques <pre><code>...</code></pre> con un centinela \x01N\x01
   // antes de estilar el <code> en línea, así el <code> del bloque no se toca.
@@ -584,7 +587,9 @@ function styleEmail(html, opts) {
 // las descarta.
 function parseCss(css) {
   // 1) Quita comentarios /* ... */ antes de trocear (pueden contener "}" o ";").
-  const noComments = String(css == null ? "" : css).replace(/\/\*[\s\S]*?\*\//g, "");
+  // Un comentario sin cerrar comenta el resto (semántica CSS real) y evita que
+  // el "/*" quede pegado a un selector y produzca un selector inválido.
+  const noComments = String(css == null ? "" : css).replace(/\/\*[\s\S]*?(?:\*\/|$)/g, "");
   const rules = [];
   // 2) Trocea en reglas por "}"; cada trozo es "selector { declaraciones".
   for (const chunk of noComments.split("}")) {
@@ -599,9 +604,14 @@ function parseCss(css) {
       const colon = p.indexOf(":"); // split en el PRIMER ":" (los valores pueden llevar más, p. ej. url(...))
       if (colon === -1) continue;
       const prop = p.slice(0, colon).trim();
-      const value = p.slice(colon + 1).trim();
+      let value = p.slice(colon + 1).trim();
       if (!prop || !value) continue;
-      decls.push({ prop, value });
+      // Soporta "!important": se separa como priority para setProperty (si no,
+      // setProperty descartaría toda la declaración al no entender el valor).
+      let priority = "";
+      const bang = value.match(/^([\s\S]*?)\s*!important$/i);
+      if (bang) { value = bang[1].trim(); priority = "important"; }
+      decls.push(priority ? { prop, value, priority } : { prop, value });
     }
     rules.push({ selector, decls });
   }

@@ -270,7 +270,7 @@
     for (const rule of rules) {
       let els;
       try { els = doc.querySelectorAll(rule.selector); } catch (e) { continue; }
-      els.forEach((el) => { for (const d of rule.decls) el.style.setProperty(d.prop, d.value); });
+      els.forEach((el) => { for (const d of rule.decls) el.style.setProperty(d.prop, d.value, d.priority || ""); });
     }
     return doc.body.innerHTML;
   }
@@ -296,7 +296,13 @@
   }
 
   function finalHtml() {
-    return active ? inlineCss(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), activeThemeCss()) : null;
+    if (!active) return null;
+    try {
+      return inlineCss(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), activeThemeCss());
+    } catch (e) {
+      // Degrada con gracia: si el tema/inliner falla, envía al menos el HTML base.
+      try { return styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }); } catch (e2) { return ""; }
+    }
   }
 
   function renderPreview() {

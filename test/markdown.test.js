@@ -400,3 +400,15 @@ test("parseCss: ignora at-rules y vacío", () => {
   assert.deepEqual(parseCss("@media x { h1 { color: red } }"), []);
   assert.deepEqual(parseCss(""), []);
 });
+
+test("styleEmail: un acento no válido cae al por defecto (no rompe el atributo)", () => {
+  assert.equal(styleEmail('<h2>T</h2>', { accent: 'red" onmouseover=x' }), '<h2 style="color:#0969da;margin:12px 0 6px;">T</h2>');
+});
+
+test("parseCss: comentario sin cerrar comenta el resto", () => {
+  assert.deepEqual(parseCss("/* oops\nh1 { color: red; }"), []);
+});
+
+test("parseCss: !important se separa como priority", () => {
+  assert.deepEqual(parseCss("h1 { color: red !important; }"), [{ selector: "h1", decls: [{ prop: "color", value: "red", priority: "important" }] }]);
+});
