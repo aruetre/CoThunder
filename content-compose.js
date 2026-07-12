@@ -64,6 +64,108 @@
     insertMd("\n" + template + "\n");
   }
 
+  // --- Pegado de HTML como Markdown ---
+  // Al pegar contenido con "flavor" HTML (copiado de otro correo o de una web),
+  // lo convertimos a Markdown para mantener el editor consistente con el modelo
+  // "Markdown como fuente". El pegado de texto plano sigue el comportamiento
+  // por defecto del navegador (no se toca).
+
+  function collapseWs(s) {
+    return s.replace(/\s+/g, " ");
+  }
+
+  function nodeToMd(node) {
+    let out = "";
+    for (const child of node.childNodes) {
+      out += childToMd(child);
+    }
+    return out;
+  }
+
+  function childToMd(node) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return collapseWs(node.textContent);
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) return "";
+
+    const tag = node.nodeName.toLowerCase();
+    const inner = () => nodeToMd(node);
+
+    switch (tag) {
+      case "h1": case "h2": case "h3": case "h4": case "h5": case "h6": {
+        const level = Number(tag[1]);
+        return "\n" + "#".repeat(level) + " " + inner().trim() + "\n\n";
+      }
+      case "strong": case "b":
+        return "**" + inner() + "**";
+      case "em": case "i":
+        return "*" + inner() + "*";
+      case "del": case "s": case "strike":
+        return "~~" + inner() + "~~";
+      case "code":
+        // Si está dentro de <pre>, el propio <pre> ya genera el bloque.
+        return node.closest && node.closest("pre") ? node.textContent : "`" + node.textContent + "`";
+      case "pre":
+        return "\n```\n" + node.textContent + "\n```\n\n";
+      case "a":
+        return "[" + inner() + "](" + (node.getAttribute("href") || "") + ")";
+      case "img":
+        return "![" + (node.getAttribute("alt") || "") + "](" + (node.getAttribute("src") || "") + ")";
+      case "br":
+        return "\n";
+      case "hr":
+        return "\n---\n\n";
+      case "p": case "div":
+        return "\n" + inner() + "\n\n";
+      case "blockquote": {
+        const lines = inner().split("\n").map((l) => (l.trim() ? "> " + l : l));
+        return "\n" + lines.join("\n") + "\n\n";
+      }
+      case "ul": {
+        let md = "\n";
+        node.querySelectorAll(":scope > li").forEach((li) => {
+          md += "- " + nodeToMd(li).trim() + "\n";
+        });
+        return md + "\n";
+      }
+      case "ol": {
+        let md = "\n";
+        node.querySelectorAll(":scope > li").forEach((li) => {
+          md += "1. " + nodeToMd(li).trim() + "\n";
+        });
+        return md + "\n";
+      }
+      case "table": {
+        const rows = Array.from(node.querySelectorAll("tr"));
+        if (!rows.length) return inner();
+        let md = "\n";
+        rows.forEach((tr, i) => {
+          const cells = Array.from(tr.querySelectorAll("th,td")).map((c) => nodeToMd(c).trim());
+          md += "| " + cells.join(" | ") + " |\n";
+          if (i === 0) {
+            md += "| " + cells.map(() => "---").join(" | ") + " |\n";
+          }
+        });
+        return md + "\n";
+      }
+      default:
+        return inner();
+    }
+  }
+
+  function htmlToMarkdown(html) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    return nodeToMd(doc.body).replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  function onPaste(e) {
+    const html = e.clipboardData && e.clipboardData.getData("text/html");
+    if (!html) return; // sin HTML: pegado normal (texto plano)
+    e.preventDefault();
+    const md = htmlToMarkdown(html);
+    insertMd(md);
+  }
+
   function buildToolbar() {
     const toolbar = document.createElement("div");
     toolbar.id = IDS.toolbar;
@@ -176,6 +278,7 @@
     bodyEl.appendChild(toolbarEl);
 
     bodyEl.addEventListener("input", scheduleRender);
+    bodyEl.addEventListener("paste", onPaste);
     active = true;
     renderPreview();
   }
@@ -188,7 +291,10 @@
     if (toolbarEl) toolbarEl.remove();
     const style = document.getElementById(IDS.style);
     if (style) style.remove();
-    if (bodyEl) bodyEl.removeEventListener("input", scheduleRender);
+    if (bodyEl) {
+      bodyEl.removeEventListener("input", scheduleRender);
+      bodyEl.removeEventListener("paste", onPaste);
+    }
     previewEl = null;
     toolbarEl = null;
     active = false;
