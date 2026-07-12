@@ -24,11 +24,12 @@ jobs:
       - name: Validar manifest y sintaxis JS
         run: |
           node -e "const m=JSON.parse(require('fs').readFileSync('manifest.json'));if(!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(m.version))throw new Error('version no SemVer: '+m.version);console.log('manifest OK, version '+m.version)"
-          for f in common.js background.js content-copilot.js popup/popup.js options/options.js; do node --check "$f" && echo "$f OK"; done
+          for f in common.js background.js content-copilot.js content-compose.js markdown.js popup/popup.js options/options.js; do node --check "$f" && echo "$f OK"; done
+          node --test
 
       - name: Verificar que existen los ficheros de la extensión
         run: |
-          for f in manifest.json common.js background.js content-copilot.js \
+          for f in manifest.json common.js background.js content-copilot.js content-compose.js markdown.js compose.css \
                    popup/popup.html popup/popup.js popup/popup.css \
                    options/options.html options/options.js icon.svg; do
             test -f "$f" || { echo "FALTA: $f"; exit 1; }
@@ -40,7 +41,7 @@ jobs:
         run: |
           VERSION=$(node -p "JSON.parse(require('fs').readFileSync('manifest.json')).version")
           XPI="cothunder-${VERSION}.xpi"
-          zip -r "$XPI" manifest.json common.js background.js content-copilot.js icon.svg popup options -x '*.md'
+          zip -r "$XPI" manifest.json common.js background.js content-copilot.js content-compose.js markdown.js compose.css icon.svg popup options -x '*.md'
           echo "Contenido del paquete:"
           unzip -l "$XPI"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"

@@ -21,6 +21,7 @@ jobs:
 
       - name: Comprobar sintaxis de los JS
         run: |
-          for f in common.js background.js content-copilot.js popup/popup.js options/options.js; do
+          for f in common.js background.js content-copilot.js content-compose.js markdown.js popup/popup.js options/options.js; do
             node --check "$f" && echo "$f OK"
           done
+          node --test
