@@ -3,6 +3,11 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.2] — 2026-07-12
+
+### Corregido
+- El **tema del correo se aplica en vivo**: al cambiarlo (o cambiar el color de acento / el CSS personalizado) en Opciones, las ventanas de redacción **ya abiertas se actualizan al momento**. Antes se quedaban con el tema que tenían al abrirse (p. ej. seguían mostrando UPO tras cambiar a Dracula) y había que abrir una redacción nueva.
+
 ## [2.6.1] — 2026-07-12
 
 ### Añadido

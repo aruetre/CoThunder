@@ -676,4 +676,15 @@
     emailCustomCss = s.emailCustomCss || "";
     if (active) renderPreview();
   });
+
+  // Aplica EN VIVO los cambios de tema/acento hechos en Opciones, sin tener que
+  // reabrir la redacción: si no, una ventana ya abierta se quedaría con el tema
+  // que tenía al abrirse (p. ej. seguiría en UPO tras cambiar a Dracula).
+  messenger.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local") return;
+    if (changes.emailAccent) emailAccent = changes.emailAccent.newValue || "#0969da";
+    if (changes.emailTheme) emailTheme = changes.emailTheme.newValue || "default";
+    if (changes.emailCustomCss) emailCustomCss = changes.emailCustomCss.newValue || "";
+    if (active && (changes.emailAccent || changes.emailTheme || changes.emailCustomCss)) renderPreview();
+  });
 })();
