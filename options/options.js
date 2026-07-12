@@ -1,4 +1,18 @@
 "use strict";
+const EMAIL_THEME_TEMPLATE_CSS = `/* Plantilla de tema para CoThunder.
+   Edita los colores y pega este CSS en «CSS personalizado», o súbelo.
+   Se aplica como estilos EN LÍNEA sobre el correo (los clientes de correo
+   ignoran el CSS externo y las clases), usando selectores de etiqueta. */
+
+h1, h2, h3, h4, h5, h6 { color: #003772; }
+a { color: #003772; }
+table { border-collapse: collapse; }
+th { background: #003772; color: #ffffff; }
+th, td { border: 1px solid #d0d7de; padding: 6px 12px; }
+blockquote { border-left: 4px solid #FCC100; color: #444444; }
+code { background: #f6f8fa; }
+mark { background-color: #FCC100; }
+`;
 (async () => {
   const $ = (id) => document.getElementById(id);
   const cfg = await getConfig();
@@ -7,6 +21,8 @@
   $("newChatByDefault").checked = cfg.newChatByDefault;
   $("mdEditorDefault").checked = cfg.mdEditorDefault;
   $("emailAccent").value = cfg.emailAccent;
+  $("emailTheme").value = cfg.emailTheme;
+  $("emailCustomCss").value = cfg.emailCustomCss;
   const prof = cfg.userProfile || {};
   $("userName").value = prof.name || "";
   $("userRole").value = prof.role || "";
@@ -47,6 +63,8 @@
       newChatByDefault: $("newChatByDefault").checked,
       mdEditorDefault: $("mdEditorDefault").checked,
       emailAccent: $("emailAccent").value,
+      emailTheme: $("emailTheme").value,
+      emailCustomCss: $("emailCustomCss").value,
       userProfile: {
         name: $("userName").value.trim(),
         role: $("userRole").value.trim(),
@@ -59,6 +77,29 @@
       ? "Guardado"
       : "Guardado. Aviso: solo el dominio m365.cloud.microsoft tiene permiso; otro dominio no se inyectará";
     setTimeout(() => { $("saved").textContent = ""; }, 4000);
+  });
+
+  // --- Tema del correo: subir CSS desde fichero y descargar plantilla ---
+  $("emailCssFile").addEventListener("change", () => {
+    const file = $("emailCssFile").files && $("emailCssFile").files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      $("emailCustomCss").value = String(reader.result || "");
+      $("emailTheme").value = "custom";
+    };
+    reader.readAsText(file);
+  });
+  $("emailCssDownload").addEventListener("click", () => {
+    const blob = new Blob([EMAIL_THEME_TEMPLATE_CSS], { type: "text/css" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "cothunder-tema.css";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 
   // --- Registro de actividad (auditoría local, opcional) ---

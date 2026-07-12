@@ -19,7 +19,19 @@
   <p><label><input id="mdEditorDefault" type="checkbox"> Activar el editor Markdown por defecto en la redacción</label></p>
 
   <h2>Tema del correo</h2>
+  <p><label>Tema<br>
+    <select id="emailTheme">
+      <option value="default">Por defecto</option>
+      <option value="upo">UPO corporativo</option>
+      <option value="custom">Personalizado</option>
+    </select>
+  </label></p>
   <p><label>Color de acento (encabezados, tablas y citas)<br><input id="emailAccent" type="color"></label></p>
+  <p><label>CSS personalizado (para el tema «Personalizado»)<br><textarea id="emailCustomCss" rows="10"></textarea></label></p>
+  <p>
+    <label>Subir .css <input type="file" id="emailCssFile" accept=".css,text/css"></label>
+    <button type="button" id="emailCssDownload">Descargar plantilla</button>
+  </p>
 
   <h2>Sobre ti (contexto para Copilot)</h2>
   <p class="muted">Se añade al prompt para que Copilot sepa quién eres al redactar (tu usuario de Thunderbird es el mismo que el de Copilot). Cuanto más completo, más adaptadas serán las respuestas. Se guarda solo en tu equipo.</p>
