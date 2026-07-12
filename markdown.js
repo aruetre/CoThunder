@@ -49,7 +49,7 @@ function renderInline(text) {
   // sobrevive intacto a todas las reglas siguientes (negrita, enlaces...).
   // Va después de aislar los code spans para no interpretar como escape una
   // barra invertida que en realidad está dentro de un `code span`.
-  s = s.replace(/\\([!"#$%&'()*+,./:;<=>?@[\]^_`{|}~-])/g, (m, ch) => {
+  s = s.replace(/\\([\\!"#$%&'()*+,./:;<=>?@[\]^_`{|}~-])/g, (m, ch) => {
     codes.push(mdEscape(ch));
     return "\x00" + (codes.length - 1) + "\x00";
   });
@@ -79,7 +79,11 @@ function renderInline(text) {
   // 3.5) Autoenlaces de URLs sueltas (http/https). Se salta las que ya están
   // dentro de un atributo href="..." o justo tras un ">" (ya son <a>...</a>
   // por las reglas anteriores), para no re-enlazar lo ya enlazado.
-  s = s.replace(/(?<![">])https?:\/\/[^\s<)]+/g, (m) => {
+  // Clase atemperada: la URL para ante `&gt;`/`&lt;` (entidades de `>`/`<`
+  // escapados por mdEscape) pero conserva `&amp;` (query strings ?a=1&b=2); y
+  // ante el centinela `\x00` (escapes/code spans aislados), para no engullir
+  // entidades ni marcadores en el href.
+  s = s.replace(/(?<![">])https?:\/\/(?:(?!&gt;|&lt;)[^\s<)\x00])+/g, (m) => {
     let url = m, trail = "";
     if (/[.,]$/.test(url)) { trail = url.slice(-1); url = url.slice(0, -1); }
     return '<a href="' + url + '">' + url + "</a>" + trail;

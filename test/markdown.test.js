@@ -220,3 +220,23 @@ test("renderMarkdown: nota al pie con id textual", () => {
     '<p>Texto<sup><a href="#fn1" id="fnref1">1</a></sup> aquí.</p>\n<hr>\n<ol><li id="fn1">La aclaración. <a href="#fnref1">↩</a></li></ol>'
   );
 });
+
+// Regresión del CRÍTICO de la tanda 2: la URL suelta no debe engullir entidades.
+test("renderInline: URL suelta corta ante un > sin engullir la entidad", () => {
+  assert.equal(renderInline("v https://x.io>ok"), 'v <a href="https://x.io">https://x.io</a>&gt;ok');
+});
+
+test("renderInline: URL suelta conserva el & de una query string", () => {
+  assert.equal(
+    renderInline("v https://x.io?a=1&b=2 z"),
+    'v <a href="https://x.io?a=1&amp;b=2">https://x.io?a=1&amp;b=2</a> z'
+  );
+});
+
+test("renderInline: ángulos escapados quedan literales, URL bien formada", () => {
+  assert.equal(renderInline("\\<https://x.io\\>"), '&lt;<a href="https://x.io">https://x.io</a>&gt;');
+});
+
+test("renderInline: doble barra invertida escapa a una literal", () => {
+  assert.equal(renderInline("\\\\"), "\\");
+});
