@@ -3,6 +3,14 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.1] — 2026-07-12
+
+### Añadido
+- **Temas de correo listos para usar** (en Opciones → «Tema del correo»): el preset «UPO corporativo» ahora es fiel al tema `upo.css` completo, y se añaden temas famosos en **claro y oscuro**: **GitHub** (claro/oscuro), **Solarized** (claro/oscuro), **Monokai**, **Dracula**, **Nord** y **One Dark**.
+
+### Cambiado
+- El motor de temas **envuelve el correo en un contenedor `.markdown-here-wrapper`**: así los temas CSS de **Markdown Here** (con ese prefijo) funcionan tal cual — puedes pegar tu `.css` de MDHR en «Personalizado» y se aplica. Los selectores planos (`h1`, `table`…) también siguen funcionando.
+
 ## [2.6.0] — 2026-07-12
 
 ### Añadido
