@@ -342,16 +342,18 @@ El perfil viaja a Copilot como parte del prompt, igual que el resto del contexto
 
 Sustituye a **Markdown Here Revival** (ya no soportado en TB nuevas): un **panel dividido en la zona de escritura** de la ventana de redacción — izquierda Markdown editable, derecha preview HTML en vivo. La conversión a HTML ocurre al apagar el panel o al enviar; el correo sale maquetado. Disponible en **cualquier** ventana de redacción y, además, el flujo de Copilot la abre **ya rellena** con el Markdown de la respuesta.
 
-Diseño completo en `docs/superpowers/specs/2026-07-12-editor-markdown-redaccion-design.md`. Resumen:
+Diseño consolidado (arquitectura real + backlog) en `docs/superpowers/specs/2026-07-12-editor-markdown-consolidado.md`. Resumen:
 
-### 22.1 Componentes
+### 22.1 Arquitectura (Plan B, tras el spike)
 
-Superficie inyectable: el documento del cuerpo editable, vía *compose script* (`scripting.compose`/`composeScripts`, permiso `compose` ya declarado). Ficheros nuevos: **`markdown.js`** (renderizador Markdown→HTML vanilla propio + sanitizado, por nodos, sin `innerHTML`), **`content-compose.js`** (compose script con el panel y **selectores del editor de TB centralizados**), **`compose.css`**. Cambian `manifest.json` (`compose_action` + `commands` `Ctrl+Alt+M`, sin permisos nuevos), `background.js` (registro runtime del compose script, `onClicked`, `onBeforeSend`, y entrega de Copilot como **Markdown fuente** en vez de HTML escapado) y `options/` (ajuste "editor Markdown por defecto").
+El enfoque inicial (inyectar un `<textarea>` en el cuerpo editable) se **descartó**: el editor nativo de TB se queda con el tecleo. Enfoque adoptado (**Plan B**): el **editor nativo de Thunderbird es la fuente Markdown** (el usuario escribe ahí); un **preview NO editable** (mitad derecha, `position:fixed`, `contenteditable=false`) renderiza en vivo con debounce; `body{margin-right:50%}` reserva la izquierda. `markdownSource()` lee el texto del cuerpo (excluyendo el preview, sobre un clon oculto para no tocar el cursor) y convierte los `<img>` insertados a `![alt](src)` para conservarlos.
 
-### 22.2 Activación y finalización
+Superficie inyectable: el documento del cuerpo editable, vía *compose script* (`scripting.compose`, permiso `compose`). Ficheros: **`markdown.js`** (renderizador propio, cadena HTML segura escapada; preview vía `DOMParser`, sin `innerHTML` remoto), **`content-compose.js`** (compose script; dependencia del DOM del editor centralizada en `SELECTORS`), **`compose.css`**. `manifest.json` añade `compose_action` (sin permisos nuevos); `background.js` registra el compose script en runtime (idempotente) y maneja `onBeforeSend`.
 
-Botón `compose_action` y atajo `Ctrl+Alt+M` **alternan** el panel; **encendido por defecto** (configurable). Al enviar con el panel encendido, `compose.onBeforeSend` renderiza a HTML y devuelve `{ cancel: true, details: { body: html } }`: cancela ese envío, deja el HTML en el cuerpo y apaga el panel; el usuario revisa y envía. El andamiaje del panel nunca es el correo: el Markdown fuente es la única verdad mientras se edita.
+### 22.2 Envío (opción 1, un clic)
 
-### 22.3 Motor propio y compatibilidad
+Al enviar, `compose.onBeforeSend` pide el HTML final al compose script y devuelve `{ details: { body: html } }` (**sin `cancel`**): el correo sale directo, ya maquetado, en un solo clic.
 
-Renderizador escrito a mano (sin marked/highlight.js): encabezados, párrafos, listas anidadas, citas, `hr`, bloques de código, tablas; en línea negrita/cursiva/código/enlaces (solo `http`/`https`/`mailto`). Objetivo TB 150+ **retrocompatible con ESR 140** (`strict_min_version` en `"140.0"`). El montaje del panel dentro del editor nativo es un **spike bloqueante** (validar en 140 y 150+ que el envío sale limpio); plan B: cuerpo nativo solo-Markdown con preview como overlay no editable. Sin destinos nuevos, sin permisos nuevos, sin `innerHTML` remoto.
+### 22.3 Motor propio, cobertura e imágenes
+
+Renderizador escrito a mano (sin marked/highlight.js), objetivo **cobertura completa** del Markdown Guide (básica + extendida). Enlaces solo `http`/`https`/`mailto`; imágenes `http`/`https`/`data`/`cid` (conserva las insertadas por TB). Restricción de correo: estilos **en línea** (los clientes ignoran CSS externo); iconos en el correo con **emoji** (el `<svg>` inline se elimina); imágenes preferentemente `cid`. Objetivo TB 150+ **retrocompatible con ESR 140**. Spike del panel: **RESUELTO** con Plan B (verificado por el usuario en TB). Sin destinos nuevos, sin permisos nuevos, sin `innerHTML` remoto.
