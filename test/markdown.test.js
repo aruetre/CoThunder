@@ -23,5 +23,27 @@ test("renderInline: enlace con esquema permitido", () => {
 });
 
 test("renderInline: enlace con esquema no permitido queda como texto", () => {
-  assert.equal(renderInline("[x](javascript:alert(1))"), "x");
+  assert.equal(renderInline("[x](javascript:void)"), "x");
+});
+
+test("renderInline: un número suelto en prosa no colisiona con el centinela de code spans", () => {
+  assert.equal(renderInline("paso 2 hecho"), "paso 2 hecho");
+});
+
+test("renderInline: code span con un número sigue funcionando", () => {
+  assert.equal(renderInline("cuesta `5` euros"), "cuesta <code>5</code> euros");
+});
+
+test("renderInline: enlaces adyacentes se renderizan ambos", () => {
+  assert.equal(
+    renderInline("[a](https://x.io)[b](https://y.io)"),
+    '<a href="https://x.io">a</a><a href="https://y.io">b</a>'
+  );
+});
+
+test("renderInline: enlace seguido de prosa entre paréntesis no se lo engulle", () => {
+  assert.equal(
+    renderInline("ve a [la web](https://x.io) (recomendado)"),
+    've a <a href="https://x.io">la web</a> (recomendado)'
+  );
 });
