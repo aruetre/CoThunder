@@ -89,7 +89,7 @@ function renderInline(text) {
   // escapados por mdEscape) pero conserva `&amp;` (query strings ?a=1&b=2); y
   // ante el centinela `\x00` (escapes/code spans aislados), para no engullir
   // entidades ni marcadores en el href.
-  s = s.replace(/(?<![">])https?:\/\/(?:(?!&gt;|&lt;)[^\s<)\x00])+/g, (m) => {
+  s = s.replace(/(?<![">])https?:\/\/(?:(?!&gt;|&lt;)[^\s<)\x00*_~])+/g, (m) => {
     let url = m, trail = "";
     if (/[.,]$/.test(url)) { trail = url.slice(-1); url = url.slice(0, -1); }
     return protect('<a href="' + url + '">' + url + "</a>") + trail;
@@ -388,9 +388,17 @@ const MD_FOOTNOTE_DEF_RE = /^\[\^([A-Za-z0-9_-]+)\]:\s*(.*)$/;
 const MD_FOOTNOTE_REF_RE = /\[\^([A-Za-z0-9_-]+)\]/g;
 const MD_FOOTNOTE_MARKER_RE = /\x01(\d+)\x01/g;
 
+// Ambas funciones de abajo caminan línea a línea llevando la cuenta de si están
+// dentro de un bloque de código ``` (mismo criterio que el parser de bloques:
+// cualquier línea que empiece por ``` alterna dentro/fuera), para que una nota
+// al pie (definición o referencia) que aparezca DENTRO de un fence de código se
+// deje literal: el fence es contenido preformateado, no prosa.
 function extractFootnoteDefs(text) {
   const defs = new Map();
+  let inFence = false;
   const cleaned = text.split("\n").map((line) => {
+    if (/^```/.test(line)) { inFence = !inFence; return line; }
+    if (inFence) return line;
     const m = line.match(MD_FOOTNOTE_DEF_RE);
     if (!m) return line;
     defs.set(m[1], m[2]);
@@ -401,11 +409,16 @@ function extractFootnoteDefs(text) {
 
 function substituteFootnoteRefs(text, defs) {
   const order = new Map(); // id de nota -> número de aparición (1-based)
-  const withMarkers = text.replace(MD_FOOTNOTE_REF_RE, (m, id) => {
-    if (!defs.has(id)) return m; // sin definición: se deja el texto literal
-    if (!order.has(id)) order.set(id, order.size + 1);
-    return "\x01" + order.get(id) + "\x01";
-  });
+  let inFence = false;
+  const withMarkers = text.split("\n").map((line) => {
+    if (/^```/.test(line)) { inFence = !inFence; return line; }
+    if (inFence) return line;
+    return line.replace(MD_FOOTNOTE_REF_RE, (m, id) => {
+      if (!defs.has(id)) return m; // sin definición: se deja el texto literal
+      if (!order.has(id)) order.set(id, order.size + 1);
+      return "\x01" + order.get(id) + "\x01";
+    });
+  }).join("\n");
   return { withMarkers, order };
 }
 

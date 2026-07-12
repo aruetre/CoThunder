@@ -412,3 +412,14 @@ test("parseCss: comentario sin cerrar comenta el resto", () => {
 test("parseCss: !important se separa como priority", () => {
   assert.deepEqual(parseCss("h1 { color: red !important; }"), [{ selector: "h1", decls: [{ prop: "color", value: "red", priority: "important" }] }]);
 });
+
+test("renderMarkdown: nota al pie dentro de un bloque de código no lo altera", () => {
+  assert.equal(
+    renderMarkdown("Ver[^1].\n\n```\nno[^1]\n```\n\n[^1]: la nota."),
+    '<p>Ver<sup><a href="#fn1" id="fnref1">1</a></sup>.</p>\n<pre><code>no[^1]</code></pre>\n<hr>\n<ol><li id="fn1">la nota. <a href="#fnref1">↩</a></li></ol>'
+  );
+});
+
+test("renderInline: negrita alrededor de una URL suelta se conserva", () => {
+  assert.equal(renderInline("**https://x.io**"), '<strong><a href="https://x.io">https://x.io</a></strong>');
+});

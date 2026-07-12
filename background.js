@@ -42,6 +42,13 @@ messenger.compose.onBeforeSend.addListener(async (tab) => {
     }
   } catch (e) {
     console.error("[CoThunder] onBeforeSend Markdown falló:", e);
+    // Resguardo: si la finalización falla, quita el andamiaje del editor del cuerpo enviado.
+    try {
+      const details = await messenger.compose.getComposeDetails(tab.id);
+      const doc = new DOMParser().parseFromString(details.body || "", "text/html");
+      doc.querySelectorAll("#cothunder-md-preview, #cothunder-md-toolbar, #cothunder-md-style").forEach((n) => n.remove());
+      return { details: { body: doc.body.innerHTML } };
+    } catch (e2) { /* si tampoco se puede, se envía tal cual */ }
   }
 });
 
@@ -191,6 +198,8 @@ messenger.runtime.onMessage.addListener(async (msg) => {
         title: "CoThunder",
         message: "No se pudo capturar la respuesta de Copilot. Revísala en la ventana de Copilot."
       }).catch(() => {});
+      // Evita dejar la clave de opciones de este token huérfana en storage.session.
+      messenger.storage.session.remove("opts_" + msg.messageId).catch(() => {});
       return;
     }
     // Composición HTML (mantiene barra de formato y complementos); texto tal cual, con saltos preservados.

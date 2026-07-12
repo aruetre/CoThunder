@@ -280,7 +280,14 @@
     for (const rule of rules) {
       let els;
       try { els = doc.querySelectorAll(rule.selector); } catch (e) { continue; }
-      els.forEach((el) => { for (const d of rule.decls) el.style.setProperty(d.prop, d.value, d.priority || ""); });
+      els.forEach((el) => {
+        for (const d of rule.decls) {
+          // RGPD: un tema "custom" pegado por el usuario no debe poder disparar una
+          // petición saliente (p. ej. background-image:url(...) como tracking pixel).
+          if (/url\s*\(/i.test(d.value)) continue;
+          el.style.setProperty(d.prop, d.value, d.priority || "");
+        }
+      });
     }
     wrapper.removeAttribute("class");
     return doc.body.innerHTML;
@@ -408,6 +415,7 @@
 .markdown-here-wrapper pre {
   font-size: 0.95em;
   line-height: 1.45;
+  background: #003772;
 }
 
 .markdown-here-wrapper pre code {
@@ -504,6 +512,7 @@
       ".markdown-here-wrapper code { background-color: " + p.codeBg + "; color: " + p.codeText +
         "; border: 1px solid " + p.codeBorder + "; border-radius: 4px; padding: 0.15em 0.35em; " +
         "font-family: Consolas, Menlo, Monaco, monospace; }",
+      ".markdown-here-wrapper pre { background: " + p.preBg + "; }",
       ".markdown-here-wrapper pre code { display: block; background: " + p.preBg + "; color: " + p.preText +
         "; padding: 0.9em 1em; border-radius: 8px; white-space: pre; overflow: auto; }",
       ".markdown-here-wrapper table { border-collapse: collapse; border: 1px solid " + p.border + "; width: 100%; }",
@@ -537,7 +546,7 @@
       preBg: "#f6f8fa", preText: "#1f2328",
       bqBorder: "#d0d7de", bqBg: "#f6f8fa", bqText: "#57606a",
       border: "#d0d7de", thBg: "#f6f8fa", thText: "#1f2328", evenRow: "#f6f8fa",
-      hr: "#d0d7de", mark: "#fff8c5",
+      hr: "#d0d7de", mark: "#fff8c5", markText: "#1f2328",
       hlComment: "#6e7781", hlString: "#0a3069", hlNumber: "#0550ae", hlKeyword: "#cf222e",
       admBg: "#f6f8fa", admText: "#1f2328" },
     { id: "github-dark", name: "GitHub (oscuro)",
@@ -653,7 +662,7 @@
       return inlineCss(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), activeThemeCss());
     } catch (e) {
       // Degrada con gracia: si el tema/inliner falla, envía al menos el HTML base.
-      try { return styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }); } catch (e2) { return ""; }
+      try { return styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }); } catch (e2) { return null; }
     }
   }
 
