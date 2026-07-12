@@ -8,7 +8,7 @@ async function registerComposeScript() {
     await messenger.scripting.compose.unregisterScripts({ ids: ["cothunder-compose"] }).catch(() => {});
     await messenger.scripting.compose.registerScripts([{
       id: "cothunder-compose",
-      js: ["content-compose.js"],
+      js: ["markdown.js", "content-compose.js"],
       css: ["compose.css"]
     }]);
   } catch (e) {
