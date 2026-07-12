@@ -342,24 +342,24 @@ test("highlightCode: sin lenguaje solo escapa", () => {
   assert.equal(highlightCode("x = 1", ""), "x = 1");
 });
 test("highlightCode: comentario js", () => {
-  assert.equal(highlightCode("// hola", "js"), '<span style="color:#6e7781;">// hola</span>');
+  assert.equal(highlightCode("// hola", "js"), '<span class="cthl-comment" style="color:#6e7781;">// hola</span>');
 });
 test("highlightCode: string js escapa su contenido", () => {
-  assert.equal(highlightCode('a = "x<y"', "js"), 'a = <span style="color:#0a3069;">&quot;x&lt;y&quot;</span>');
+  assert.equal(highlightCode('a = "x<y"', "js"), 'a = <span class="cthl-string" style="color:#0a3069;">&quot;x&lt;y&quot;</span>');
 });
 test("highlightCode: comentario python con #", () => {
-  assert.equal(highlightCode("# nota", "python"), '<span style="color:#6e7781;"># nota</span>');
+  assert.equal(highlightCode("# nota", "python"), '<span class="cthl-comment" style="color:#6e7781;"># nota</span>');
 });
 test("renderMarkdown: bloque de código sin lenguaje no cambia (regresión)", () => {
   assert.equal(renderMarkdown("```\na < b\n```"), "<pre><code>a &lt; b</code></pre>");
 });
 test("renderMarkdown: bloque de código con lenguaje resalta", () => {
-  assert.equal(renderMarkdown("```js\n// hi\n```"), '<pre><code><span style="color:#6e7781;">// hi</span></code></pre>');
+  assert.equal(renderMarkdown("```js\n// hi\n```"), '<pre><code><span class="cthl-comment" style="color:#6e7781;">// hi</span></code></pre>');
 });
 test("highlightCode: palabra clave js const", () => {
   assert.equal(
     highlightCode("const x = 1;", "js"),
-    '<span style="color:#cf222e;">const</span> x = <span style="color:#0550ae;">1</span>;'
+    '<span class="cthl-keyword" style="color:#cf222e;">const</span> x = <span class="cthl-number" style="color:#0550ae;">1</span>;'
   );
 });
 test("highlightCode: identificador que no es palabra clave no se colorea", () => {
@@ -368,7 +368,7 @@ test("highlightCode: identificador que no es palabra clave no se colorea", () =>
 test("highlightCode: palabra clave sql SELECT", () => {
   assert.equal(
     highlightCode("SELECT id FROM t", "sql"),
-    '<span style="color:#cf222e;">SELECT</span> id <span style="color:#cf222e;">FROM</span> t'
+    '<span class="cthl-keyword" style="color:#cf222e;">SELECT</span> id <span class="cthl-keyword" style="color:#cf222e;">FROM</span> t'
   );
 });
 

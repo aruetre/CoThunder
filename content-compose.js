@@ -470,6 +470,12 @@
   margin-right: 0.4em;
   vertical-align: middle;
 }
+
+/* Resaltado de sintaxis, legible sobre el fondo #003772 de los bloques de código */
+.markdown-here-wrapper .cthl-comment { color: #9fb6cf; }
+.markdown-here-wrapper .cthl-string { color: #ffd479; }
+.markdown-here-wrapper .cthl-number { color: #8be9fd; }
+.markdown-here-wrapper .cthl-keyword { color: #fcc100; }
 `;
 
   // Genera el CSS de un tema "famoso" a partir de una paleta de colores, con
@@ -503,6 +509,10 @@
       ".markdown-here-wrapper hr { border: 0; border-top: 2px solid " + p.hr + "; }",
       ".markdown-here-wrapper dl dt { font-weight: 700; color: " + p.headings + "; }",
       ".markdown-here-wrapper mark { " + markCss + " }",
+      ".markdown-here-wrapper .cthl-comment { color: " + p.hlComment + "; }",
+      ".markdown-here-wrapper .cthl-string { color: " + p.hlString + "; }",
+      ".markdown-here-wrapper .cthl-number { color: " + p.hlNumber + "; }",
+      ".markdown-here-wrapper .cthl-keyword { color: " + p.hlKeyword + "; }",
     ].join("\n");
   }
 
@@ -514,56 +524,64 @@
       preBg: "#f6f8fa", preText: "#1f2328",
       bqBorder: "#d0d7de", bqBg: "#f6f8fa", bqText: "#57606a",
       border: "#d0d7de", thBg: "#f6f8fa", thText: "#1f2328", evenRow: "#f6f8fa",
-      hr: "#d0d7de", mark: "#fff8c5" },
+      hr: "#d0d7de", mark: "#fff8c5",
+      hlComment: "#6e7781", hlString: "#0a3069", hlNumber: "#0550ae", hlKeyword: "#cf222e" },
     { id: "github-dark", name: "GitHub (oscuro)",
       bg: "#0d1117", text: "#c9d1d9", headings: "#e6edf3", accent: "#30363d", link: "#2f81f7",
       codeBg: "#161b22", codeText: "#c9d1d9", codeBorder: "#30363d",
       preBg: "#161b22", preText: "#c9d1d9",
       bqBorder: "#30363d", bqBg: "#161b22", bqText: "#8b949e",
       border: "#30363d", thBg: "#161b22", thText: "#e6edf3", evenRow: "#161b22",
-      hr: "#30363d", mark: "#bb8009", markText: "#ffffff" },
+      hr: "#30363d", mark: "#bb8009", markText: "#ffffff",
+      hlComment: "#8b949e", hlString: "#a5d6ff", hlNumber: "#79c0ff", hlKeyword: "#ff7b72" },
     { id: "solarized-light", name: "Solarized (claro)",
       bg: "#fdf6e3", text: "#657b83", headings: "#586e75", accent: "#93a1a1", link: "#268bd2",
       codeBg: "#eee8d5", codeText: "#657b83", codeBorder: "#93a1a1",
       preBg: "#eee8d5", preText: "#586e75",
       bqBorder: "#268bd2", bqBg: "#eee8d5", bqText: "#657b83",
       border: "#93a1a1", thBg: "#268bd2", thText: "#fdf6e3", evenRow: "#eee8d5",
-      hr: "#93a1a1", mark: "#b58900", markText: "#fdf6e3" },
+      hr: "#93a1a1", mark: "#b58900", markText: "#fdf6e3",
+      hlComment: "#93a1a1", hlString: "#2aa198", hlNumber: "#d33682", hlKeyword: "#859900" },
     { id: "solarized-dark", name: "Solarized (oscuro)",
       bg: "#002b36", text: "#839496", headings: "#93a1a1", accent: "#073642", link: "#268bd2",
       codeBg: "#073642", codeText: "#839496", codeBorder: "#586e75",
       preBg: "#073642", preText: "#93a1a1",
       bqBorder: "#268bd2", bqBg: "#073642", bqText: "#839496",
       border: "#586e75", thBg: "#268bd2", thText: "#fdf6e3", evenRow: "#073642",
-      hr: "#586e75", mark: "#b58900", markText: "#002b36" },
+      hr: "#586e75", mark: "#b58900", markText: "#002b36",
+      hlComment: "#586e75", hlString: "#2aa198", hlNumber: "#d33682", hlKeyword: "#859900" },
     { id: "monokai", name: "Monokai (oscuro)",
       bg: "#272822", text: "#f8f8f2", headings: "#a6e22e", accent: "#f92672", link: "#66d9ef",
       codeBg: "#3e3d32", codeText: "#f8f8f2", codeBorder: "#75715e",
       preBg: "#1e1f1c", preText: "#f8f8f2",
       bqBorder: "#fd971f", bqBg: "#3e3d32", bqText: "#cfcfc2",
       border: "#75715e", thBg: "#f92672", thText: "#272822", evenRow: "#3e3d32",
-      hr: "#75715e", mark: "#e6db74", markText: "#272822" },
+      hr: "#75715e", mark: "#e6db74", markText: "#272822",
+      hlComment: "#75715e", hlString: "#e6db74", hlNumber: "#ae81ff", hlKeyword: "#f92672" },
     { id: "dracula", name: "Dracula (oscuro)",
       bg: "#282a36", text: "#f8f8f2", headings: "#bd93f9", accent: "#ff79c6", link: "#8be9fd",
       codeBg: "#44475a", codeText: "#f8f8f2", codeBorder: "#6272a4",
       preBg: "#21222c", preText: "#f8f8f2",
       bqBorder: "#ff79c6", bqBg: "#44475a", bqText: "#f8f8f2",
       border: "#6272a4", thBg: "#bd93f9", thText: "#282a36", evenRow: "#44475a",
-      hr: "#6272a4", mark: "#f1fa8c", markText: "#282a36" },
+      hr: "#6272a4", mark: "#f1fa8c", markText: "#282a36",
+      hlComment: "#6272a4", hlString: "#f1fa8c", hlNumber: "#bd93f9", hlKeyword: "#ff79c6" },
     { id: "nord", name: "Nord (oscuro)",
       bg: "#2e3440", text: "#d8dee9", headings: "#88c0d0", accent: "#5e81ac", link: "#88c0d0",
       codeBg: "#3b4252", codeText: "#eceff4", codeBorder: "#4c566a",
       preBg: "#3b4252", preText: "#eceff4",
       bqBorder: "#5e81ac", bqBg: "#3b4252", bqText: "#d8dee9",
       border: "#4c566a", thBg: "#5e81ac", thText: "#eceff4", evenRow: "#3b4252",
-      hr: "#4c566a", mark: "#ebcb8b", markText: "#2e3440" },
+      hr: "#4c566a", mark: "#ebcb8b", markText: "#2e3440",
+      hlComment: "#616e88", hlString: "#a3be8c", hlNumber: "#b48ead", hlKeyword: "#81a1c1" },
     { id: "onedark", name: "One Dark (oscuro)",
       bg: "#282c34", text: "#abb2bf", headings: "#61afef", accent: "#3e4451", link: "#61afef",
       codeBg: "#3e4451", codeText: "#abb2bf", codeBorder: "#5c6370",
       preBg: "#21252b", preText: "#abb2bf",
       bqBorder: "#c678dd", bqBg: "#3e4451", bqText: "#abb2bf",
       border: "#5c6370", thBg: "#61afef", thText: "#282c34", evenRow: "#2c313a",
-      hr: "#3e4451", mark: "#e5c07b", markText: "#282c34" },
+      hr: "#3e4451", mark: "#e5c07b", markText: "#282c34",
+      hlComment: "#5c6370", hlString: "#98c379", hlNumber: "#d19a66", hlKeyword: "#c678dd" },
   ];
 
   // Lista de presets del selector de Opciones: { id (valor guardado), name (español), css }.

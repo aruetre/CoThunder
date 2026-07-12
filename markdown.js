@@ -120,10 +120,14 @@ function renderInline(text) {
 }
 
 // --- Resaltado de sintaxis (bloques ```lang) -----------------------------
-// El correo elimina CSS/clases, así que los tokens se colorean con
-// `<span style="color:...">` en línea. Todo el texto se escapa SIEMPRE con
-// mdEscape (dentro y fuera de los spans): un lenguaje desconocido, o código
-// como `</script>` o `"><img>`, nunca produce HTML vivo.
+// Cada token lleva una clase `cthl-<kind>` (para que el CSS del tema activo
+// pueda sobrescribir su color, legible sobre el fondo de código de ese tema)
+// Y un color en línea por defecto (el de abajo, para el tema por defecto y
+// como resguardo si no hay tema). El correo elimina el <style> externo, así
+// que el color final llega como `style="color:..."` en línea, puesto por el
+// inlineado de tema de content-compose.js. Todo el texto se escapa SIEMPRE
+// con mdEscape (dentro y fuera de los spans): un lenguaje desconocido, o
+// código como `</script>` o `"><img>`, nunca produce HTML vivo.
 const MD_HL_COLORS = {
   comment: "#6e7781",
   string: "#0a3069",
@@ -132,7 +136,7 @@ const MD_HL_COLORS = {
 };
 
 function mdHlSpan(kind, text) {
-  return '<span style="color:' + MD_HL_COLORS[kind] + ';">' + mdEscape(text) + "</span>";
+  return '<span class="cthl-' + kind + '" style="color:' + MD_HL_COLORS[kind] + ';">' + mdEscape(text) + "</span>";
 }
 
 const MD_HL_JS_KEYWORDS = [
