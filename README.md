@@ -62,9 +62,14 @@ Requiere **Thunderbird ESR 140 o superior**.
 
 El paso a paso completo, con todos los campos, está en el [manual de uso](docs/MANUAL.md).
 
-## Complemento recomendado: Markdown Here Revival
+## Editor Markdown en la redacción (v2.5)
 
-CoThunder pide la respuesta en **Markdown** y la vuelca tal cual en la composición. Para verla **renderizada** instala el complemento gratuito **[Markdown Here Revival](https://addons.thunderbird.net/thunderbird/addon/markdown-here-revival/)**: convierte el Markdown en HTML con un clic. Es opcional; sin él, la respuesta sigue llegando en Markdown legible.
+CoThunder trae su **propio editor Markdown con vista previa en vivo** en la ventana de redacción, así que **ya no necesitas Markdown Here** (que dejó de funcionar en las versiones nuevas de Thunderbird). Escribes en Markdown en el editor de siempre (izquierda) y ves la vista **renderizada a la derecha** mientras escribes; al **enviar**, el correo sale maquetado en un clic.
+
+- Se enciende/apaga con el botón **«Editor Markdown»** de la redacción o con **Ctrl+Alt+M** (y un ajuste en Opciones para tenerlo por defecto).
+- Cobertura **completa** de Markdown (básico y extendido): encabezados, énfasis, listas y citas anidadas, listas de tareas, tablas, código, enlaces e imágenes, notas al pie, IDs de encabezado, listas de definición, resaltado `==...==`, subíndice/superíndice y emoji `:código:`.
+- **Admonitions** estilo GitHub (`> [!NOTE]`, `[!WARNING]`…), **resaltado de sintaxis** en bloques de código, **barra de herramientas** para insertar sintaxis, y **pegar contenido con formato** que se convierte a Markdown.
+- Renderizador **propio**, sin librerías; salida siempre escapada y con estilos **en línea** (para que se vea bien en cualquier cliente de correo).
 
 ## Privacidad y seguridad
 

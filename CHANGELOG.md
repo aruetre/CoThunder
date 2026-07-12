@@ -3,6 +3,21 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.5.0] — 2026-07-12
+
+### Añadido
+- **Editor Markdown con vista previa en la ventana de redacción** (sustituye a Markdown Here Revival, ya no soportado). Escribes el correo en Markdown en el editor normal de Thunderbird (izquierda) y ves la **vista renderizada en vivo** a la derecha. Al **enviar**, el correo sale maquetado en un solo clic. Se activa/desactiva con el botón **«Editor Markdown»** de la ventana de redacción o con **Ctrl+Alt+M**, y hay un ajuste en Opciones para tenerlo activo por defecto.
+- **Cobertura completa de Markdown** (sintaxis básica y extendida del Markdown Guide): encabezados, **negrita/cursiva/negrita+cursiva**, tachado, citas y listas anidadas, listas de tareas, código en línea y en bloque, reglas, enlaces (con título y autoenlaces `<...>`), imágenes (con título y enlazadas), escapado con `\`, tablas, **notas al pie**, **IDs de encabezado**, **listas de definición**, **resaltado** `==texto==`, **subíndice/superíndice** y **emoji** `:código:`.
+- **Admonitions** estilo GitHub (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`) como cajas con color.
+- **Resaltado de sintaxis** en bloques de código con lenguaje (```js, ```python…): JS/TS, Python, JSON, Bash, SQL, CSS, con colores en línea.
+- **Barra de herramientas** en la redacción para insertar sintaxis Markdown (encabezados, negrita, enlaces, listas, tabla, etc.).
+- **Pegar contenido con formato** (de otros correos o webs): se convierte automáticamente a Markdown al pegar.
+- **Imágenes**: las que insertas se conservan y se ven en la vista previa.
+
+### Detalles técnicos
+- Renderizador Markdown **propio**, sin librerías ni dependencias, con salida siempre escapada (segura) y estilos **en línea** (los clientes de correo ignoran el CSS externo). El motor tiene 98 pruebas automáticas.
+- La automatización del editor vive en `content-compose.js` (compose script) y `markdown.js` (renderizador); sin permisos nuevos.
+
 ## [2.4.0] — 2026-07-09
 
 ### Añadido
