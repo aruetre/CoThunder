@@ -36,6 +36,12 @@ function mdEscape(text) {
 
 function renderInline(text) {
   const codes = [];
+  // Protege una cadena ya generada (URL o atributo de un enlace/imagen/
+  // autoenlace) tras un centinela, para que las reglas de énfasis/resaltado/
+  // emoji (pasos 4 y 4.5) no la reinterpreten y corrompan el HTML generado.
+  // Comparte el mismo array `codes` y se restaura junto con los code spans
+  // en el paso 5.
+  const protect = (str) => { codes.push(str); return "\x00" + (codes.length - 1) + "\x00"; };
   // 1) Aísla los code spans antes de escapar el resto.
   let s = String(text == null ? "" : text).replace(/`([^`]+)`/g, (m, c) => {
     codes.push("<code>" + mdEscape(c) + "</code>");
@@ -60,7 +66,7 @@ function renderInline(text) {
   // título es opcional; si el esquema no es válido se ignora también.
   s = s.replace(/!\[([^\]]*)\]\(([^\s)]+)(?:\s+&quot;([\s\S]*?)&quot;)?\)/g, (m, alt, url, title) =>
     MD_IMG_SCHEMES.test(url)
-      ? '<img src="' + url + '" alt="' + alt + '"' + (title ? ' title="' + title + '"' : "") + '>'
+      ? protect('<img src="' + url + '" alt="' + alt + '"' + (title ? ' title="' + title + '"' : "") + '>')
       : "");
   // 3) Enlaces [texto](url "título") solo con esquema permitido; si no,
   // texto plano. El título es opcional.
@@ -68,14 +74,14 @@ function renderInline(text) {
   // truncaría en ese paréntesis; aceptable para uso en correo.
   s = s.replace(/\[([^\]]+)\]\(([^\s)]+)(?:\s+&quot;([\s\S]*?)&quot;)?\)/g, (m, label, url, title) =>
     MD_SAFE_SCHEMES.test(url)
-      ? '<a href="' + url + '"' + (title ? ' title="' + title + '"' : "") + '>' + label + "</a>"
+      ? '<a href="' + protect(url) + '"' + (title ? ' title="' + protect(title) + '"' : "") + '>' + label + "</a>"
       : label);
   // 3.4) Autoenlaces angulares <url> y <email>. mdEscape ya convirtió < y >
   // en &lt;/&gt;, así que se buscan en su forma escapada. Va antes de los
   // autoenlaces de URL suelta (3.5) para que esa regla, gracias a su
   // lookbehind, no re-enlace el texto que ya queda dentro del <a> generado.
-  s = s.replace(/&lt;(https?:\/\/[^\s&<>]+)&gt;/g, (m, url) => '<a href="' + url + '">' + url + "</a>")
-       .replace(/&lt;([^\s&<>]+@[^\s&<>]+)&gt;/g, (m, email) => '<a href="mailto:' + email + '">' + email + "</a>");
+  s = s.replace(/&lt;(https?:\/\/[^\s&<>]+)&gt;/g, (m, url) => protect('<a href="' + url + '">' + url + "</a>"))
+       .replace(/&lt;([^\s&<>]+@[^\s&<>]+)&gt;/g, (m, email) => protect('<a href="mailto:' + email + '">' + email + "</a>"));
   // 3.5) Autoenlaces de URLs sueltas (http/https). Se salta las que ya están
   // dentro de un atributo href="..." o justo tras un ">" (ya son <a>...</a>
   // por las reglas anteriores), para no re-enlazar lo ya enlazado.
@@ -86,7 +92,7 @@ function renderInline(text) {
   s = s.replace(/(?<![">])https?:\/\/(?:(?!&gt;|&lt;)[^\s<)\x00])+/g, (m) => {
     let url = m, trail = "";
     if (/[.,]$/.test(url)) { trail = url.slice(-1); url = url.slice(0, -1); }
-    return '<a href="' + url + '">' + url + "</a>" + trail;
+    return protect('<a href="' + url + '">' + url + "</a>") + trail;
   });
   // 4) Tachado, negrita+cursiva, negrita y cursiva.
   s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>")

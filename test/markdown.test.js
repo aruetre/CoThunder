@@ -259,3 +259,27 @@ test("renderMarkdown: tipo desconocido es cita normal", () => {
 test("renderMarkdown: cita normal sigue igual", () => {
   assert.equal(renderMarkdown("> cita"), "<blockquote><p>cita</p></blockquote>");
 });
+
+// Regresión CRÍTICA: el énfasis/resaltado/emoji no debe reinterpretar
+// caracteres dentro de atributos o URLs ya generados (href/src/title).
+test("renderInline: == dentro de un título de enlace no rompe el atributo", () => {
+  assert.equal(renderInline('[t](https://x.io "a==b==c")'), '<a href="https://x.io" title="a==b==c">t</a>');
+});
+test("renderInline: URL SharePoint con == y :x: no se corrompe", () => {
+  assert.equal(
+    renderInline("ver https://contoso.sharepoint.com/:x:/g/abc== ok"),
+    'ver <a href="https://contoso.sharepoint.com/:x:/g/abc==">https://contoso.sharepoint.com/:x:/g/abc==</a> ok'
+  );
+});
+test("renderInline: la etiqueta del enlace sí admite negrita", () => {
+  assert.equal(renderInline("[**negrita**](https://x.io)"), '<a href="https://x.io"><strong>negrita</strong></a>');
+});
+test("renderInline: emoji :x: en prosa sigue funcionando", () => {
+  assert.equal(renderInline("marca :x: aqui"), "marca ❌ aqui");
+});
+test("renderInline: resaltado en prosa sigue funcionando", () => {
+  assert.equal(renderInline("esto es ==clave=="), 'esto es <mark style="background-color:#fff2a8;">clave</mark>');
+});
+test("renderInline: imagen enlazada sigue funcionando tras proteger", () => {
+  assert.equal(renderInline("[![alt](https://x.io/i.png)](https://x.io)"), '<a href="https://x.io"><img src="https://x.io/i.png" alt="alt"></a>');
+});
