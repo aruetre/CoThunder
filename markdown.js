@@ -26,32 +26,56 @@ function renderInline(text) {
     // a diferencia de espacios (que colisionan con números sueltos en prosa).
     return "\x00" + (codes.length - 1) + "\x00";
   });
+  // 1.5) Escapado con barra invertida: \X dado un X de puntuación se aísla
+  // como literal, con el mismo mecanismo de centinela que los code spans
+  // (comparten el mismo array `codes` y se restauran juntos al final), así
+  // sobrevive intacto a todas las reglas siguientes (negrita, enlaces...).
+  // Va después de aislar los code spans para no interpretar como escape una
+  // barra invertida que en realidad está dentro de un `code span`.
+  s = s.replace(/\\([!"#$%&'()*+,./:;<=>?@[\]^_`{|}~-])/g, (m, ch) => {
+    codes.push(mdEscape(ch));
+    return "\x00" + (codes.length - 1) + "\x00";
+  });
   // 2) Escapa el texto restante.
   s = mdEscape(s);
-  // 2.5) Imágenes ![alt](url) con esquema de imagen permitido; si no, se descartan.
-  //      Va antes de los enlaces porque comparten la sintaxis [ ]( ).
-  s = s.replace(/!\[([^\]]*)\]\(([^\s)]+)\)/g, (m, alt, url) =>
-    MD_IMG_SCHEMES.test(url) ? '<img src="' + url + '" alt="' + alt + '">' : "");
-  // 3) Enlaces [texto](url) solo con esquema permitido; si no, texto plano.
+  // 2.5) Imágenes ![alt](url "título") con esquema de imagen permitido; si
+  // no, se descartan. Va antes de los enlaces porque comparten [ ]( ). El
+  // título es opcional; si el esquema no es válido se ignora también.
+  s = s.replace(/!\[([^\]]*)\]\(([^\s)]+)(?:\s+&quot;([\s\S]*?)&quot;)?\)/g, (m, alt, url, title) =>
+    MD_IMG_SCHEMES.test(url)
+      ? '<img src="' + url + '" alt="' + alt + '"' + (title ? ' title="' + title + '"' : "") + '>'
+      : "");
+  // 3) Enlaces [texto](url "título") solo con esquema permitido; si no,
+  // texto plano. El título es opcional.
   // Nota: una URL con un ")" literal (p. ej. cierta URL de Wikipedia) se
   // truncaría en ese paréntesis; aceptable para uso en correo.
-  s = s.replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (m, label, url) =>
-    MD_SAFE_SCHEMES.test(url) ? '<a href="' + url + '">' + label + "</a>" : label);
+  s = s.replace(/\[([^\]]+)\]\(([^\s)]+)(?:\s+&quot;([\s\S]*?)&quot;)?\)/g, (m, label, url, title) =>
+    MD_SAFE_SCHEMES.test(url)
+      ? '<a href="' + url + '"' + (title ? ' title="' + title + '"' : "") + '>' + label + "</a>"
+      : label);
+  // 3.4) Autoenlaces angulares <url> y <email>. mdEscape ya convirtió < y >
+  // en &lt;/&gt;, así que se buscan en su forma escapada. Va antes de los
+  // autoenlaces de URL suelta (3.5) para que esa regla, gracias a su
+  // lookbehind, no re-enlace el texto que ya queda dentro del <a> generado.
+  s = s.replace(/&lt;(https?:\/\/[^\s&<>]+)&gt;/g, (m, url) => '<a href="' + url + '">' + url + "</a>")
+       .replace(/&lt;([^\s&<>]+@[^\s&<>]+)&gt;/g, (m, email) => '<a href="mailto:' + email + '">' + email + "</a>");
   // 3.5) Autoenlaces de URLs sueltas (http/https). Se salta las que ya están
   // dentro de un atributo href="..." o justo tras un ">" (ya son <a>...</a>
-  // por la regla anterior), para no re-enlazar lo ya enlazado.
+  // por las reglas anteriores), para no re-enlazar lo ya enlazado.
   s = s.replace(/(?<![">])https?:\/\/[^\s<)]+/g, (m) => {
     let url = m, trail = "";
     if (/[.,]$/.test(url)) { trail = url.slice(-1); url = url.slice(0, -1); }
     return '<a href="' + url + '">' + url + "</a>" + trail;
   });
-  // 4) Tachado, negrita y cursiva.
+  // 4) Tachado, negrita+cursiva, negrita y cursiva.
   s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>")
+       .replace(/\*\*\*([^*]+)\*\*\*/g, "<strong><em>$1</em></strong>")
+       .replace(/___([^_]+)___/g, "<strong><em>$1</em></strong>")
        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
        .replace(/__([^_]+)__/g, "<strong>$1</strong>")
        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
        .replace(/(^|[^A-Za-z0-9])_([^_]+)_/g, "$1<em>$2</em>");
-  // 5) Restaura los code spans.
+  // 5) Restaura los code spans y los escapes con barra invertida.
   return s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
 }
 

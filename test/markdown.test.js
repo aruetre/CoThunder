@@ -142,3 +142,28 @@ test("renderInline: autoenlace de URL suelta", () => {
 test("renderInline: un enlace explícito no se re-enlaza", () => {
   assert.equal(renderInline("[web](https://x.io)"), '<a href="https://x.io">web</a>');
 });
+
+test("renderInline: negrita+cursiva ***", () => {
+  assert.equal(renderInline("***fuerte***"), "<strong><em>fuerte</em></strong>");
+});
+test("renderInline: título en enlace", () => {
+  assert.equal(renderInline('[web](https://x.io "Título")'), '<a href="https://x.io" title="Título">web</a>');
+});
+test("renderInline: título en imagen", () => {
+  assert.equal(renderInline('![gato](https://x.io/g.png "Un gato")'), '<img src="https://x.io/g.png" alt="gato" title="Un gato">');
+});
+test("renderInline: autoenlace angular de URL", () => {
+  assert.equal(renderInline("visita <https://x.io>"), 'visita <a href="https://x.io">https://x.io</a>');
+});
+test("renderInline: autoenlace angular de correo", () => {
+  assert.equal(renderInline("a <a@b.com> ya"), 'a <a href="mailto:a@b.com">a@b.com</a> ya');
+});
+test("renderInline: asterisco escapado es literal", () => {
+  assert.equal(renderInline("un \\*literal\\* aqui"), "un *literal* aqui");
+});
+test("renderInline: enlace normal sin título sigue igual", () => {
+  assert.equal(renderInline("[web](https://x.io)"), '<a href="https://x.io">web</a>');
+});
+test("renderInline: imagen enlazada", () => {
+  assert.equal(renderInline("[![alt](https://x.io/i.png)](https://x.io)"), '<a href="https://x.io"><img src="https://x.io/i.png" alt="alt"></a>');
+});
