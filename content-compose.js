@@ -13,22 +13,40 @@
   // "wrap" rodea la selección, "prefix" antepone al inicio de línea (v1: caret al inicio de línea)
   // y "block" inserta una plantilla en su propio bloque.
   const TOOLBAR_BUTTONS = [
+    // Encabezados
     { label: "H1", title: "Título 1", kind: "prefix", value: "# " },
     { label: "H2", title: "Título 2", kind: "prefix", value: "## " },
+    { label: "H3", title: "Título 3", kind: "prefix", value: "### " },
+    // Énfasis
     { label: "B", title: "Negrita", kind: "wrap", before: "**", after: "**" },
     { label: "I", title: "Cursiva", kind: "wrap", before: "*", after: "*" },
+    { label: "B+I", title: "Negrita y cursiva", kind: "wrap", before: "***", after: "***" },
     { label: "S", title: "Tachado", kind: "wrap", before: "~~", after: "~~" },
-    { label: "</>", title: "Código", kind: "wrap", before: "`", after: "`" },
+    { label: "🖍", title: "Resaltado", kind: "wrap", before: "==", after: "==" },
+    { label: "x₂", title: "Subíndice", kind: "wrap", before: "~", after: "~" },
+    { label: "x²", title: "Superíndice", kind: "wrap", before: "^", after: "^" },
+    { label: "</>", title: "Código en línea", kind: "wrap", before: "`", after: "`" },
+    // Enlaces y multimedia
     { label: "🔗", title: "Enlace", kind: "link" },
     { label: "🖼", title: "Imagen", kind: "image" },
+    { label: "😀", title: "Emoji", kind: "insert", value: ":smile:" },
+    // Listas y cita
     { label: "❝", title: "Cita", kind: "prefix", value: "> " },
     { label: "•", title: "Lista", kind: "prefix", value: "- " },
     { label: "1.", title: "Lista numerada", kind: "prefix", value: "1. " },
     { label: "☑", title: "Tarea", kind: "prefix", value: "- [ ] " },
+    // Bloques
     { label: "▦", title: "Tabla", kind: "block", template: "| Col 1 | Col 2 |\n| --- | --- |\n|  |  |" },
     { label: "{}", title: "Bloque de código", kind: "block", template: "```\n\n```" },
-    { label: "―", title: "Regla", kind: "block", template: "---" },
-    { label: "ℹ", title: "Nota", kind: "block", template: "> [!NOTE]\n> " },
+    { label: "―", title: "Regla horizontal", kind: "block", template: "---" },
+    { label: "Def", title: "Lista de definición", kind: "block", template: "término\n: definición" },
+    { label: "†", title: "Nota al pie (añade la definición «[^1]: ...» al final del correo)", kind: "insert", value: "[^1]" },
+    // Admonitions (cajas)
+    { label: "ℹ", title: "Admonition: Nota", kind: "block", template: "> [!NOTE]\n> " },
+    { label: "💡", title: "Admonition: Consejo", kind: "block", template: "> [!TIP]\n> " },
+    { label: "❗", title: "Admonition: Importante", kind: "block", template: "> [!IMPORTANT]\n> " },
+    { label: "⚠", title: "Admonition: Advertencia", kind: "block", template: "> [!WARNING]\n> " },
+    { label: "🛑", title: "Admonition: Precaución", kind: "block", template: "> [!CAUTION]\n> " },
   ];
 
   let active = false;
@@ -197,6 +215,9 @@
             break;
           case "block":
             insertBlock(spec.template);
+            break;
+          case "insert":
+            insertMd(spec.value);
             break;
         }
       };
