@@ -192,3 +192,31 @@ test("renderInline: emoji desconocido queda literal", () => {
 test("renderInline: dos puntos de una hora no se tocan", () => {
   assert.equal(renderInline("a las 12:30"), "a las 12:30");
 });
+
+test("renderMarkdown: ID de encabezado", () => {
+  assert.equal(renderMarkdown("## Título {#mi-id}"), '<h2 id="mi-id">Título</h2>');
+});
+test("renderMarkdown: encabezado sin ID no cambia", () => {
+  assert.equal(renderMarkdown("## Título"), "<h2>Título</h2>");
+});
+test("renderMarkdown: lista de definición", () => {
+  assert.equal(renderMarkdown("término\n: definición"), "<dl><dt>término</dt><dd>definición</dd></dl>");
+});
+test("renderMarkdown: lista de definición con dos términos", () => {
+  assert.equal(
+    renderMarkdown("uno\n: def uno\ndos\n: def dos"),
+    "<dl><dt>uno</dt><dd>def uno</dd><dt>dos</dt><dd>def dos</dd></dl>"
+  );
+});
+test("renderMarkdown: nota al pie", () => {
+  assert.equal(
+    renderMarkdown("Frase.[^1]\n\n[^1]: El detalle."),
+    '<p>Frase.<sup><a href="#fn1" id="fnref1">1</a></sup></p>\n<hr>\n<ol><li id="fn1">El detalle. <a href="#fnref1">↩</a></li></ol>'
+  );
+});
+test("renderMarkdown: nota al pie con id textual", () => {
+  assert.equal(
+    renderMarkdown("Texto[^nota] aquí.\n\n[^nota]: La aclaración."),
+    '<p>Texto<sup><a href="#fn1" id="fnref1">1</a></sup> aquí.</p>\n<hr>\n<ol><li id="fn1">La aclaración. <a href="#fnref1">↩</a></li></ol>'
+  );
+});

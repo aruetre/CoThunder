@@ -153,8 +153,53 @@ function parseList(lines, start) {
   return { html: `<${tag}>${items.join("")}</${tag}>`, i };
 }
 
+// --- Notas al pie -----------------------------------------------------
+// Las definiciones "[^id]: texto" se extraen del origen ANTES de partir en
+// líneas (así una línea de definición nunca llega al bucle de bloques como
+// párrafo suelto). Las referencias "[^id]" se sustituyen por un centinela
+// "\x01N\x01" (N = número de aparición, 1-based) que sobrevive intacto a
+// renderInline: usa un byte de control distinto del centinela \x00 que usa
+// renderInline internamente para code spans, y ningún carácter de la marca
+// (dígitos + \x01) coincide con las reglas de negrita/cursiva/superíndice/
+// etc., así que atraviesa mdEscape y todas las sustituciones sin tocarse.
+// Al final de renderMarkdown se resuelve el centinela a su <sup><a...>
+// definitivo y, si hubo alguna nota, se añade el <ol> de pies de página.
+const MD_FOOTNOTE_DEF_RE = /^\[\^([A-Za-z0-9_-]+)\]:\s*(.*)$/;
+const MD_FOOTNOTE_REF_RE = /\[\^([A-Za-z0-9_-]+)\]/g;
+const MD_FOOTNOTE_MARKER_RE = /\x01(\d+)\x01/g;
+
+function extractFootnoteDefs(text) {
+  const defs = new Map();
+  const cleaned = text.split("\n").map((line) => {
+    const m = line.match(MD_FOOTNOTE_DEF_RE);
+    if (!m) return line;
+    defs.set(m[1], m[2]);
+    return "";
+  }).join("\n");
+  return { cleaned, defs };
+}
+
+function substituteFootnoteRefs(text, defs) {
+  const order = new Map(); // id de nota -> número de aparición (1-based)
+  const withMarkers = text.replace(MD_FOOTNOTE_REF_RE, (m, id) => {
+    if (!defs.has(id)) return m; // sin definición: se deja el texto literal
+    if (!order.has(id)) order.set(id, order.size + 1);
+    return "\x01" + order.get(id) + "\x01";
+  });
+  return { withMarkers, order };
+}
+
+// Encabezado con ID opcional "{#id}" al final del texto visible.
+const MD_HEADING_ID_RE = /\s*\{#([A-Za-z0-9_-]+)\}\s*$/;
+
+// Línea de definición ": texto" (lista de definición).
+const MD_DEF_LINE_RE = /^:\s+(.*)$/;
+
 function renderMarkdown(src) {
-  const lines = String(src == null ? "" : src).replace(/\r\n?/g, "\n").split("\n");
+  const raw = String(src == null ? "" : src).replace(/\r\n?/g, "\n");
+  const { cleaned, defs } = extractFootnoteDefs(raw);
+  const { withMarkers, order } = substituteFootnoteRefs(cleaned, defs);
+  const lines = withMarkers.split("\n");
   const out = [];
   let i = 0;
 
@@ -165,7 +210,15 @@ function renderMarkdown(src) {
     if (MD_HR_RE.test(line)) { out.push("<hr>"); i++; continue; }
 
     const h = line.match(/^(#{1,6})\s+(.*)$/);                          // encabezado
-    if (h) { const n = h[1].length; out.push(`<h${n}>${renderInline(h[2].trim())}</h${n}>`); i++; continue; }
+    if (h) {
+      const n = h[1].length;
+      let text = h[2].trim();
+      let idAttr = "";
+      const idm = text.match(MD_HEADING_ID_RE);
+      if (idm) { text = text.slice(0, idm.index).trim(); idAttr = ` id="${idm[1]}"`; }
+      out.push(`<h${n}${idAttr}>${renderInline(text)}</h${n}>`);
+      i++; continue;
+    }
 
     if (/^```/.test(line)) {                                            // bloque de código
       i++; const buf = [];
@@ -195,6 +248,19 @@ function renderMarkdown(src) {
       out.push(`<table><thead><tr>${head}</tr></thead><tbody>${rows.join("")}</tbody></table>`); continue;
     }
 
+    if (i + 1 < lines.length && !/^\s*$/.test(line) && MD_DEF_LINE_RE.test(lines[i + 1])) {   // lista de definición
+      const items = [];
+      while (i < lines.length && !/^\s*$/.test(lines[i]) && i + 1 < lines.length && MD_DEF_LINE_RE.test(lines[i + 1])) {
+        items.push(`<dt>${renderInline(lines[i])}</dt>`);
+        i++;
+        while (i < lines.length && MD_DEF_LINE_RE.test(lines[i])) {
+          items.push(`<dd>${renderInline(lines[i].match(MD_DEF_LINE_RE)[1])}</dd>`);
+          i++;
+        }
+      }
+      out.push(`<dl>${items.join("")}</dl>`); continue;
+    }
+
     const buf = [];                                                    // párrafo
     while (i < lines.length && !/^\s*$/.test(lines[i]) &&
            !/^(#{1,6}\s|```|\s*>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i]) &&
@@ -204,7 +270,16 @@ function renderMarkdown(src) {
     }
     out.push("<p>" + renderInline(buf.join(" ")) + "</p>");
   }
-  return out.join("\n");
+  let result = out.join("\n").replace(MD_FOOTNOTE_MARKER_RE, (m, n) =>
+    `<sup><a href="#fn${n}" id="fnref${n}">${n}</a></sup>`);
+  if (order.size > 0) {
+    const items = [];
+    for (const [id, n] of order) {
+      items.push(`<li id="fn${n}">${renderInline(defs.get(id) || "")} <a href="#fnref${n}">↩</a></li>`);
+    }
+    result += "\n<hr>\n<ol>" + items.join("") + "</ol>";
+  }
+  return result;
 }
 
 if (typeof module !== "undefined" && module.exports) {
