@@ -1,63 +1,75 @@
 "use strict";
-// content-compose.js — compose script: panel dividido (Markdown | preview) en la
-// ventana de redacción. Toda la dependencia del DOM del editor de TB va aquí, en
-// SELECTORS, para actualizarla en un solo sitio si TB cambia.
+// content-compose.js — compose script: editor Markdown con preview en vivo.
+//
+// PLAN B (§8 del spec): NO se inyecta ningún textarea. El editor NATIVO de
+// Thunderbird es la fuente Markdown (el usuario escribe ahí, a la izquierda);
+// añadimos a la derecha un preview NO editable que renderiza en vivo lo que se
+// escribe. El textarea competía con el editor nativo por el tecleo, así que se
+// descarta. renderMarkdown viene de markdown.js (inyectado antes, mismo scope).
+// Toda la dependencia del DOM del editor de TB va aquí, en SELECTORS.
 (function () {
-  const SELECTORS = { body: "body" };            // el documento inyectado ES el cuerpo editable
-  const IDS = { root: "cothunder-md-root", src: "cothunder-md-src", preview: "cothunder-md-preview" };
+  const SELECTORS = { body: "body" };
+  const IDS = { preview: "cothunder-md-preview", style: "cothunder-md-style" };
 
   let active = false;
+  let bodyEl = null;
+  let previewEl = null;
+  let timer = null;
 
-  function currentMarkdown() {
-    const src = document.getElementById(IDS.src);
-    return src ? src.value : "";
+  // Fuente Markdown = texto del cuerpo editable, EXCLUYENDO el preview (que
+  // también vive dentro del cuerpo). Se oculta un instante para no leerlo.
+  function markdownSource() {
+    if (!bodyEl) return "";
+    if (previewEl) previewEl.style.display = "none";
+    const text = bodyEl.innerText || "";
+    if (previewEl) previewEl.style.display = "";
+    return text;
   }
 
-  // renderMarkdown viene de markdown.js (inyectado antes en el mismo documento).
   function finalHtml() {
-    return active ? renderMarkdown(currentMarkdown()) : null;
+    return active ? renderMarkdown(markdownSource()) : null;
   }
 
-  function updatePreview() {
-    const preview = document.getElementById(IDS.preview);
-    if (!preview) return;
+  function renderPreview() {
+    if (!previewEl) return;
     try {
       // DOMParser: convierte nuestra cadena segura en nodos sin ejecutar scripts.
-      const doc = new DOMParser().parseFromString(finalHtml() || "", "text/html");
-      preview.replaceChildren(...doc.body.childNodes);
+      const doc = new DOMParser().parseFromString(renderMarkdown(markdownSource()), "text/html");
+      previewEl.replaceChildren(...doc.body.childNodes);
     } catch (e) {
-      // DIAGNÓSTICO TEMPORAL: muestra el error en el propio preview (retirar tras el spike).
-      preview.textContent = "[CoThunder diag] " + (e && e.message) +
-        " | typeof renderMarkdown=" + (typeof renderMarkdown) +
-        " | typeof renderInline=" + (typeof renderInline);
+      previewEl.textContent = "[CoThunder preview] " + (e && e.message);
     }
+  }
+
+  // Debounce: no re-renderizar en cada tecla.
+  function scheduleRender() {
+    if (timer) return;
+    timer = setTimeout(function () { timer = null; renderPreview(); }, 150);
   }
 
   function activate() {
     if (active) return;
-    const body = document.querySelector(SELECTORS.body);
-    if (!body) return;
-    const seed = body.innerText || "";
+    bodyEl = document.querySelector(SELECTORS.body);
+    if (!bodyEl) return;
 
-    const root = document.createElement("div");
-    root.id = IDS.root;
-    root.style.cssText = "display:flex;gap:10px;height:100%;margin:0;box-sizing:border-box;";
+    // Reserva la mitad derecha del área de edición para el preview.
+    const style = document.createElement("style");
+    style.id = IDS.style;
+    style.textContent =
+      "body{margin-right:50% !important;}" +
+      "#" + IDS.preview + "{position:fixed;top:0;right:0;width:50%;height:100%;" +
+      "overflow:auto;box-sizing:border-box;border-left:1px solid #bbb;" +
+      "background:#fff;color:#111;padding:10px;}";
+    (document.head || document.documentElement).appendChild(style);
 
-    const src = document.createElement("textarea");
-    src.id = IDS.src;
-    src.value = seed;
-    src.style.cssText = "flex:1 1 50%;min-width:0;min-height:0;resize:none;border:1px solid #bbb;background:#fff;color:#111;font:13px/1.5 monospace;padding:8px;box-sizing:border-box;";
+    previewEl = document.createElement("div");
+    previewEl.id = IDS.preview;
+    previewEl.contentEditable = "false";
+    bodyEl.appendChild(previewEl);
 
-    const preview = document.createElement("div");
-    preview.id = IDS.preview;
-    preview.style.cssText = "flex:1 1 50%;min-width:0;min-height:0;overflow:auto;border:1px solid #bbb;background:#fff;color:#111;padding:8px;box-sizing:border-box;";
-
-    root.append(src, preview);
-    body.replaceChildren(root);
-    src.addEventListener("input", updatePreview);
+    bodyEl.addEventListener("input", scheduleRender);
     active = true;
-    updatePreview();
-    src.focus();
+    renderPreview();
   }
 
   messenger.runtime.onMessage.addListener((msg, sender, respond) => {
