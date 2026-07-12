@@ -39,6 +39,61 @@ function renderInline(text) {
   return s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
 }
 
+function renderMarkdown(src) {
+  const lines = String(src == null ? "" : src).replace(/\r\n?/g, "\n").split("\n");
+  const out = [];
+  let i = 0;
+
+  const isTableSep = (s) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(s);
+  const cells = (s) => s.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    if (/^\s*$/.test(line)) { i++; continue; }                          // línea vacía
+    if (/^\s*(---|\*\*\*|___)\s*$/.test(line)) { out.push("<hr>"); i++; continue; }
+
+    const h = line.match(/^(#{1,6})\s+(.*)$/);                          // encabezado
+    if (h) { const n = h[1].length; out.push(`<h${n}>${renderInline(h[2].trim())}</h${n}>`); i++; continue; }
+
+    if (/^```/.test(line)) {                                            // bloque de código
+      i++; const buf = [];
+      while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i++; }
+      i++; out.push("<pre><code>" + mdEscape(buf.join("\n")) + "</code></pre>"); continue;
+    }
+
+    if (/^\s*>\s?/.test(line)) {                                        // cita
+      const buf = [];
+      while (i < lines.length && /^\s*>\s?/.test(lines[i])) { buf.push(lines[i].replace(/^\s*>\s?/, "")); i++; }
+      out.push("<blockquote>" + renderMarkdown(buf.join("\n")) + "</blockquote>"); continue;
+    }
+
+    if (/^\s*[-*+]\s+/.test(line) || /^\s*\d+\.\s+/.test(line)) {       // listas
+      const ordered = /^\s*\d+\.\s+/.test(line);
+      const tag = ordered ? "ol" : "ul";
+      const items = [];
+      const marker = ordered ? /^\s*\d+\.\s+(.*)$/ : /^\s*[-*+]\s+(.*)$/;
+      while (i < lines.length && marker.test(lines[i])) { items.push(renderInline(lines[i].match(marker)[1])); i++; }
+      out.push(`<${tag}>` + items.map((t) => `<li>${t}</li>`).join("") + `</${tag}>`); continue;
+    }
+
+    if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {   // tabla
+      const head = cells(line).map((c) => `<th>${renderInline(c)}</th>`).join("");
+      i += 2; const rows = [];
+      while (i < lines.length && lines[i].includes("|") && !/^\s*$/.test(lines[i])) {
+        rows.push("<tr>" + cells(lines[i]).map((c) => `<td>${renderInline(c)}</td>`).join("") + "</tr>"); i++;
+      }
+      out.push(`<table><thead><tr>${head}</tr></thead><tbody>${rows.join("")}</tbody></table>`); continue;
+    }
+
+    const buf = [];                                                    // párrafo
+    while (i < lines.length && !/^\s*$/.test(lines[i]) &&
+           !/^(#{1,6}\s|```|\s*>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i])) { buf.push(lines[i]); i++; }
+    out.push("<p>" + renderInline(buf.join(" ")) + "</p>");
+  }
+  return out.join("\n");
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { mdEscape, renderInline };
+  module.exports = { mdEscape, renderInline, renderMarkdown };
 }

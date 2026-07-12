@@ -4,6 +4,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { renderInline } = require("../markdown.js");
+const { renderMarkdown } = require("../markdown.js");
 
 test("renderInline escapa HTML", () => {
   assert.equal(renderInline("a < b & c"), "a &lt; b &amp; c");
@@ -45,5 +46,35 @@ test("renderInline: enlace seguido de prosa entre paréntesis no se lo engulle",
   assert.equal(
     renderInline("ve a [la web](https://x.io) (recomendado)"),
     've a <a href="https://x.io">la web</a> (recomendado)'
+  );
+});
+
+test("renderMarkdown: encabezados", () => {
+  assert.equal(renderMarkdown("# Hola"), "<h1>Hola</h1>");
+  assert.equal(renderMarkdown("### Sub"), "<h3>Sub</h3>");
+});
+
+test("renderMarkdown: párrafo con énfasis", () => {
+  assert.equal(renderMarkdown("Texto **fuerte**"), "<p>Texto <strong>fuerte</strong></p>");
+});
+
+test("renderMarkdown: lista desordenada", () => {
+  assert.equal(renderMarkdown("- a\n- b"), "<ul><li>a</li><li>b</li></ul>");
+});
+
+test("renderMarkdown: cita y regla", () => {
+  assert.equal(renderMarkdown("> cita"), "<blockquote><p>cita</p></blockquote>");
+  assert.equal(renderMarkdown("---"), "<hr>");
+});
+
+test("renderMarkdown: bloque de código escapa su contenido", () => {
+  assert.equal(renderMarkdown("```\na < b\n```"), "<pre><code>a &lt; b</code></pre>");
+});
+
+test("renderMarkdown: tabla de pipes", () => {
+  const md = "| A | B |\n| --- | --- |\n| 1 | 2 |";
+  assert.equal(
+    renderMarkdown(md),
+    "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>"
   );
 });
