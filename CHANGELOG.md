@@ -3,6 +3,14 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.0] — 2026-07-12
+
+### Añadido
+- **Tema del correo configurable** (en Opciones → «Tema del correo»). Ahora puedes dar a tus correos el estilo que quieras, sin depender de Markdown Here:
+  - **Color de acento**: se aplica a encabezados, cabeceras de tabla y borde de citas.
+  - **Desplegable de tema**: «Por defecto», **«UPO corporativo»** (azul `#003772` / amarillo `#FCC100`) o **«Personalizado»**.
+  - **CSS personalizado**: **pega** tu propio CSS, **sube un archivo `.css`** o **descarga una plantilla** para editarla. El CSS se aplica como **estilos en línea** sobre el correo (los clientes de correo ignoran el CSS externo y las clases), de forma parecida a como lo hacía Markdown Here.
+
 ## [2.5.2] — 2026-07-12
 
 ### Añadido
