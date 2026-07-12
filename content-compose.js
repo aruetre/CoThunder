@@ -83,9 +83,29 @@
     renderPreview();
   }
 
+  // Apaga el preview y restaura el editor nativo a ancho completo; el texto Markdown
+  // fuente permanece intacto (no se renderiza ni se sustituye el cuerpo).
+  function deactivate() {
+    if (!active) return;
+    if (previewEl) previewEl.remove();
+    const style = document.getElementById(IDS.style);
+    if (style) style.remove();
+    if (bodyEl) bodyEl.removeEventListener("input", scheduleRender);
+    previewEl = null;
+    active = false;
+  }
+
+  function toggle() {
+    active ? deactivate() : activate();
+  }
+
   messenger.runtime.onMessage.addListener((msg, sender, respond) => {
     if (msg && msg.type === "cothunder-finalize") { respond({ html: finalHtml() }); return true; }
+    if (msg && msg.type === "cothunder-toggle") { toggle(); respond({ active }); return true; }
   });
 
-  activate();   // encendido por defecto (la task 5 añade el toggle configurable)
+  // Encendido por defecto según el ajuste de Opciones (activable/desactivable con el botón o el atajo).
+  messenger.storage.local.get({ mdEditorDefault: true }).then((s) => {
+    if (s.mdEditorDefault) activate();
+  });
 })();

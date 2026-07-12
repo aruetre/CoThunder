@@ -5,6 +5,7 @@
   $("copilotUrl").value = cfg.copilotUrl;
   $("promptTemplate").value = cfg.promptTemplate;
   $("newChatByDefault").checked = cfg.newChatByDefault;
+  $("mdEditorDefault").checked = cfg.mdEditorDefault;
   const prof = cfg.userProfile || {};
   $("userName").value = prof.name || "";
   $("userRole").value = prof.role || "";
@@ -43,6 +44,7 @@
       copilotUrl: url,
       promptTemplate: $("promptTemplate").value,
       newChatByDefault: $("newChatByDefault").checked,
+      mdEditorDefault: $("mdEditorDefault").checked,
       userProfile: {
         name: $("userName").value.trim(),
         role: $("userRole").value.trim(),

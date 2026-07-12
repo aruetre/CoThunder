@@ -10,6 +10,12 @@
   "message_display_action": { "default_title": "Preguntar a Copilot", "default_icon": "icon.svg" },
   "action": { "default_title": "Crear desde Copilot", "default_icon": "icon.svg" },
   "compose_action": { "default_title": "Editor Markdown", "default_icon": "icon.svg" },
+  "commands": {
+    "toggle-markdown": {
+      "suggested_key": { "default": "Ctrl+Alt+M" },
+      "description": "Alternar el editor Markdown en la ventana de redacción"
+    }
+  },
   "options_ui": { "page": "options/options.html", "open_in_tab": false },
   "icons": { "32": "icon.svg", "64": "icon.svg" }
 }

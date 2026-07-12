@@ -17,6 +17,20 @@ async function registerComposeScript() {
 }
 registerComposeScript();
 
+// Alterna el panel Markdown en la pestaña de redacción activa, desde el botón (composeAction)
+// o el atajo de teclado; refleja el estado en el título del botón.
+async function toggleMarkdownPanel() {
+  const [tab] = await messenger.tabs.query({ active: true, currentWindow: true });
+  if (!tab) return;
+  try {
+    const res = await messenger.tabs.sendMessage(tab.id, { type: "cothunder-toggle" });
+    const on = !!(res && res.active);
+    messenger.composeAction.setTitle({ tabId: tab.id, title: on ? "Editor Markdown (activo)" : "Editor Markdown" });
+  } catch (e) { /* la pestaña puede no tener el compose script */ }
+}
+messenger.composeAction.onClicked.addListener(toggleMarkdownPanel);
+messenger.commands.onCommand.addListener((name) => { if (name === "toggle-markdown") toggleMarkdownPanel(); });
+
 // Al enviar con el panel activo: pide el HTML final al compose script y lo pone
 // como cuerpo del correo. Opción 1 (un solo clic): sin cancel, el envío sale
 // directo ya maquetado.
