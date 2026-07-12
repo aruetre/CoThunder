@@ -9,6 +9,23 @@ const MD_SAFE_SCHEMES = /^(https?:|mailto:)/i;
 // que inserta Thunderbird (data: en línea, cid: adjunto).
 const MD_IMG_SCHEMES = /^(https?:|data:|cid:)/i;
 
+// Emojis por código corto :shortcode: -> unicode. Solo códigos conocidos se
+// sustituyen; el resto queda literal (así ":noexiste:" o una hora "12:30" no
+// se tocan, al no formar parte de este mapa).
+const MD_EMOJI = {
+  fire: "🔥", joy: "😂", "+1": "👍", thumbsup: "👍", "-1": "👎", thumbsdown: "👎",
+  heart: "❤️", tada: "🎉", rocket: "🚀", warning: "⚠️", bulb: "💡",
+  white_check_mark: "✅", smile: "😄", eyes: "👀", "100": "💯",
+  wave: "👋", ok_hand: "👌", pray: "🙏", clap: "👏", star: "⭐",
+  sparkles: "✨", bug: "🐛", memo: "📝", email: "📧", calendar: "📅",
+  thinking: "🤔", cry: "😢", laughing: "😆", wink: "😉", sunglasses: "😎",
+  x: "❌", question: "❓", exclamation: "❗", check: "✔️", zap: "⚡",
+  moneybag: "💰", gift: "🎁", coffee: "☕", pencil: "✏️", lock: "🔒",
+  unlock: "🔓", key: "🔑", hourglass: "⏳", loudspeaker: "📢", bell: "🔔",
+  point_right: "👉", point_left: "👈", muscle: "💪", raised_hands: "🙌",
+  handshake: "🤝",
+};
+
 function mdEscape(text) {
   return String(text == null ? "" : text)
     .replace(/&/g, "&amp;")
@@ -75,6 +92,13 @@ function renderInline(text) {
        .replace(/__([^_]+)__/g, "<strong>$1</strong>")
        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
        .replace(/(^|[^A-Za-z0-9])_([^_]+)_/g, "$1<em>$2</em>");
+  // 4.5) Extendida: resaltado, subíndice, superíndice, emoji. El tachado ya
+  // se resolvió en el paso 4 (arriba), así que aquí no quedan "~~" sin
+  // consumir: el subíndice de un solo "~" no puede confundirse con él.
+  s = s.replace(/==([^=]+)==/g, '<mark style="background-color:#fff2a8;">$1</mark>')
+       .replace(/~([^~]+)~/g, "<sub>$1</sub>")
+       .replace(/\^([^\^]+)\^/g, "<sup>$1</sup>")
+       .replace(/:([a-z0-9_+-]+):/g, (m, code) => (MD_EMOJI[code] !== undefined ? MD_EMOJI[code] : m));
   // 5) Restaura los code spans y los escapes con barra invertida.
   return s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
 }

@@ -167,3 +167,28 @@ test("renderInline: enlace normal sin título sigue igual", () => {
 test("renderInline: imagen enlazada", () => {
   assert.equal(renderInline("[![alt](https://x.io/i.png)](https://x.io)"), '<a href="https://x.io"><img src="https://x.io/i.png" alt="alt"></a>');
 });
+
+test("renderInline: resaltado ==x==", () => {
+  assert.equal(renderInline("==importante=="), '<mark style="background-color:#fff2a8;">importante</mark>');
+});
+test("renderInline: subíndice ~x~", () => {
+  assert.equal(renderInline("H~2~O"), "H<sub>2</sub>O");
+});
+test("renderInline: tachado ~~x~~ NO se confunde con subíndice", () => {
+  assert.equal(renderInline("~~tachado~~"), "<del>tachado</del>");
+});
+test("renderInline: superíndice ^x^", () => {
+  assert.equal(renderInline("X^2^"), "X<sup>2</sup>");
+});
+test("renderInline: emoji conocido", () => {
+  assert.equal(renderInline("bien :fire: hecho"), "bien 🔥 hecho");
+});
+test("renderInline: emoji +1", () => {
+  assert.equal(renderInline(":+1:"), "👍");
+});
+test("renderInline: emoji desconocido queda literal", () => {
+  assert.equal(renderInline(":noexiste:"), ":noexiste:");
+});
+test("renderInline: dos puntos de una hora no se tocan", () => {
+  assert.equal(renderInline("a las 12:30"), "a las 12:30");
+});
