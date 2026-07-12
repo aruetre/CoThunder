@@ -3,6 +3,12 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.5] — 2026-07-12
+
+### Añadido
+- **Los temas cubren ahora todos los elementos** de Markdown y recolorean también las **admonitions** (`> [!NOTE]`, etc.) y el **resaltado `==`** según el tema; antes tenían colores fijos que desentonaban en los temas oscuros. Repaso de visibilidad/usabilidad en todos los temas (contraste, espaciado, listas de definición, imágenes…).
+- **Tres variantes del tema UPO**: **UPO claro**, **UPO oscuro** y **UPO mixto** (contenido claro con bloques de código oscuros), además de tu **UPO original**.
+
 ## [2.6.4] — 2026-07-12
 
 ### Corregido
