@@ -78,3 +78,35 @@ test("renderMarkdown: tabla de pipes", () => {
     "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>"
   );
 });
+
+test("renderMarkdown: párrafo pegado a una tabla no la engulle", () => {
+  assert.equal(
+    renderMarkdown("Intro:\n| A | B |\n| --- | --- |\n| 1 | 2 |"),
+    "<p>Intro:</p>\n<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>"
+  );
+});
+
+test("renderMarkdown: párrafo pegado a una regla horizontal corta ahí", () => {
+  assert.equal(renderMarkdown("texto\n---"), "<p>texto</p>\n<hr>");
+});
+
+test("renderMarkdown: lista desordenada anidada", () => {
+  assert.equal(
+    renderMarkdown("- a\n  - sub\n- b"),
+    "<ul><li>a<ul><li>sub</li></ul></li><li>b</li></ul>"
+  );
+});
+
+test("renderMarkdown: lista ordenada anidada bajo desordenada", () => {
+  assert.equal(
+    renderMarkdown("- a\n  1. sub\n- b"),
+    "<ul><li>a<ol><li>sub</li></ol></li><li>b</li></ul>"
+  );
+});
+
+test("renderMarkdown: separador de tabla de un solo guion", () => {
+  assert.equal(
+    renderMarkdown("| A | B |\n| - | - |\n| 1 | 2 |"),
+    "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>"
+  );
+});

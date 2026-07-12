@@ -39,19 +39,55 @@ function renderInline(text) {
   return s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
 }
 
+const MD_HR_RE = /^\s*(---|\*\*\*|___)\s*$/;
+const MD_TABLE_SEP_RE = /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$/;
+const MD_UL_MARKER_RE = /^(\s*)[-*+]\s+(.*)$/;
+const MD_OL_MARKER_RE = /^(\s*)\d+\.\s+(.*)$/;
+
+function isTableSep(s) { return MD_TABLE_SEP_RE.test(s); }
+function tableCells(s) { return s.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim()); }
+
+function isListMarkerLine(s) { return MD_UL_MARKER_RE.test(s) || MD_OL_MARKER_RE.test(s); }
+
+function listMarkerInfo(s) {
+  const u = s.match(MD_UL_MARKER_RE);
+  if (u) return { indent: u[1].length, ordered: false, text: u[2] };
+  const o = s.match(MD_OL_MARKER_RE);
+  return { indent: o[1].length, ordered: true, text: o[2] };
+}
+
+// Parsea una lista (anidada por indentación) a partir de lines[start].
+// Devuelve el HTML de la lista y el índice tras el último renglón consumido.
+function parseList(lines, start) {
+  const baseIndent = listMarkerInfo(lines[start]).indent;
+  const ordered = listMarkerInfo(lines[start]).ordered;
+  const tag = ordered ? "ol" : "ul";
+  const items = [];
+  let i = start;
+  while (i < lines.length && isListMarkerLine(lines[i]) && listMarkerInfo(lines[i]).indent === baseIndent) {
+    const info = listMarkerInfo(lines[i]);
+    let itemHtml = renderInline(info.text);
+    i++;
+    if (i < lines.length && isListMarkerLine(lines[i]) && listMarkerInfo(lines[i]).indent > baseIndent) {
+      const nested = parseList(lines, i);
+      itemHtml += nested.html;
+      i = nested.i;
+    }
+    items.push(`<li>${itemHtml}</li>`);
+  }
+  return { html: `<${tag}>${items.join("")}</${tag}>`, i };
+}
+
 function renderMarkdown(src) {
   const lines = String(src == null ? "" : src).replace(/\r\n?/g, "\n").split("\n");
   const out = [];
   let i = 0;
 
-  const isTableSep = (s) => /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(s);
-  const cells = (s) => s.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim());
-
   while (i < lines.length) {
     const line = lines[i];
 
     if (/^\s*$/.test(line)) { i++; continue; }                          // línea vacía
-    if (/^\s*(---|\*\*\*|___)\s*$/.test(line)) { out.push("<hr>"); i++; continue; }
+    if (MD_HR_RE.test(line)) { out.push("<hr>"); i++; continue; }
 
     const h = line.match(/^(#{1,6})\s+(.*)$/);                          // encabezado
     if (h) { const n = h[1].length; out.push(`<h${n}>${renderInline(h[2].trim())}</h${n}>`); i++; continue; }
@@ -68,27 +104,29 @@ function renderMarkdown(src) {
       out.push("<blockquote>" + renderMarkdown(buf.join("\n")) + "</blockquote>"); continue;
     }
 
-    if (/^\s*[-*+]\s+/.test(line) || /^\s*\d+\.\s+/.test(line)) {       // listas
-      const ordered = /^\s*\d+\.\s+/.test(line);
-      const tag = ordered ? "ol" : "ul";
-      const items = [];
-      const marker = ordered ? /^\s*\d+\.\s+(.*)$/ : /^\s*[-*+]\s+(.*)$/;
-      while (i < lines.length && marker.test(lines[i])) { items.push(renderInline(lines[i].match(marker)[1])); i++; }
-      out.push(`<${tag}>` + items.map((t) => `<li>${t}</li>`).join("") + `</${tag}>`); continue;
+    if (isListMarkerLine(line)) {                                       // listas (anidadas)
+      const list = parseList(lines, i);
+      out.push(list.html);
+      i = list.i;
+      continue;
     }
 
     if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {   // tabla
-      const head = cells(line).map((c) => `<th>${renderInline(c)}</th>`).join("");
+      const head = tableCells(line).map((c) => `<th>${renderInline(c)}</th>`).join("");
       i += 2; const rows = [];
       while (i < lines.length && lines[i].includes("|") && !/^\s*$/.test(lines[i])) {
-        rows.push("<tr>" + cells(lines[i]).map((c) => `<td>${renderInline(c)}</td>`).join("") + "</tr>"); i++;
+        rows.push("<tr>" + tableCells(lines[i]).map((c) => `<td>${renderInline(c)}</td>`).join("") + "</tr>"); i++;
       }
       out.push(`<table><thead><tr>${head}</tr></thead><tbody>${rows.join("")}</tbody></table>`); continue;
     }
 
     const buf = [];                                                    // párrafo
     while (i < lines.length && !/^\s*$/.test(lines[i]) &&
-           !/^(#{1,6}\s|```|\s*>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i])) { buf.push(lines[i]); i++; }
+           !/^(#{1,6}\s|```|\s*>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i]) &&
+           !MD_HR_RE.test(lines[i]) &&
+           !(lines[i].includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1]))) {
+      buf.push(lines[i]); i++;
+    }
     out.push("<p>" + renderInline(buf.join(" ")) + "</p>");
   }
   return out.join("\n");
