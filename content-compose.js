@@ -26,8 +26,20 @@
     return text;
   }
 
-  function finalHtml() {
-    return active ? renderMarkdown(markdownSource()) : null;
+  // Finaliza (al enviar o al apagar): renderiza el Markdown a HTML, lo deja como
+  // cuerpo real, apaga el panel (quita preview y el reparto 50/50) y devuelve el
+  // HTML. Devuelve null si el panel ya estaba apagado (para que el envío pase).
+  function finalize() {
+    if (!active) return null;
+    const html = renderMarkdown(markdownSource());
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    if (previewEl) { previewEl.remove(); previewEl = null; }
+    const st = document.getElementById(IDS.style);
+    if (st) st.remove();
+    bodyEl.removeEventListener("input", scheduleRender);
+    bodyEl.replaceChildren(...doc.body.childNodes);   // HTML renderizado como cuerpo
+    active = false;
+    return html;
   }
 
   function renderPreview() {
@@ -73,7 +85,7 @@
   }
 
   messenger.runtime.onMessage.addListener((msg, sender, respond) => {
-    if (msg && msg.type === "cothunder-finalize") { respond({ html: finalHtml() }); return true; }
+    if (msg && msg.type === "cothunder-finalize") { respond({ html: finalize() }); return true; }
   });
 
   activate();   // encendido por defecto (la task 5 añade el toggle configurable)
