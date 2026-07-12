@@ -58,5 +58,19 @@
     if (msg && msg.type === "cothunder-finalize") { respond({ html: finalHtml() }); return true; }
   });
 
-  activate();   // encendido por defecto (la task 5 añade el toggle)
+  // --- DIAGNÓSTICO TEMPORAL (retirar tras el spike) ---------------------------
+  console.warn("[CoThunder][diag] compose script cargado. readyState=", document.readyState,
+    "url=", location.href, "bodyLen=", (document.body && document.body.innerText || "").length);
+  try {
+    activate();   // encendido por defecto (la task 5 añade el toggle)
+    console.warn("[CoThunder][diag] activate() OK. root presente=", !!document.getElementById(IDS.root),
+      "preview html=", JSON.stringify(finalHtml()));
+  } catch (e) {
+    console.error("[CoThunder][diag] activate() LANZÓ:", e && e.message, e && e.stack);
+  }
+  // ¿Nos sobrescribe TB el panel después (caso Responder)?
+  [500, 1500, 3000].forEach((ms) => setTimeout(() => {
+    console.warn("[CoThunder][diag] a los " + ms + "ms: root presente=",
+      !!document.getElementById(IDS.root), "active=", active);
+  }, ms));
 })();
