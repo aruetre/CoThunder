@@ -105,7 +105,7 @@ function renderInline(text) {
   // 4.5) Extendida: resaltado, subíndice, superíndice, emoji. El tachado ya
   // se resolvió en el paso 4 (arriba), así que aquí no quedan "~~" sin
   // consumir: el subíndice de un solo "~" no puede confundirse con él.
-  s = s.replace(/==([^=]+)==/g, '<mark style="background-color:#fff2a8;">$1</mark>')
+  s = s.replace(/==([^=]+)==/g, '<mark class="cothunder-mark" style="background-color:#fff2a8;">$1</mark>')
        .replace(/~([^~]+)~/g, "<sub>$1</sub>")
        .replace(/\^([^\^]+)\^/g, "<sup>$1</sup>")
        .replace(/:([a-z0-9_+-]+):/g, (m, code) => (MD_EMOJI[code] !== undefined ? MD_EMOJI[code] : m));
@@ -467,8 +467,9 @@ function renderMarkdown(src) {
       const adm = admMatch ? MD_ADMONITIONS[admMatch[1].toUpperCase()] : null;
       if (adm) {
         const content = renderMarkdown(buf.slice(1).join("\n"));
+        const admType = admMatch[1].toLowerCase();
         out.push(
-          `<div style="border-left:4px solid ${adm.border};background:${adm.bg};padding:8px 12px;margin:8px 0;color:#1f2328;">` +
+          `<div class="cothunder-adm-${admType}" style="border-left:4px solid ${adm.border};background:${adm.bg};padding:8px 12px;margin:8px 0;color:#1f2328;">` +
           `<p style="margin:0 0 6px;font-weight:bold;">${adm.emoji} ${adm.title}</p>${content}</div>`
         );
       } else {

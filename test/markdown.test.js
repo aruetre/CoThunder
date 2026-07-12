@@ -172,7 +172,7 @@ test("renderInline: imagen enlazada", () => {
 });
 
 test("renderInline: resaltado ==x==", () => {
-  assert.equal(renderInline("==importante=="), '<mark style="background-color:#fff2a8;">importante</mark>');
+  assert.equal(renderInline("==importante=="), '<mark class="cothunder-mark" style="background-color:#fff2a8;">importante</mark>');
 });
 test("renderInline: subíndice ~x~", () => {
   assert.equal(renderInline("H~2~O"), "H<sub>2</sub>O");
@@ -247,13 +247,13 @@ test("renderInline: doble barra invertida escapa a una literal", () => {
 test("renderMarkdown: admonition NOTE", () => {
   assert.equal(
     renderMarkdown("> [!NOTE]\n> Esto es una nota."),
-    '<div style="border-left:4px solid #0969da;background:#ddf4ff;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">ℹ️ Nota</p><p>Esto es una nota.</p></div>'
+    '<div class="cothunder-adm-note" style="border-left:4px solid #0969da;background:#ddf4ff;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">ℹ️ Nota</p><p>Esto es una nota.</p></div>'
   );
 });
 test("renderMarkdown: admonition WARNING con énfasis en el cuerpo", () => {
   assert.equal(
     renderMarkdown("> [!WARNING]\n> Ojo con **esto**."),
-    '<div style="border-left:4px solid #9a6700;background:#fff8c5;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">⚠️ Advertencia</p><p>Ojo con <strong>esto</strong>.</p></div>'
+    '<div class="cothunder-adm-warning" style="border-left:4px solid #9a6700;background:#fff8c5;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">⚠️ Advertencia</p><p>Ojo con <strong>esto</strong>.</p></div>'
   );
 });
 test("renderMarkdown: tipo desconocido es cita normal", () => {
@@ -267,7 +267,7 @@ test("renderMarkdown: cada salto de línea dentro de un párrafo se respeta como
 test("renderMarkdown: multilínea dentro de un admonition", () => {
   assert.equal(
     renderMarkdown("> [!TIP]\n> Consejo con **énfasis**.\n> Segunda línea."),
-    '<div style="border-left:4px solid #1a7f37;background:#dafbe1;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">💡 Consejo</p><p>Consejo con <strong>énfasis</strong>.<br>Segunda línea.</p></div>'
+    '<div class="cothunder-adm-tip" style="border-left:4px solid #1a7f37;background:#dafbe1;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">💡 Consejo</p><p>Consejo con <strong>énfasis</strong>.<br>Segunda línea.</p></div>'
   );
 });
 test("renderMarkdown: cita normal sigue igual", () => {
@@ -292,7 +292,7 @@ test("renderInline: emoji :x: en prosa sigue funcionando", () => {
   assert.equal(renderInline("marca :x: aqui"), "marca ❌ aqui");
 });
 test("renderInline: resaltado en prosa sigue funcionando", () => {
-  assert.equal(renderInline("esto es ==clave=="), 'esto es <mark style="background-color:#fff2a8;">clave</mark>');
+  assert.equal(renderInline("esto es ==clave=="), 'esto es <mark class="cothunder-mark" style="background-color:#fff2a8;">clave</mark>');
 });
 
 // Regresión (revisión final): un centinela anidado dentro de un valor protegido
