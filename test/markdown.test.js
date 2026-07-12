@@ -5,6 +5,7 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { renderInline } = require("../markdown.js");
 const { renderMarkdown } = require("../markdown.js");
+const { styleEmail } = require("../markdown.js");
 
 test("renderInline escapa HTML", () => {
   assert.equal(renderInline("a < b & c"), "a &lt; b &amp; c");
@@ -282,4 +283,29 @@ test("renderInline: resaltado en prosa sigue funcionando", () => {
 });
 test("renderInline: imagen enlazada sigue funcionando tras proteger", () => {
   assert.equal(renderInline("[![alt](https://x.io/i.png)](https://x.io)"), '<a href="https://x.io"><img src="https://x.io/i.png" alt="alt"></a>');
+});
+
+test("styleEmail: bloque de código", () => {
+  assert.equal(styleEmail("<pre><code>x</code></pre>"), '<pre style="background:#f6f8fa;padding:12px;border-radius:6px;overflow-x:auto;font-family:monospace;font-size:13px;line-height:1.45;"><code>x</code></pre>');
+});
+test("styleEmail: el <code> de un bloque NO recibe estilo inline", () => {
+  assert.equal(styleEmail("<pre><code>x</code></pre>").includes('<code style'), false);
+});
+test("styleEmail: código en línea", () => {
+  assert.equal(styleEmail("usa <code>x</code> ya"), 'usa <code style="background:#f6f8fa;padding:2px 5px;border-radius:4px;font-family:monospace;font-size:90%;">x</code> ya');
+});
+test("styleEmail: tabla", () => {
+  assert.equal(
+    styleEmail("<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>"),
+    '<table style="border-collapse:collapse;margin:8px 0;"><thead><tr><th style="border:1px solid #d0d7de;padding:6px 12px;background:#f6f8fa;text-align:left;">A</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:6px 12px;">1</td></tr></tbody></table>'
+  );
+});
+test("styleEmail: cita", () => {
+  assert.equal(styleEmail("<blockquote><p>x</p></blockquote>"), '<blockquote style="border-left:4px solid #d0d7de;margin:8px 0;padding:0 12px;color:#57606a;"><p>x</p></blockquote>');
+});
+test("styleEmail: hr", () => {
+  assert.equal(styleEmail("<hr>"), '<hr style="border:none;border-top:1px solid #d0d7de;margin:12px 0;">');
+});
+test("styleEmail: no toca un div de admonition", () => {
+  assert.equal(styleEmail('<div style="x">hola</div>'), '<div style="x">hola</div>');
 });

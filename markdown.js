@@ -315,6 +315,41 @@ function renderMarkdown(src) {
   return result;
 }
 
+// --- Estilos de correo -------------------------------------------------
+// Los clientes de correo eliminan el CSS externo (y muchos también las
+// etiquetas <style>), así que el HTML final necesita estilos EN LÍNEA en
+// los bloques (código, tabla, cita, regla) para que se vea bien. Se aplica
+// como pasada POSTERIOR a renderMarkdown (no toca su salida semántica) para
+// no afectar a los tests existentes de renderMarkdown/renderInline.
+const MD_EMAIL_STYLES = {
+  pre: "background:#f6f8fa;padding:12px;border-radius:6px;overflow-x:auto;font-family:monospace;font-size:13px;line-height:1.45;",
+  codeInline: "background:#f6f8fa;padding:2px 5px;border-radius:4px;font-family:monospace;font-size:90%;",
+  table: "border-collapse:collapse;margin:8px 0;",
+  th: "border:1px solid #d0d7de;padding:6px 12px;background:#f6f8fa;text-align:left;",
+  td: "border:1px solid #d0d7de;padding:6px 12px;",
+  blockquote: "border-left:4px solid #d0d7de;margin:8px 0;padding:0 12px;color:#57606a;",
+  hr: "border:none;border-top:1px solid #d0d7de;margin:12px 0;",
+};
+
+function styleEmail(html) {
+  let s = String(html == null ? "" : html);
+  // Protege los bloques <pre><code>...</code></pre> con un centinela \x01N\x01
+  // antes de estilar el <code> en línea, así el <code> del bloque no se toca.
+  const blocks = [];
+  s = s.replace(/<pre><code>/g, () => {
+    blocks.push('<pre style="' + MD_EMAIL_STYLES.pre + '"><code>');
+    return "\x01" + (blocks.length - 1) + "\x01";
+  });
+  s = s.replace(/<code>/g, '<code style="' + MD_EMAIL_STYLES.codeInline + '">');
+  s = s.replace(/\x01(\d+)\x01/g, (m, i) => blocks[Number(i)]);
+  s = s.replace(/<table>/g, '<table style="' + MD_EMAIL_STYLES.table + '">');
+  s = s.replace(/<th>/g, '<th style="' + MD_EMAIL_STYLES.th + '">');
+  s = s.replace(/<td>/g, '<td style="' + MD_EMAIL_STYLES.td + '">');
+  s = s.replace(/<blockquote>/g, '<blockquote style="' + MD_EMAIL_STYLES.blockquote + '">');
+  s = s.replace(/<hr>/g, '<hr style="' + MD_EMAIL_STYLES.hr + '">');
+  return s;
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { mdEscape, renderInline, renderMarkdown };
+  module.exports = { mdEscape, renderInline, renderMarkdown, styleEmail };
 }

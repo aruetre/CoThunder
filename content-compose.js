@@ -37,14 +37,14 @@
   }
 
   function finalHtml() {
-    return active ? renderMarkdown(markdownSource()) : null;
+    return active ? styleEmail(renderMarkdown(markdownSource())) : null;
   }
 
   function renderPreview() {
     if (!previewEl) return;
     try {
       // DOMParser: convierte nuestra cadena segura en nodos sin ejecutar scripts.
-      const doc = new DOMParser().parseFromString(renderMarkdown(markdownSource()), "text/html");
+      const doc = new DOMParser().parseFromString(styleEmail(renderMarkdown(markdownSource())), "text/html");
       previewEl.replaceChildren(...doc.body.childNodes);
     } catch (e) {
       previewEl.textContent = "[CoThunder preview] " + (e && e.message);
