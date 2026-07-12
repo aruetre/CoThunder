@@ -6,6 +6,7 @@
   $("promptTemplate").value = cfg.promptTemplate;
   $("newChatByDefault").checked = cfg.newChatByDefault;
   $("mdEditorDefault").checked = cfg.mdEditorDefault;
+  $("emailAccent").value = cfg.emailAccent;
   const prof = cfg.userProfile || {};
   $("userName").value = prof.name || "";
   $("userRole").value = prof.role || "";
@@ -45,6 +46,7 @@
       promptTemplate: $("promptTemplate").value,
       newChatByDefault: $("newChatByDefault").checked,
       mdEditorDefault: $("mdEditorDefault").checked,
+      emailAccent: $("emailAccent").value,
       userProfile: {
         name: $("userName").value.trim(),
         role: $("userRole").value.trim(),

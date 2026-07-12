@@ -315,11 +315,17 @@ test("styleEmail: código en línea", () => {
 test("styleEmail: tabla", () => {
   assert.equal(
     styleEmail("<table><thead><tr><th>A</th></tr></thead><tbody><tr><td>1</td></tr></tbody></table>"),
-    '<table style="border-collapse:collapse;margin:8px 0;"><thead><tr><th style="border:1px solid #d0d7de;padding:6px 12px;background:#f6f8fa;text-align:left;">A</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:6px 12px;">1</td></tr></tbody></table>'
+    '<table style="border-collapse:collapse;margin:8px 0;"><thead><tr><th style="border:1px solid #0969da;padding:6px 12px;background:#0969da;color:#fff;text-align:left;">A</th></tr></thead><tbody><tr><td style="border:1px solid #d0d7de;padding:6px 12px;">1</td></tr></tbody></table>'
   );
 });
 test("styleEmail: cita", () => {
-  assert.equal(styleEmail("<blockquote><p>x</p></blockquote>"), '<blockquote style="border-left:4px solid #d0d7de;margin:8px 0;padding:0 12px;color:#57606a;"><p>x</p></blockquote>');
+  assert.equal(styleEmail("<blockquote><p>x</p></blockquote>"), '<blockquote style="border-left:4px solid #0969da;margin:8px 0;padding:0 12px;color:#57606a;"><p>x</p></blockquote>');
+});
+test("styleEmail: encabezado h2 recibe color de acento por defecto", () => {
+  assert.equal(styleEmail("<h2>T</h2>"), '<h2 style="color:#0969da;margin:12px 0 6px;">T</h2>');
+});
+test("styleEmail: acento personalizado en encabezado", () => {
+  assert.equal(styleEmail("<h2>T</h2>", { accent: "#003772" }), '<h2 style="color:#003772;margin:12px 0 6px;">T</h2>');
 });
 test("styleEmail: hr", () => {
   assert.equal(styleEmail("<hr>"), '<hr style="border:none;border-top:1px solid #d0d7de;margin:12px 0;">');

@@ -83,7 +83,9 @@ const DEFAULTS = {
   // Editor Markdown en la ventana de redacción: activo por defecto (alternable con el botón/atajo).
   mdEditorDefault: true,
   // Perfil del usuario (el mismo en Thunderbird y en Copilot): contexto para enriquecer las respuestas.
-  userProfile: { name: "", role: "", org: "", about: "", style: "" }
+  userProfile: { name: "", role: "", org: "", about: "", style: "" },
+  // Color de acento del correo (encabezados, tablas y citas del cuerpo Markdown maquetado).
+  emailAccent: "#0969da"
 };
 
 // Monta el bloque "CONTEXTO DEL AUTOR" a partir del perfil del usuario. Devuelve "" si no hay datos.

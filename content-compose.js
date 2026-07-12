@@ -54,6 +54,7 @@
   let previewEl = null;
   let toolbarEl = null;
   let timer = null;
+  let emailAccent = "#0969da";
 
   // --- Inserción de Markdown en el editor nativo (contenteditable) ---
 
@@ -254,14 +255,14 @@
   }
 
   function finalHtml() {
-    return active ? styleEmail(renderMarkdown(markdownSource())) : null;
+    return active ? styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }) : null;
   }
 
   function renderPreview() {
     if (!previewEl) return;
     try {
       // DOMParser: convierte nuestra cadena segura en nodos sin ejecutar scripts.
-      const doc = new DOMParser().parseFromString(styleEmail(renderMarkdown(markdownSource())), "text/html");
+      const doc = new DOMParser().parseFromString(styleEmail(renderMarkdown(markdownSource()), { accent: emailAccent }), "text/html");
       previewEl.replaceChildren(...doc.body.childNodes);
     } catch (e) {
       previewEl.textContent = "[CoThunder preview] " + (e && e.message);
@@ -333,5 +334,11 @@
   // Encendido por defecto según el ajuste de Opciones (activable/desactivable con el botón o el atajo).
   messenger.storage.local.get({ mdEditorDefault: true }).then((s) => {
     if (s.mdEditorDefault) activate();
+  });
+
+  // Color de acento configurable en Opciones, aplicado a encabezados, tablas y citas del preview/envío.
+  messenger.storage.local.get({ emailAccent: "#0969da" }).then((s) => {
+    emailAccent = s.emailAccent || "#0969da";
+    if (active) renderPreview();
   });
 })();
