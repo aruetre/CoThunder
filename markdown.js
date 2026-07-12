@@ -113,6 +113,192 @@ function renderInline(text) {
   return s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
 }
 
+// --- Resaltado de sintaxis (bloques ```lang) -----------------------------
+// El correo elimina CSS/clases, así que los tokens se colorean con
+// `<span style="color:...">` en línea. Todo el texto se escapa SIEMPRE con
+// mdEscape (dentro y fuera de los spans): un lenguaje desconocido, o código
+// como `</script>` o `"><img>`, nunca produce HTML vivo.
+const MD_HL_COLORS = {
+  comment: "#6e7781",
+  string: "#0a3069",
+  number: "#0550ae",
+  keyword: "#cf222e",
+};
+
+function mdHlSpan(kind, text) {
+  return '<span style="color:' + MD_HL_COLORS[kind] + ';">' + mdEscape(text) + "</span>";
+}
+
+const MD_HL_JS_KEYWORDS = [
+  "const", "let", "var", "function", "return", "if", "else", "for", "while", "do",
+  "break", "continue", "switch", "case", "default", "class", "extends", "new", "this",
+  "typeof", "instanceof", "in", "of", "try", "catch", "finally", "throw", "async", "await",
+  "yield", "import", "export", "from", "as", "static", "get", "set", "super", "void",
+  "delete", "null", "undefined", "true", "false",
+];
+
+const MD_HL_LANGS = {
+  js: {
+    keywords: new Set(MD_HL_JS_KEYWORDS),
+    lineComments: ["//"],
+    blockComments: true,
+    stringChars: ['"', "'", "`"],
+  },
+  ts: {
+    keywords: new Set([
+      ...MD_HL_JS_KEYWORDS,
+      "interface", "type", "enum", "implements", "public", "private", "protected",
+      "readonly", "namespace", "declare", "is", "keyof", "abstract",
+    ]),
+    lineComments: ["//"],
+    blockComments: true,
+    stringChars: ['"', "'", "`"],
+  },
+  python: {
+    keywords: new Set([
+      "def", "class", "return", "if", "elif", "else", "for", "while", "break", "continue",
+      "pass", "import", "from", "as", "try", "except", "finally", "raise", "with", "lambda",
+      "yield", "global", "nonlocal", "in", "is", "not", "and", "or", "None", "True", "False",
+      "async", "await", "del", "assert",
+    ]),
+    lineComments: ["#"],
+    blockComments: false,
+    stringChars: ['"', "'"],
+  },
+  json: {
+    keywords: new Set(["true", "false", "null"]),
+    lineComments: [],
+    blockComments: false,
+    stringChars: ['"'],
+  },
+  bash: {
+    keywords: new Set([
+      "if", "then", "else", "elif", "fi", "for", "while", "do", "done", "case", "esac",
+      "function", "return", "export", "local", "in", "break", "continue", "echo", "exit",
+      "select", "until", "time",
+    ]),
+    lineComments: ["#"],
+    blockComments: false,
+    stringChars: ['"', "'"],
+  },
+  sql: {
+    keywords: new Set([
+      "SELECT", "FROM", "WHERE", "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE",
+      "JOIN", "LEFT", "RIGHT", "INNER", "OUTER", "ON", "GROUP", "BY", "ORDER", "HAVING",
+      "AND", "OR", "NOT", "NULL", "IS", "IN", "LIKE", "LIMIT", "AS", "CREATE", "TABLE",
+      "DROP", "ALTER", "PRIMARY", "KEY", "FOREIGN", "REFERENCES", "DISTINCT", "UNION", "ALL",
+    ]),
+    lineComments: ["--"],
+    blockComments: false,
+    stringChars: ["'", '"'],
+  },
+  css: {
+    keywords: new Set([
+      "important", "media", "import", "keyframes", "supports", "charset",
+      "inherit", "initial", "unset", "none", "auto", "block", "flex", "grid",
+    ]),
+    lineComments: ["//"],
+    blockComments: true,
+    stringChars: ['"', "'"],
+  },
+};
+
+const MD_HL_ALIASES = {
+  js: "js", javascript: "js",
+  ts: "ts", typescript: "ts",
+  python: "python", py: "python",
+  json: "json",
+  bash: "bash", sh: "bash", shell: "bash",
+  sql: "sql",
+  css: "css",
+};
+
+const MD_HL_IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*/;
+const MD_HL_NUMBER_RE = /^\d+(\.\d+)?/;
+
+// Tokeniza `code` en una única pasada izquierda->derecha según `lang`
+// (alias normalizado vía MD_HL_ALIASES). Prioridad: comentario de bloque >
+// comentario de línea > cadena > número > palabra clave > texto plano. No es
+// un parser real: aproximación suficiente para colorear código de correo.
+// Un lenguaje desconocido o vacío devuelve el código solo escapado (sin spans).
+function highlightCode(code, lang) {
+  const src = String(code == null ? "" : code);
+  const key = MD_HL_ALIASES[String(lang == null ? "" : lang).trim().toLowerCase()];
+  const config = key ? MD_HL_LANGS[key] : null;
+  if (!config) return mdEscape(src);
+
+  const parts = [];
+  let plain = "";
+  const flushPlain = () => { if (plain) { parts.push(mdEscape(plain)); plain = ""; } };
+
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    if (config.blockComments && src.startsWith("/*", i)) {
+      const end = src.indexOf("*/", i + 2);
+      const stop = end === -1 ? n : end + 2;
+      flushPlain();
+      parts.push(mdHlSpan("comment", src.slice(i, stop)));
+      i = stop;
+      continue;
+    }
+
+    const lc = config.lineComments.find((marker) => src.startsWith(marker, i));
+    if (lc) {
+      let end = src.indexOf("\n", i);
+      if (end === -1) end = n;
+      flushPlain();
+      parts.push(mdHlSpan("comment", src.slice(i, end)));
+      i = end;
+      continue;
+    }
+
+    const ch = src[i];
+
+    if (config.stringChars.includes(ch)) {
+      let j = i + 1;
+      while (j < n && src[j] !== ch) {
+        j += (src[j] === "\\" && j + 1 < n) ? 2 : 1;
+      }
+      const stop = j < n ? j + 1 : j;
+      flushPlain();
+      parts.push(mdHlSpan("string", src.slice(i, stop)));
+      i = stop;
+      continue;
+    }
+
+    if (/[0-9]/.test(ch)) {
+      const m = MD_HL_NUMBER_RE.exec(src.slice(i));
+      const stop = i + m[0].length;
+      const nextCh = src[stop];
+      if (!nextCh || !/[A-Za-z_]/.test(nextCh)) {
+        flushPlain();
+        parts.push(mdHlSpan("number", m[0]));
+        i = stop;
+        continue;
+      }
+    }
+
+    if (/[A-Za-z_]/.test(ch)) {
+      const m = MD_HL_IDENT_RE.exec(src.slice(i));
+      const word = m[0];
+      if (config.keywords.has(word)) {
+        flushPlain();
+        parts.push(mdHlSpan("keyword", word));
+      } else {
+        plain += word;
+      }
+      i += word.length;
+      continue;
+    }
+
+    plain += ch;
+    i++;
+  }
+  flushPlain();
+  return parts.join("");
+}
+
 const MD_HR_RE = /^\s*(---|\*\*\*|___)\s*$/;
 const MD_TABLE_SEP_RE = /^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?\s*$/;
 const MD_UL_MARKER_RE = /^(\s*)[-*+]\s+(.*)$/;
@@ -243,9 +429,11 @@ function renderMarkdown(src) {
     }
 
     if (/^```/.test(line)) {                                            // bloque de código
+      const langMatch = line.match(/^```\s*([\w+-]*)/);
+      const lang = langMatch ? langMatch[1] : "";
       i++; const buf = [];
       while (i < lines.length && !/^```/.test(lines[i])) { buf.push(lines[i]); i++; }
-      i++; out.push("<pre><code>" + mdEscape(buf.join("\n")) + "</code></pre>"); continue;
+      i++; out.push("<pre><code>" + highlightCode(buf.join("\n"), lang) + "</code></pre>"); continue;
     }
 
     if (/^\s*>\s?/.test(line)) {                                        // cita
@@ -351,5 +539,5 @@ function styleEmail(html) {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { mdEscape, renderInline, renderMarkdown, styleEmail };
+  module.exports = { mdEscape, renderInline, renderMarkdown, styleEmail, highlightCode };
 }
