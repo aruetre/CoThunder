@@ -126,3 +126,19 @@ test("renderInline: imagen con esquema no permitido se descarta", () => {
 test("renderInline: enlace normal sigue funcionando junto a la regla de imagen", () => {
   assert.equal(renderInline("[web](https://x.io)"), '<a href="https://x.io">web</a>');
 });
+
+test("renderInline: tachado ~~x~~", () => {
+  assert.equal(renderInline("~~tachado~~"), "<del>tachado</del>");
+});
+test("renderMarkdown: lista de tareas", () => {
+  assert.equal(renderMarkdown("- [ ] uno\n- [x] dos"), "<ul><li>☐ uno</li><li>☑ dos</li></ul>");
+});
+test("renderMarkdown: tarea marcada con X mayúscula y texto con énfasis", () => {
+  assert.equal(renderMarkdown("- [X] **hecho**"), "<ul><li>☑ <strong>hecho</strong></li></ul>");
+});
+test("renderInline: autoenlace de URL suelta", () => {
+  assert.equal(renderInline("mira https://x.io ahora"), 'mira <a href="https://x.io">https://x.io</a> ahora');
+});
+test("renderInline: un enlace explícito no se re-enlaza", () => {
+  assert.equal(renderInline("[web](https://x.io)"), '<a href="https://x.io">web</a>');
+});

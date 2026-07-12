@@ -37,8 +37,17 @@ function renderInline(text) {
   // truncaría en ese paréntesis; aceptable para uso en correo.
   s = s.replace(/\[([^\]]+)\]\(([^\s)]+)\)/g, (m, label, url) =>
     MD_SAFE_SCHEMES.test(url) ? '<a href="' + url + '">' + label + "</a>" : label);
-  // 4) Negrita y cursiva.
-  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+  // 3.5) Autoenlaces de URLs sueltas (http/https). Se salta las que ya están
+  // dentro de un atributo href="..." o justo tras un ">" (ya son <a>...</a>
+  // por la regla anterior), para no re-enlazar lo ya enlazado.
+  s = s.replace(/(?<![">])https?:\/\/[^\s<)]+/g, (m) => {
+    let url = m, trail = "";
+    if (/[.,]$/.test(url)) { trail = url.slice(-1); url = url.slice(0, -1); }
+    return '<a href="' + url + '">' + url + "</a>" + trail;
+  });
+  // 4) Tachado, negrita y cursiva.
+  s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>")
+       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
        .replace(/__([^_]+)__/g, "<strong>$1</strong>")
        .replace(/\*([^*]+)\*/g, "<em>$1</em>")
        .replace(/(^|[^A-Za-z0-9])_([^_]+)_/g, "$1<em>$2</em>");
@@ -63,6 +72,16 @@ function listMarkerInfo(s) {
   return { indent: o[1].length, ordered: true, text: o[2] };
 }
 
+// Ítem de lista de tareas: "[ ] texto" o "[x] texto" (x insensible a mayúsculas).
+const MD_TASK_RE = /^\[([ xX])\]\s+(.*)$/;
+
+function taskItemHtml(text) {
+  const t = text.match(MD_TASK_RE);
+  if (!t) return null;
+  const checked = t[1].toLowerCase() === "x";
+  return (checked ? "☑" : "☐") + " " + renderInline(t[2]);
+}
+
 // Parsea una lista (anidada por indentación) a partir de lines[start].
 // Devuelve el HTML de la lista y el índice tras el último renglón consumido.
 function parseList(lines, start) {
@@ -73,7 +92,8 @@ function parseList(lines, start) {
   let i = start;
   while (i < lines.length && isListMarkerLine(lines[i]) && listMarkerInfo(lines[i]).indent === baseIndent) {
     const info = listMarkerInfo(lines[i]);
-    let itemHtml = renderInline(info.text);
+    let itemHtml = taskItemHtml(info.text);
+    if (itemHtml === null) itemHtml = renderInline(info.text);
     i++;
     if (i < lines.length && isListMarkerLine(lines[i]) && listMarkerInfo(lines[i]).indent > baseIndent) {
       const nested = parseList(lines, i);
