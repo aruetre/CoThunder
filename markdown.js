@@ -5,6 +5,9 @@
 // Se usa en content-compose.js (preview y cuerpo final) y en Node para pruebas.
 
 const MD_SAFE_SCHEMES = /^(https?:|mailto:)/i;
+// Esquemas permitidos en el origen de una imagen: web y las imágenes embebidas
+// que inserta Thunderbird (data: en línea, cid: adjunto).
+const MD_IMG_SCHEMES = /^(https?:|data:|cid:)/i;
 
 function mdEscape(text) {
   return String(text == null ? "" : text)
@@ -25,6 +28,10 @@ function renderInline(text) {
   });
   // 2) Escapa el texto restante.
   s = mdEscape(s);
+  // 2.5) Imágenes ![alt](url) con esquema de imagen permitido; si no, se descartan.
+  //      Va antes de los enlaces porque comparten la sintaxis [ ]( ).
+  s = s.replace(/!\[([^\]]*)\]\(([^\s)]+)\)/g, (m, alt, url) =>
+    MD_IMG_SCHEMES.test(url) ? '<img src="' + url + '" alt="' + alt + '">' : "");
   // 3) Enlaces [texto](url) solo con esquema permitido; si no, texto plano.
   // Nota: una URL con un ")" literal (p. ej. cierta URL de Wikipedia) se
   // truncaría en ese paréntesis; aceptable para uso en correo.

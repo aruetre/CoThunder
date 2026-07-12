@@ -3,10 +3,8 @@
 //
 // PLAN B (§8 del spec): NO se inyecta ningún textarea. El editor NATIVO de
 // Thunderbird es la fuente Markdown (el usuario escribe ahí, a la izquierda);
-// añadimos a la derecha un preview NO editable que renderiza en vivo lo que se
-// escribe. El textarea competía con el editor nativo por el tecleo, así que se
-// descarta. renderMarkdown viene de markdown.js (inyectado antes, mismo scope).
-// Toda la dependencia del DOM del editor de TB va aquí, en SELECTORS.
+// a la derecha un preview NO editable renderiza en vivo. renderMarkdown viene
+// de markdown.js (inyectado antes, mismo scope). Selectores centralizados.
 (function () {
   const SELECTORS = { body: "body" };
   const IDS = { preview: "cothunder-md-preview", style: "cothunder-md-style" };
@@ -16,30 +14,30 @@
   let previewEl = null;
   let timer = null;
 
-  // Fuente Markdown = texto del cuerpo editable, EXCLUYENDO el preview (que
-  // también vive dentro del cuerpo). Se oculta un instante para no leerlo.
+  // Fuente Markdown: clona el cuerpo editable (sin el preview), convierte las
+  // imágenes insertadas a sintaxis ![alt](src) —innerText las descartaría— y lee
+  // el texto. Trabaja sobre un clon oculto para no tocar el cursor del editor.
   function markdownSource() {
     if (!bodyEl) return "";
-    if (previewEl) previewEl.style.display = "none";
-    const text = bodyEl.innerText || "";
-    if (previewEl) previewEl.style.display = "";
+    const holder = document.createElement("div");
+    for (const child of bodyEl.childNodes) {
+      if (child === previewEl) continue;
+      holder.appendChild(child.cloneNode(true));
+    }
+    holder.querySelectorAll("img").forEach((img) => {
+      const src = img.getAttribute("src") || "";
+      const alt = img.getAttribute("alt") || "";
+      img.replaceWith(document.createTextNode("![" + alt + "](" + src + ")"));
+    });
+    holder.style.cssText = "position:absolute;left:-99999px;top:0;";
+    document.body.appendChild(holder);   // innerText necesita estar en el documento
+    const text = holder.innerText || "";
+    holder.remove();
     return text;
   }
 
-  // Finaliza (al enviar o al apagar): renderiza el Markdown a HTML, lo deja como
-  // cuerpo real, apaga el panel (quita preview y el reparto 50/50) y devuelve el
-  // HTML. Devuelve null si el panel ya estaba apagado (para que el envío pase).
-  function finalize() {
-    if (!active) return null;
-    const html = renderMarkdown(markdownSource());
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    if (previewEl) { previewEl.remove(); previewEl = null; }
-    const st = document.getElementById(IDS.style);
-    if (st) st.remove();
-    bodyEl.removeEventListener("input", scheduleRender);
-    bodyEl.replaceChildren(...doc.body.childNodes);   // HTML renderizado como cuerpo
-    active = false;
-    return html;
+  function finalHtml() {
+    return active ? renderMarkdown(markdownSource()) : null;
   }
 
   function renderPreview() {
@@ -71,7 +69,8 @@
       "body{margin-right:50% !important;}" +
       "#" + IDS.preview + "{position:fixed;top:0;right:0;width:50%;height:100%;" +
       "overflow:auto;box-sizing:border-box;border-left:1px solid #bbb;" +
-      "background:#fff;color:#111;padding:10px;}";
+      "background:#fff;color:#111;padding:10px;}" +
+      "#" + IDS.preview + " img{max-width:100%;height:auto;}";
     (document.head || document.documentElement).appendChild(style);
 
     previewEl = document.createElement("div");
@@ -85,7 +84,7 @@
   }
 
   messenger.runtime.onMessage.addListener((msg, sender, respond) => {
-    if (msg && msg.type === "cothunder-finalize") { respond({ html: finalize() }); return true; }
+    if (msg && msg.type === "cothunder-finalize") { respond({ html: finalHtml() }); return true; }
   });
 
   activate();   // encendido por defecto (la task 5 añade el toggle configurable)

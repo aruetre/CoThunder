@@ -17,13 +17,14 @@ async function registerComposeScript() {
 }
 registerComposeScript();
 
-// Al enviar con el panel activo: pide el HTML final al compose script, cancela
-// ese envío y deja el HTML en el cuerpo (el usuario revisa y envía).
+// Al enviar con el panel activo: pide el HTML final al compose script y lo pone
+// como cuerpo del correo. Opción 1 (un solo clic): sin cancel, el envío sale
+// directo ya maquetado.
 messenger.compose.onBeforeSend.addListener(async (tab) => {
   try {
     const res = await messenger.tabs.sendMessage(tab.id, { type: "cothunder-finalize" });
     if (res && res.html != null) {
-      return { cancel: true, details: { body: res.html } };
+      return { details: { body: res.html } };
     }
   } catch (e) {
     console.error("[CoThunder] onBeforeSend Markdown falló:", e);

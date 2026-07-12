@@ -110,3 +110,19 @@ test("renderMarkdown: separador de tabla de un solo guion", () => {
     "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr></tbody></table>"
   );
 });
+
+test("renderInline: imagen web ![alt](url)", () => {
+  assert.equal(renderInline("![gato](https://x.io/g.png)"), '<img src="https://x.io/g.png" alt="gato">');
+});
+
+test("renderInline: imagen embebida data: se conserva, alt vacío", () => {
+  assert.equal(renderInline("![](data:image/png;base64,ABC)"), '<img src="data:image/png;base64,ABC" alt="">');
+});
+
+test("renderInline: imagen con esquema no permitido se descarta", () => {
+  assert.equal(renderInline("![x](ftp://h/i.png)"), "");
+});
+
+test("renderInline: enlace normal sigue funcionando junto a la regla de imagen", () => {
+  assert.equal(renderInline("[web](https://x.io)"), '<a href="https://x.io">web</a>');
+});
