@@ -282,6 +282,12 @@ test("renderInline: emoji :x: en prosa sigue funcionando", () => {
 test("renderInline: resaltado en prosa sigue funcionando", () => {
   assert.equal(renderInline("esto es ==clave=="), 'esto es <mark style="background-color:#fff2a8;">clave</mark>');
 });
+
+// Regresión (revisión final): un centinela anidado dentro de un valor protegido
+// (título con comilla escapada) debe restaurarse del todo, sin dejar bytes NUL.
+test("renderInline: comilla escapada dentro de un título de enlace se restaura entera", () => {
+  assert.equal(renderInline('[x](https://x.io "a\\"b")'), '<a href="https://x.io" title="a&quot;b">x</a>');
+});
 test("renderInline: imagen enlazada sigue funcionando tras proteger", () => {
   assert.equal(renderInline("[![alt](https://x.io/i.png)](https://x.io)"), '<a href="https://x.io"><img src="https://x.io/i.png" alt="alt"></a>');
 });

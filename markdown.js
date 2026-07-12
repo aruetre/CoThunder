@@ -109,8 +109,14 @@ function renderInline(text) {
        .replace(/~([^~]+)~/g, "<sub>$1</sub>")
        .replace(/\^([^\^]+)\^/g, "<sup>$1</sup>")
        .replace(/:([a-z0-9_+-]+):/g, (m, code) => (MD_EMOJI[code] !== undefined ? MD_EMOJI[code] : m));
-  // 5) Restaura los code spans y los escapes con barra invertida.
-  return s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
+  // 5) Restaura los code spans, escapes y valores protegidos. En bucle: un valor
+  // protegido (p. ej. un título con un escape dentro) puede contener a su vez un
+  // centinela, y una sola pasada dejaría bytes NUL en la salida. Se repite hasta
+  // que no quede ninguno (la profundidad de anidamiento es finita y decreciente).
+  while (/\x00\d+\x00/.test(s)) {
+    s = s.replace(/\x00(\d+)\x00/g, (m, i) => codes[Number(i)]);
+  }
+  return s;
 }
 
 // --- Resaltado de sintaxis (bloques ```lang) -----------------------------
