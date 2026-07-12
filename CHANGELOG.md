@@ -3,6 +3,14 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.5.2] — 2026-07-12
+
+### Añadido
+- **Más botones en la barra de herramientas** del editor: H3, negrita+cursiva, resaltado, subíndice, superíndice, lista de definición, nota al pie, emoji y las cinco admonitions (Nota, Consejo, Importante, Advertencia, Precaución).
+
+### Corregido
+- **Tablas de Copilot con líneas en blanco entre filas**: Copilot suele separar cada fila de una tabla con una línea en blanco, y eso la rompía (salía como texto suelto). Ahora el editor tolera esas líneas en blanco y maqueta la tabla correctamente.
+
 ## [2.5.1] — 2026-07-12
 
 ### Cambiado

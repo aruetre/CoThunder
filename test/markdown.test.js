@@ -364,3 +364,10 @@ test("highlightCode: palabra clave sql SELECT", () => {
     '<span style="color:#cf222e;">SELECT</span> id <span style="color:#cf222e;">FROM</span> t'
   );
 });
+
+test("renderMarkdown: tabla con líneas en blanco entre filas (estilo Copilot)", () => {
+  assert.equal(
+    renderMarkdown("| A | B |\n\n| --- | --- |\n\n| 1 | 2 |\n\n| 3 | 4 |"),
+    "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody></table>"
+  );
+});

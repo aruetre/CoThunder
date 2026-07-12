@@ -312,6 +312,20 @@ const MD_OL_MARKER_RE = /^(\s*)\d+\.\s+(.*)$/;
 
 function isTableSep(s) { return MD_TABLE_SEP_RE.test(s); }
 function tableCells(s) { return s.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map((c) => c.trim()); }
+// Índice de la primera línea NO vacía a partir de `from` (o lines.length).
+function nextNonBlank(lines, from) {
+  let k = from;
+  while (k < lines.length && /^\s*$/.test(lines[k])) k++;
+  return k;
+}
+// Una tabla empieza en `i` si esa línea tiene "|" y la siguiente línea NO vacía es
+// el separador (---). Tolera líneas en blanco entre cabecera y separador, típico de
+// las tablas que genera Copilot.
+function tableStartsAt(lines, i) {
+  if (!lines[i].includes("|")) return false;
+  const j = nextNonBlank(lines, i + 1);
+  return j < lines.length && isTableSep(lines[j]);
+}
 
 function isListMarkerLine(s) { return MD_UL_MARKER_RE.test(s) || MD_OL_MARKER_RE.test(s); }
 
@@ -466,10 +480,19 @@ function renderMarkdown(src) {
       continue;
     }
 
-    if (line.includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1])) {   // tabla
+    if (tableStartsAt(lines, i)) {   // tabla (tolera líneas en blanco entre filas)
       const head = tableCells(line).map((c) => `<th>${renderInline(c)}</th>`).join("");
-      i += 2; const rows = [];
-      while (i < lines.length && lines[i].includes("|") && !/^\s*$/.test(lines[i])) {
+      i = nextNonBlank(lines, i + 1) + 1;   // pasa cabecera y separador (saltando blancos)
+      const rows = [];
+      while (i < lines.length) {
+        if (/^\s*$/.test(lines[i])) {
+          // Línea en blanco: si la siguiente línea con contenido sigue siendo una
+          // fila de tabla, la saltamos; si no, la tabla termina aquí.
+          const k = nextNonBlank(lines, i);
+          if (k < lines.length && lines[k].includes("|") && !isTableSep(lines[k])) { i = k; continue; }
+          break;
+        }
+        if (!lines[i].includes("|") || isTableSep(lines[i])) break;
         rows.push("<tr>" + tableCells(lines[i]).map((c) => `<td>${renderInline(c)}</td>`).join("") + "</tr>"); i++;
       }
       out.push(`<table><thead><tr>${head}</tr></thead><tbody>${rows.join("")}</tbody></table>`); continue;
@@ -492,7 +515,7 @@ function renderMarkdown(src) {
     while (i < lines.length && !/^\s*$/.test(lines[i]) &&
            !/^(#{1,6}\s|```|\s*>|\s*[-*+]\s|\s*\d+\.\s)/.test(lines[i]) &&
            !MD_HR_RE.test(lines[i]) &&
-           !(lines[i].includes("|") && i + 1 < lines.length && isTableSep(lines[i + 1]))) {
+           !tableStartsAt(lines, i)) {
       buf.push(lines[i]); i++;
     }
     // Cada salto de línea dentro del párrafo se respeta como <br> (más intuitivo
