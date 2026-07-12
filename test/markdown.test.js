@@ -240,3 +240,22 @@ test("renderInline: ángulos escapados quedan literales, URL bien formada", () =
 test("renderInline: doble barra invertida escapa a una literal", () => {
   assert.equal(renderInline("\\\\"), "\\");
 });
+
+test("renderMarkdown: admonition NOTE", () => {
+  assert.equal(
+    renderMarkdown("> [!NOTE]\n> Esto es una nota."),
+    '<div style="border-left:4px solid #0969da;background:#ddf4ff;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">ℹ️ Nota</p><p>Esto es una nota.</p></div>'
+  );
+});
+test("renderMarkdown: admonition WARNING con énfasis en el cuerpo", () => {
+  assert.equal(
+    renderMarkdown("> [!WARNING]\n> Ojo con **esto**."),
+    '<div style="border-left:4px solid #9a6700;background:#fff8c5;padding:8px 12px;margin:8px 0;color:#1f2328;"><p style="margin:0 0 6px;font-weight:bold;">⚠️ Advertencia</p><p>Ojo con <strong>esto</strong>.</p></div>'
+  );
+});
+test("renderMarkdown: tipo desconocido es cita normal", () => {
+  assert.equal(renderMarkdown("> [!FOO]\n> hola"), "<blockquote><p>[!FOO] hola</p></blockquote>");
+});
+test("renderMarkdown: cita normal sigue igual", () => {
+  assert.equal(renderMarkdown("> cita"), "<blockquote><p>cita</p></blockquote>");
+});

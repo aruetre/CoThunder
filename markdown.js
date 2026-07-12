@@ -199,6 +199,18 @@ const MD_HEADING_ID_RE = /\s*\{#([A-Za-z0-9_-]+)\}\s*$/;
 // Línea de definición ": texto" (lista de definición).
 const MD_DEF_LINE_RE = /^:\s+(.*)$/;
 
+// Admonitions estilo GitHub: cita cuyo primer renglón es "[!TYPE]". Estilos
+// en línea (los clientes de correo eliminan el CSS externo) y emoji como
+// icono (eliminan también <svg>).
+const MD_ADMONITION_RE = /^\[!([A-Za-z]+)\]\s*$/;
+const MD_ADMONITIONS = {
+  NOTE: { border: "#0969da", bg: "#ddf4ff", emoji: "ℹ️", title: "Nota" },
+  TIP: { border: "#1a7f37", bg: "#dafbe1", emoji: "💡", title: "Consejo" },
+  IMPORTANT: { border: "#8250df", bg: "#fbefff", emoji: "❗", title: "Importante" },
+  WARNING: { border: "#9a6700", bg: "#fff8c5", emoji: "⚠️", title: "Advertencia" },
+  CAUTION: { border: "#cf222e", bg: "#ffebe9", emoji: "🛑", title: "Precaución" },
+};
+
 function renderMarkdown(src) {
   const raw = String(src == null ? "" : src).replace(/\r\n?/g, "\n");
   const { cleaned, defs } = extractFootnoteDefs(raw);
@@ -233,7 +245,18 @@ function renderMarkdown(src) {
     if (/^\s*>\s?/.test(line)) {                                        // cita
       const buf = [];
       while (i < lines.length && /^\s*>\s?/.test(lines[i])) { buf.push(lines[i].replace(/^\s*>\s?/, "")); i++; }
-      out.push("<blockquote>" + renderMarkdown(buf.join("\n")) + "</blockquote>"); continue;
+      const admMatch = buf.length > 0 && buf[0].match(MD_ADMONITION_RE);
+      const adm = admMatch ? MD_ADMONITIONS[admMatch[1].toUpperCase()] : null;
+      if (adm) {
+        const content = renderMarkdown(buf.slice(1).join("\n"));
+        out.push(
+          `<div style="border-left:4px solid ${adm.border};background:${adm.bg};padding:8px 12px;margin:8px 0;color:#1f2328;">` +
+          `<p style="margin:0 0 6px;font-weight:bold;">${adm.emoji} ${adm.title}</p>${content}</div>`
+        );
+      } else {
+        out.push("<blockquote>" + renderMarkdown(buf.join("\n")) + "</blockquote>");
+      }
+      continue;
     }
 
     if (isListMarkerLine(line)) {                                       // listas (anidadas)
