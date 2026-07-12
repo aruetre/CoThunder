@@ -21,9 +21,16 @@
   function updatePreview() {
     const preview = document.getElementById(IDS.preview);
     if (!preview) return;
-    // DOMParser: convierte nuestra cadena segura en nodos sin ejecutar scripts.
-    const doc = new DOMParser().parseFromString(finalHtml() || "", "text/html");
-    preview.replaceChildren(...doc.body.childNodes);
+    try {
+      // DOMParser: convierte nuestra cadena segura en nodos sin ejecutar scripts.
+      const doc = new DOMParser().parseFromString(finalHtml() || "", "text/html");
+      preview.replaceChildren(...doc.body.childNodes);
+    } catch (e) {
+      // DIAGNÓSTICO TEMPORAL: muestra el error en el propio preview (retirar tras el spike).
+      preview.textContent = "[CoThunder diag] " + (e && e.message) +
+        " | typeof renderMarkdown=" + (typeof renderMarkdown) +
+        " | typeof renderInline=" + (typeof renderInline);
+    }
   }
 
   function activate() {
