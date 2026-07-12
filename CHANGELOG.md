@@ -3,6 +3,18 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.6] — 2026-07-13
+
+### Corregido (revisión profunda del código)
+- **Marco gris alrededor de los bloques de código** en los temas: el fondo del `<pre>` exterior no seguía al tema; ahora sí, sin marco.
+- **GitHub claro:** el resaltado generaba un valor de color inválido (corregido).
+- **Notas al pie dentro de un bloque de código** ya no lo vacían: el pre-proceso de notas respeta los bloques ```` ``` ````.
+- **Negrita alrededor de una URL** (`**https://…**`) se conserva.
+- **CSS personalizado:** se ignoran las reglas con `url(...)`, para que un tema de terceros no pueda hacer conexiones externas (pixel de rastreo) — coherente con la garantía RGPD.
+- **Envío más robusto:** si la finalización fallara, se limpia el andamiaje del editor del cuerpo y nunca se envía un correo vacío; además se limpia una clave de sesión que quedaba huérfana al fallar una captura de Copilot.
+
+_Nota: la revisión profunda confirmó que la seguridad del renderizador es sólida (sin XSS por ningún camino), permisos exactos, sin dependencias ni código de depuración._
+
 ## [2.6.5] — 2026-07-12
 
 ### Añadido
