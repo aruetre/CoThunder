@@ -3,6 +3,14 @@
 Todas las mejoras y correcciones notables de CoThunder. Formato basado en
 [Keep a Changelog](https://keepachangelog.com/es/); versionado [SemVer](https://semver.org/lang/es/).
 
+## [2.6.7] — 2026-07-13
+
+### Corregido
+- **Contraste texto/fondo en los temas oscuros y de bajo contraste.** Se auditaron los 11 temas con el criterio WCAG (relación de contraste ≥ 4.5 para texto normal, cabeceras de tabla y resaltado; ≥ 3.0 para comentarios de código) y se subieron los colores que no llegaban: **Solarizado claro/oscuro**, **GitHub oscuro**, **Monokai**, **Nord** y **One Dark**. Afecta a tablas (cabecera y filas cebra), resaltado `==`, bloques de código y comentarios. Sin cambios en GitHub claro, Dracula ni las variantes UPO, que ya cumplían.
+
+### Añadido
+- **Banco de pruebas Markdown más rico** (`docs/prueba-markdown.md`): tablas de varios tamaños, código en varios lenguajes, admonitions con contenido dentro (listas, tablas, código e imágenes) y anidamientos, para estresar todos los temas de una vez.
+
 ## [2.6.6] — 2026-07-13
 
 ### Corregido (revisión profunda del código)
